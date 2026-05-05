@@ -40,13 +40,43 @@ jobs:
       - name: 安装 uv
         run: pip install uv
 
+      # ====== 缓存层 ======
+      - name: 缓存 uv 包缓存
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-cache-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: uv-cache-${{ runner.os }}-
+
+      - name: 缓存 Playwright 浏览器
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('.github/workflows/bilibili-summary.yml') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - name: 缓存 FunASR 模型
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/modelscope
+          key: modelscope-${{ runner.os }}-${{ hashFiles('transcribe.py') }}
+          restore-keys: modelscope-${{ runner.os }}-
+
+      - name: 缓存 Python venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: venv-${{ runner.os }}-
+      # ====== 缓存层结束 ======
+
       - name: 安装 Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
       - name: 安装 Python 项目依赖
         run: uv sync
 
-      - name: 安装 Playwright + Chromium
+      - name: 安装 Playwright (缓存命中则秒过)
         run: |
           pip install playwright
           playwright install chromium --with-deps
@@ -58,7 +88,6 @@ jobs:
         id: download
         run: |
           mkdir -p videos
-          # 从输入URL提取BV号
           BV=$(echo "${{ inputs.bilibili_url }}" | grep -oP 'BV[a-zA-Z0-9]+')
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
@@ -117,15 +146,22 @@ jobs:
         run: |
           uv run transcribe.py transcribe -i "${{ env.video_path }}" -o ./output -f
 
+      - name: 上传转写产物（字幕）
+        uses: actions/upload-artifact@v4
+        with:
+          name: 转写结果-字幕
+          path: output/转写结果.txt
+          retention-days: 30
+
       - name: 配置Claude Code技能路径
         run: |
-          mkdir -p .claude/skills
           if [ -d .codebuddy/skills/science-content-ppt ]; then
+            mkdir -p .claude/skills
             cp -r .codebuddy/skills/science-content-ppt .claude/skills/
           elif [ -d .claude/skills/science-content-ppt ]; then
             echo "技能目录已存在，跳过复制"
           else
-            echo "错误: 技能目录不存在，请将 science-content-ppt 提交到 .claude/skills/" && exit 1
+            echo "错误: 技能目录不存在" && exit 1
           fi
 
       - name: AI总结 & 生成PPT
@@ -139,8 +175,10 @@ jobs:
           CLAUDE_CODE_SUBAGENT_MODEL: deepseek-v4-flash
           CLAUDE_CODE_EFFORT_LEVEL: max
           CI: true
+          PYTHONUNBUFFERED: 1
+          NODE_OPTIONS: --no-warnings
         run: |
-          claude -p --permission-mode bypassPermissions --verbose "$(cat <<'CLAUDE_PROMPT'
+          stdbuf -oL -e0 claude -p --permission-mode bypassPermissions --verbose "$(cat <<'CLAUDE_PROMPT'
           你是视频内容总结PPT生成助手。请严格按以下流程完成任务：
 
           ## 任务流程
