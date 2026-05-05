@@ -65,16 +65,18 @@ jobs:
             --cookies cookies.txt \
             --impersonate chrome \
             --add-header "Referer:https://www.bilibili.com/" \
-            -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            -f "bv*+ba/best[ext=mp4]/best" \
             --merge-output-format mp4 \
             -o "videos/bilibili_video.%(ext)s" \
-            --print "%(title)s" \
+            --print-to-file "%(title)s" /tmp/video_title.txt \
             --no-playlist \
-            "${{ inputs.bilibili_url }}" | tee /tmp/video_title.txt
+            --verbose \
+            "${{ inputs.bilibili_url }}"
+          ls -la videos/
           echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
           VIDEO_TITLE=$(cat /tmp/video_title.txt | tr -d '\n\r')
           echo "video_title=${VIDEO_TITLE:-未命名视频}" >> $GITHUB_ENV
-          echo "下载完成: $(cat /tmp/video_title.txt)"
+          echo "下载完成: ${VIDEO_TITLE:-未命名视频}"
 
       - name: 语音转写
         run: |
