@@ -1,4 +1,7 @@
-"""用隐身 Playwright 访问 bilibili.com 首页，提取反爬 cookies 供 yt-dlp 使用。"""
+"""用隐身 Playwright 访问 bilibili.com 首页 + 目标视频页，提取反爬 cookies 供 yt-dlp 使用。
+
+用法: python get_bilibili_cookies.py <视频URL>
+"""
 import asyncio
 import sys
 from pathlib import Path
@@ -6,7 +9,7 @@ from pathlib import Path
 COOKIES_FILE = Path(__file__).resolve().parent / "cookies.txt"
 
 
-async def main():
+async def main(video_url: str):
     from playwright.async_api import async_playwright
 
     async with async_playwright() as p:
@@ -34,36 +37,27 @@ async def main():
             timezone_id="Asia/Shanghai",
         )
 
-        # --- stealth 补丁 ---
         await context.add_init_script(
             """
-            // 隐藏 webdriver 标记
             Object.defineProperty(navigator, 'webdriver', { get: () => false });
-            // 伪造 chrome.runtime
             window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){} };
-            // 伪造 plugins
             Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
             Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
-            // 伪造 platform
             Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-            // 伪造 hardwareConcurrency
             Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
-            // 伪造 deviceMemory
             Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
-            // 权限查询伪装
             const origQuery = window.navigator.permissions.query;
             window.navigator.permissions.query = (params) =>
                 params.name === 'notifications'
                     ? Promise.resolve({ state: Notification.permission, onchange: null })
                     : origQuery(params);
-            // 消除 PhantomJS 痕迹
             delete window.callPhantom;
         """
         )
 
         page = await context.new_page()
 
-        # 先访问首页让 B 站设置初始 cookies
+        # 第1步：访问首页，获取初始 cookies + 建立 Referer 链
         print("正在访问 bilibili.com 首页...")
         resp = await page.goto(
             "https://www.bilibili.com/",
@@ -71,25 +65,32 @@ async def main():
             timeout=30000,
         )
         print(f"首页响应状态: {resp.status}")
-
-        # 等待 JS 挑战完成（B 站 WAF 会有 JS 挑战，需要额外时间）
         await asyncio.sleep(5)
-
-        # 额外 scroll 一下，触发更多 JS 执行
         await page.evaluate("window.scrollTo(0, 300)")
         await asyncio.sleep(2)
+        print(f"首页标题: {await page.title()}")
 
-        # 检查页面是否正常加载（如果被拦会看到验证页面）
-        title = await page.title()
-        print(f"页面标题: {title}")
-        if "拦截" in title or "验证" in title or "403" in title:
-            print("警告: 页面可能被拦截，但 cookies 可能仍然有效", file=sys.stderr)
+        # 第2步：访问目标视频页，获取页面专属 cookies
+        print(f"\n正在访问视频页: {video_url}")
+        resp2 = await page.goto(
+            video_url,
+            wait_until="domcontentloaded",
+            timeout=30000,
+            referer="https://www.bilibili.com/",
+        )
+        print(f"视频页响应状态: {resp2.status}")
+        await asyncio.sleep(5)
+        await page.evaluate("window.scrollTo(0, 500)")
+        await asyncio.sleep(3)
+        print(f"视频页标题: {await page.title()}")
+
+        if resp2.status != 200:
+            print(f"警告: 视频页返回 {resp2.status}", file=sys.stderr)
 
         # 提取所有 cookies
         cookies = await context.cookies()
-        print(f"获取到 {len(cookies)} 个 cookies")
+        print(f"\n获取到 {len(cookies)} 个 cookies")
 
-        # 写 Netscape 格式
         COOKIES_FILE.write_text(_to_netscape(cookies), encoding="utf-8")
         print(f"cookies 已写入 {COOKIES_FILE}")
 
@@ -112,4 +113,7 @@ def _to_netscape(cookies: list) -> str:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    if len(sys.argv) < 2:
+        print("用法: python get_bilibili_cookies.py <视频URL>", file=sys.stderr)
+        sys.exit(1)
+    asyncio.run(main(sys.argv[1]))
