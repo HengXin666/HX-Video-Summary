@@ -65,15 +65,67 @@ jobs:
             -b cookies.txt \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" \
             -H "Referer: https://www.bilibili.com/" \
-            "https://api.bilibili.com/x/web-interface/view?bvid=$BV" | tail -5
+            "https://api.bilibili.com/x/web-interface/view?bvid=$BV" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'cid={d[\"data\"][\"cid\"]}, title={d[\"data\"][\"title\"][:30]}')" 2>/dev/null || true
           echo ""
-          echo "=== 测试2: 视频页面 ==="
-          curl -s -w "\nHTTP_CODE:%{http_code}\n" \
-            -b cookies.txt \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" \
+
+      - name: API直连下载B站视频
+        id: download
+        run: |
+          mkdir -p videos
+          BV="BV1Vb9hBVE4C"
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+
+          # 1. 获取视频信息
+          INFO=$(curl -s -b cookies.txt \
+            -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
-            "https://www.bilibili.com/video/$BV" | head -5
-          echo ""
+            "https://api.bilibili.com/x/web-interface/view?bvid=$BV")
+          CID=$(echo "$INFO" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['cid'])")
+          TITLE=$(echo "$INFO" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['title'])")
+          echo "cid=$CID title=$TITLE"
+
+          # 2. 获取播放地址 (qn=80=1080P, fnval=4048=DASH+4K)
+          PLAYURL=$(curl -s -b cookies.txt \
+            -H "User-Agent: $UA" \
+            -H "Referer: https://www.bilibili.com/video/$BV" \
+            "https://api.bilibili.com/x/player/wbi/playurl?bvid=$BV&cid=$CID&qn=80&fnval=4048&fnver=0&fourk=1")
+          echo "playurl code: $(echo "$PLAYURL" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','?'))")"
+
+          # 3. 提取视频+音频URL并下载
+          VIDEO_URL=$(echo "$PLAYURL" | python3 -c "
+          import sys,json
+          d=json.load(sys.stdin)
+          # 选最高质量视频流
+          videos = d['data']['dash']['video']
+          best = max(videos, key=lambda v: v['bandwidth'])
+          print(best['baseUrl'])
+          ")
+          AUDIO_URL=$(echo "$PLAYURL" | python3 -c "
+          import sys,json
+          d=json.load(sys.stdin)
+          audios = d['data']['dash']['audio']
+          best = max(audios, key=lambda a: a['bandwidth'])
+          print(best['baseUrl'])
+          ")
+
+          echo "下载视频流..."
+          curl -L -o videos/video.m4s \
+            -H "User-Agent: $UA" \
+            -H "Referer: https://www.bilibili.com/" \
+            "$VIDEO_URL"
+          echo "下载音频流..."
+          curl -L -o videos/audio.m4s \
+            -H "User-Agent: $UA" \
+            -H "Referer: https://www.bilibili.com/" \
+            "$AUDIO_URL"
+
+          # 4. ffmpeg合并
+          ffmpeg -y -i videos/video.m4s -i videos/audio.m4s -c copy videos/bilibili_video.mp4
+          ls -la videos/bilibili_video.mp4
+          echo "$TITLE" > /tmp/video_title.txt
+          echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
+          echo "video_title=$TITLE" >> $GITHUB_ENV
+          echo "下载完成: $TITLE"
 
       - name: 下载B站视频（cookies + Referer + TLS 三重伪装）
         id: download
