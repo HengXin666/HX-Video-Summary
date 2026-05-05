@@ -192,7 +192,8 @@ jobs:
           PYTHONUNBUFFERED: 1
           NODE_OPTIONS: --no-warnings
         run: |
-          stdbuf -oL -e0 claude -p --permission-mode bypassPermissions --verbose "$(cat <<'CLAUDE_PROMPT'
+          # 写入 promt 文件供重试复用
+          cat > /tmp/claude_prompt.txt <<'CLAUDE_PROMPT'
           你是视频内容总结PPT生成助手。请严格按以下流程完成任务:
 
           ## 任务流程
@@ -232,7 +233,48 @@ jobs:
           ### 第6步: 验证输出
           确认 output/bilibili_ppt.html 和 output/summary.txt 文件已正确生成。
           CLAUDE_PROMPT
-          )"
+
+          # 重试循环：最多3次，记忆继承
+          MAX_RETRIES=3
+          RETRY=0
+          while [ $RETRY -lt $MAX_RETRIES ]; do
+            echo "========== AI 尝试 $((RETRY+1))/$MAX_RETRIES =========="
+
+            if [ $RETRY -eq 0 ]; then
+              # 首次：全新运行
+              claude -p --permission-mode bypassPermissions --verbose < /tmp/claude_prompt.txt 2>&1
+            else
+              # 重试：--continue 继承记忆，给出纠正指令
+              MISSING=""
+              [ ! -f output/bilibili_ppt.html ] && MISSING="output/bilibili_ppt.html"
+              [ ! -f output/summary.txt ] && MISSING="$MISSING output/summary.txt"
+              claude --continue -p "任务未完成！缺少文件: $MISSING。你必须立即使用 Write 工具写出缺失的文件，确保完整且符合规范。不要再做多余分析，直接写文件！" 2>&1
+            fi
+
+            EXIT_CODE=$?
+            echo "claude 退出码: $EXIT_CODE"
+
+            # 校验产物
+            PPT_OK=false; SUMMARY_OK=false
+            [ -f output/bilibili_ppt.html ] && PPT_OK=true
+            [ -f output/summary.txt ] && SUMMARY_OK=true
+
+            echo "产物检查: bilibili_ppt.html=$PPT_OK summary.txt=$SUMMARY_OK"
+
+            if $PPT_OK && $SUMMARY_OK; then
+              echo "========== 产物检查通过 =========="
+              break
+            fi
+
+            RETRY=$((RETRY+1))
+            echo "产物不完整，准备重试..."
+          done
+
+          # 最终校验
+          if [ ! -f output/bilibili_ppt.html ] || [ ! -f output/summary.txt ]; then
+            echo "错误: ${MAX_RETRIES}次尝试后仍未生成完整产物"
+            exit 1
+          fi
 
       - name: 准备 Pages 发布内容
         run: |
