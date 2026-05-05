@@ -72,20 +72,23 @@ async def main(video_url: str):
 
         # 第2步：访问目标视频页，获取页面专属 cookies
         print(f"\n正在访问视频页: {video_url}")
-        resp2 = await page.goto(
-            video_url,
-            wait_until="domcontentloaded",
-            timeout=30000,
-            referer="https://www.bilibili.com/",
-        )
-        print(f"视频页响应状态: {resp2.status}")
-        await asyncio.sleep(5)
-        await page.evaluate("window.scrollTo(0, 500)")
-        await asyncio.sleep(3)
-        print(f"视频页标题: {await page.title()}")
-
-        if resp2.status != 200:
-            print(f"警告: 视频页返回 {resp2.status}", file=sys.stderr)
+        try:
+            resp2 = await page.goto(
+                video_url,
+                wait_until="domcontentloaded",
+                timeout=30000,
+                referer="https://www.bilibili.com/",
+            )
+            print(f"视频页响应状态: {resp2.status}")
+            if resp2.status == 200:
+                await asyncio.sleep(5)
+                await page.evaluate("window.scrollTo(0, 500)")
+                await asyncio.sleep(3)
+                print(f"视频页标题: {await page.title()}")
+            else:
+                print(f"视频页非200 ({resp2.status})，跳过交互，保留已有cookies")
+        except Exception as e:
+            print(f"视频页访问异常: {e}，保留已有cookies")
 
         # 提取所有 cookies
         cookies = await context.cookies()
