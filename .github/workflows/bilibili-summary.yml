@@ -40,8 +40,6 @@ jobs:
       - name: 安装 uv
         run: pip install uv
 
-      - name: 安装 yt-dlp（带 curl_cffi 浏览器伪装）
-        run: pip install "yt-dlp[default,curl-cffi]"
 
       - name: 安装 Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
@@ -127,26 +125,6 @@ jobs:
           echo "video_title=$TITLE" >> $GITHUB_ENV
           echo "下载完成: $TITLE"
 
-      - name: 下载B站视频（cookies + Referer + TLS 三重伪装）
-        id: download
-        run: |
-          mkdir -p videos
-          yt-dlp \
-            --cookies cookies.txt \
-            --impersonate chrome \
-            --add-header "Referer:https://www.bilibili.com/" \
-            -f "bv*+ba/best[ext=mp4]/best" \
-            --merge-output-format mp4 \
-            -o "videos/bilibili_video.%(ext)s" \
-            --print-to-file "%(title)s" /tmp/video_title.txt \
-            --no-playlist \
-            --verbose \
-            "${{ inputs.bilibili_url }}"
-          ls -la videos/
-          echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
-          VIDEO_TITLE=$(cat /tmp/video_title.txt | tr -d '\n\r')
-          echo "video_title=${VIDEO_TITLE:-未命名视频}" >> $GITHUB_ENV
-          echo "下载完成: ${VIDEO_TITLE:-未命名视频}"
 
       - name: 语音转写
         run: |
