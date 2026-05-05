@@ -13,6 +13,10 @@ on:
         type: string
         default: 'hxloli@qq.com'
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   summarize:
     runs-on: ubuntu-latest
@@ -200,7 +204,10 @@ jobs:
           - 关键案例或数据
           - 结论与启示
 
-          ### 第4步：使用 science-content-ppt skill 生成PPT
+          ### 第4步：写入纯文本总结
+          将第3步的总结内容写入 output/summary.txt，纯文本格式，用于邮件正文发送。
+
+          ### 第5步：使用 science-content-ppt skill 生成PPT
           使用 science-content-ppt skill 将总结的科普内容生成为完整的PPT演示网页。
 
           必须遵守的规范：
@@ -213,17 +220,34 @@ jobs:
           - 必须包含"核心洞察总结"和"日后奋斗方向"两个收尾页面
           - 日后奋斗方向需包含：以技术入行打基础、感知变化顺势为、不躺平持续拼
 
-          ### 第5步：验证输出
-          确认 output/bilibili_ppt.html 文件已正确生成，是一个完整的、可直接在浏览器中打开的HTML文件。
+          ### 第6步：验证输出
+          确认 output/bilibili_ppt.html 和 output/summary.txt 文件已正确生成。
           CLAUDE_PROMPT
           )"
 
-      - name: 上传PPT产物
-        uses: actions/upload-artifact@v4
+      - name: 准备 Pages 发布内容
+        run: |
+          mkdir -p pages
+          cp output/bilibili_ppt.html pages/
+          cp output/summary.txt pages/ 2>/dev/null || true
+
+      - name: 部署PPT到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: bilibili-ppt
-          path: output/bilibili_ppt.html
-          retention-days: 30
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages
+          destination_dir: ${{ github.run_number }}
+          keep_files: true
+          enable_jekyll: false
+
+      - name: 构建邮件正文（纯文本总结 + PPT链接）
+        run: |
+          PPT_URL="https://HengXin666.github.io/HX-Video-Summary/${{ github.run_number }}/bilibili_ppt.html"
+          cp output/summary.txt /tmp/email_body.txt
+          echo "" >> /tmp/email_body.txt
+          echo "---" >> /tmp/email_body.txt
+          echo "PPT演示网页: $PPT_URL" >> /tmp/email_body.txt
+          echo "B站链接: ${{ inputs.bilibili_url }}" >> /tmp/email_body.txt
 
       - name: 发送邮件
         env:
@@ -236,5 +260,4 @@ jobs:
             --to "${{ inputs.email }}" \
             --cc "$QQ_EMAIL" \
             --subject "[B站视频总结] ${{ env.video_title || 'B站视频' }}" \
-            --body "视频总结PPT已生成，详见附件。\n\nB站链接: ${{ inputs.bilibili_url }}" \
-            --attachment output/bilibili_ppt.html
+            --body "$(cat /tmp/email_body.txt)"
