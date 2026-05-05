@@ -34,6 +34,9 @@ videos/
 *.wav
 *.tmp
 
+# data 目录（deployments.json 通过 Pages 持久化，不需要提交到 git）
+data/
+
 # cc
 .claude/settings.local.json
 .codebuddy/
