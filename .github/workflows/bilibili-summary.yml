@@ -57,6 +57,24 @@ jobs:
       - name: 获取 B站 反爬 cookies（隐身浏览器）
         run: python get_bilibili_cookies.py "${{ inputs.bilibili_url }}"
 
+      - name: 调试：测试 B站 API 端点
+        run: |
+          BV="BV1Vb9hBVE4C"
+          echo "=== 测试1: 视频信息 API ==="
+          curl -s -w "\nHTTP_CODE:%{http_code}\n" \
+            -b cookies.txt \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" \
+            -H "Referer: https://www.bilibili.com/" \
+            "https://api.bilibili.com/x/web-interface/view?bvid=$BV" | tail -5
+          echo ""
+          echo "=== 测试2: 视频页面 ==="
+          curl -s -w "\nHTTP_CODE:%{http_code}\n" \
+            -b cookies.txt \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" \
+            -H "Referer: https://www.bilibili.com/" \
+            "https://www.bilibili.com/video/$BV" | head -5
+          echo ""
+
       - name: 下载B站视频（cookies + Referer + TLS 三重伪装）
         id: download
         run: |
