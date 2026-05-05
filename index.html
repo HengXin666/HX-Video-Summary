@@ -1,1 +1,333 @@
-# HX-Video-Summary Pages
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HX Video Summary - 视频总结索引</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0F0E17;
+      color: #FFFFFE;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== Background Decoration ===== */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, #FF6B3522 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, #E76F5122 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(#0F0E1788 1px, transparent 1px),
+        linear-gradient(90deg, #0F0E1788 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FF6B35, #F4A261, #E76F51);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+
+    .header .subtitle {
+      color: #A7A9BE;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+    }
+
+    .header .stats {
+      margin-top: 20px;
+      display: inline-flex;
+      gap: 30px;
+      padding: 12px 30px;
+      background: #0F0E17cc;
+      border: 1px solid #FF6B3533;
+      border-radius: 40px;
+    }
+
+    .header .stat-item {
+      text-align: center;
+    }
+
+    .header .stat-num {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #FF6B35;
+    }
+
+    .header .stat-label {
+      font-size: 0.8rem;
+      color: #A7A9BE;
+    }
+
+    /* ===== Container ===== */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ===== Deploy Card ===== */
+    .deploy-card {
+      background: linear-gradient(135deg, #1a1929, #16151f);
+      border: 1px solid #FF6B3522;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .deploy-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #FF6B35, #E76F51);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .deploy-card:hover {
+      border-color: #FF6B3555;
+      transform: translateX(4px);
+      box-shadow: 0 8px 32px #FF6B3522;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .run-badge {
+      background: linear-gradient(135deg, #FF6B35, #E76F51);
+      color: #0F0E17;
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .timestamp {
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .video-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #FFFFFE;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      padding-left: 2px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #FF6B35, #E76F51);
+      color: #0F0E17;
+      box-shadow: 0 4px 15px #FF6B3544;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px #FF6B3566;
+    }
+
+    .btn-secondary {
+      background: #0F0E17;
+      color: #A7A9BE;
+      border: 1px solid #A7A9BE33;
+    }
+
+    .btn-secondary:hover {
+      border-color: #F4A261;
+      color: #F4A261;
+    }
+
+    .bilibili-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #A7A9BE;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .bilibili-link:hover {
+      color: #FF6B35;
+    }
+
+    .bilibili-link .fa-bilibili {
+      color: #00A1D6;
+    }
+
+    /* ===== Empty State ===== */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #A7A9BE;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #FF6B3544;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 20px;
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      border-top: 1px solid #FF6B3511;
+    }
+
+    .footer a {
+      color: #FF6B35;
+      text-decoration: none;
+    }
+
+    /* ===== Animation ===== */
+    .an {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 640px) {
+      .header h1 { font-size: 2rem; }
+      .deploy-card { padding: 20px 22px; }
+      .card-actions { flex-direction: column; align-items: flex-start; }
+      .header .stats { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <h1><i class="fa-solid fa-film"></i> HX Video Summary</h1>
+    <p class="subtitle">B站视频智能总结 & PPT 生成记录</p>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num">1</span>
+        <span class="stat-label">总计部署</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">#15</span>
+        <span class="stat-label">最近部署</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    
+        <div class="deploy-card an" style="animation-delay: 0.0s">
+          <div class="card-header">
+            <span class="run-badge">#15</span>
+            <span class="timestamp">2026-05-05 23:24:21</span>
+          </div>
+          <h3 class="video-title">【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南</h3>
+          <div class="card-actions">
+            <a href="15/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+              <i class="fa-solid fa-tv"></i> 查看PPT
+            </a>
+            <a href="15/summary.txt" target="_blank" class="btn btn-secondary">
+              <i class="fa-solid fa-file-lines"></i> 文字总结
+            </a>
+            <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+          </div>
+        </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      Powered by <a href="https://github.com/HengXin666/HX-Video-Summary" target="_blank">HX-Video-Summary</a>
+      &nbsp;·&nbsp;
+      <i class="fa-solid fa-heart" style="color:#E76F51"></i>
+      &nbsp;自动部署于 GitHub Pages
+    </p>
+    <p style="margin-top:8px;font-size:0.8rem;color:#A7A9BE77">
+      索引页面自动生成 · 最新部署显示在顶部
+    </p>
+  </footer>
+</body>
+</html>
