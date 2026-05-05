@@ -1,0 +1,17 @@
+[project]
+name = "HX-Video-Summary"
+version = "0.2.0"
+description = "视频转写与截图工具，使用FunASR进行中文语音识别"
+requires-python = ">=3.12"
+dependencies = [
+    "funasr",
+    "modelscope",
+    "torch",
+    "torchaudio",
+]
+
+[project.scripts]
+HX-Video-Summary = "transcribe:main"
+
+[tool.uv.extra-build-dependencies]
+editdistance = ["pdm-backend"]

@@ -1,0 +1,148 @@
+name: B站视频总结 & PPT生成
+
+on:
+  workflow_dispatch:
+    inputs:
+      bilibili_url:
+        description: 'B站视频链接'
+        required: true
+        type: string
+      email:
+        description: '接收PPT的QQ邮箱地址'
+        required: true
+        type: string
+        default: 'hxloli@qq.com'
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装系统依赖 (ffmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 uv
+        run: pip install uv
+
+      - name: 安装 yt-dlp
+        run: pip install yt-dlp
+
+      - name: 安装 Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: 安装 Python 项目依赖
+        run: uv sync
+
+      - name: 下载B站视频
+        id: download
+        run: |
+          mkdir -p videos
+          yt-dlp \
+            -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            --merge-output-format mp4 \
+            -o "videos/bilibili_video.%(ext)s" \
+            --print "%(title)s" \
+            --no-playlist \
+            "${{ inputs.bilibili_url }}" | tee /tmp/video_title.txt
+          echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
+          VIDEO_TITLE=$(cat /tmp/video_title.txt | tr -d '\n\r')
+          echo "video_title=${VIDEO_TITLE:-未命名视频}" >> $GITHUB_ENV
+          echo "下载完成: $(cat /tmp/video_title.txt)"
+
+      - name: 语音转写
+        run: |
+          uv run transcribe.py transcribe -i "${{ env.video_path }}" -o ./output -f
+
+      - name: 配置Claude Code技能路径
+        run: |
+          mkdir -p .claude/skills
+          cp -r .codebuddy/skills/science-content-ppt .claude/skills/
+
+      - name: AI总结 & 生成PPT
+        env:
+          ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_OPUS_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_SONNET_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: deepseek-v4-flash
+          CLAUDE_CODE_SUBAGENT_MODEL: deepseek-v4-flash
+          CLAUDE_CODE_EFFORT_LEVEL: max
+          CI: true
+        run: |
+          claude -p --permission-mode bypassPermissions --verbose "$(cat <<'CLAUDE_PROMPT'
+          你是视频内容总结PPT生成助手。请严格按以下流程完成任务：
+
+          ## 任务流程
+
+          ### 第1步：阅读转写内容
+          先读取 output/转写结果.txt 中的视频转写内容，理解视频的核心主题和关键信息点。
+
+          ### 第2步：截图辅助理解（如需要）
+          如果转写内容中有难以理解的模糊片段，对已下载的视频截图辅助理解：
+          ```
+          uv run transcribe.py screenshot -i videos/bilibili_video.mp4 -t <时间戳> -o ./output/screenshots
+          ```
+          然后读取截图，结合画面理解内容。
+
+          ### 第3步：总结内容
+          将视频内容总结为一篇结构化的科普文章，包含：
+          - 核心主题概述
+          - 主要观点/知识点（分点论述）
+          - 关键案例或数据
+          - 结论与启示
+
+          ### 第4步：使用 science-content-ppt skill 生成PPT
+          使用 science-content-ppt skill 将总结的科普内容生成为完整的PPT演示网页。
+
+          必须遵守的规范：
+          - 输出文件：output/bilibili_ppt.html
+          - 图标库：Font Awesome 6.x (https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)
+          - 配色方案：暖色系（橙 #FF6B35、琥珀 #F4A261、珊瑚 #E76F51），深色背景 #0F0E17，浅色文字 #FFFFFE
+          - 所有动画元素 class 使用 an 或 anim-item
+          - 必须在 </body> 前插入动画重置修复JS代码
+          - 代码行数1000行以上
+          - 必须包含"核心洞察总结"和"日后奋斗方向"两个收尾页面
+          - 日后奋斗方向需包含：以技术入行打基础、感知变化顺势为、不躺平持续拼
+
+          ### 第5步：验证输出
+          确认 output/bilibili_ppt.html 文件已正确生成，是一个完整的、可直接在浏览器中打开的HTML文件。
+          CLAUDE_PROMPT
+          )"
+
+      - name: 上传PPT产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-ppt
+          path: output/bilibili_ppt.html
+          retention-days: 30
+
+      - name: 发送邮件
+        env:
+          QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
+          QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
+        run: |
+          uv run send_email.py \
+            --sender "$QQ_EMAIL" \
+            --password "$QQ_SMTP_AUTH_CODE" \
+            --to "${{ inputs.email }}" \
+            --cc "$QQ_EMAIL" \
+            --subject "[B站视频总结] ${{ env.video_title || 'B站视频' }}" \
+            --body "视频总结PPT已生成，详见附件。\n\nB站链接: ${{ inputs.bilibili_url }}" \
+            --attachment output/bilibili_ppt.html
