@@ -40,7 +40,6 @@ jobs:
       - name: 安装 uv
         run: pip install uv
 
-
       - name: 安装 Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
@@ -55,25 +54,15 @@ jobs:
       - name: 获取 B站 反爬 cookies（隐身浏览器）
         run: python get_bilibili_cookies.py "${{ inputs.bilibili_url }}"
 
-      - name: 调试：测试 B站 API 端点
-        run: |
-          BV="BV1Vb9hBVE4C"
-          echo "=== 测试1: 视频信息 API ==="
-          curl -s -w "\nHTTP_CODE:%{http_code}\n" \
-            -b cookies.txt \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" \
-            -H "Referer: https://www.bilibili.com/" \
-            "https://api.bilibili.com/x/web-interface/view?bvid=$BV" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'cid={d[\"data\"][\"cid\"]}, title={d[\"data\"][\"title\"][:30]}')" 2>/dev/null || true
-          echo ""
-
       - name: API直连下载B站视频
         id: download
         run: |
           mkdir -p videos
-          BV="BV1Vb9hBVE4C"
+          # 从输入URL提取BV号
+          BV=$(echo "${{ inputs.bilibili_url }}" | grep -oP 'BV[a-zA-Z0-9]+')
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
-          # 1. 获取视频信息
+          # 1. view API → cid + title
           INFO=$(curl -s -b cookies.txt \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
@@ -82,18 +71,17 @@ jobs:
           TITLE=$(echo "$INFO" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['title'])")
           echo "cid=$CID title=$TITLE"
 
-          # 2. 获取播放地址 (qn=80=1080P, fnval=4048=DASH+4K)
+          # 2. playurl API → DASH 流地址
           PLAYURL=$(curl -s -b cookies.txt \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/video/$BV" \
             "https://api.bilibili.com/x/player/wbi/playurl?bvid=$BV&cid=$CID&qn=80&fnval=4048&fnver=0&fourk=1")
           echo "playurl code: $(echo "$PLAYURL" | python3 -c "import sys,json; print(json.load(sys.stdin).get('code','?'))")"
 
-          # 3. 提取视频+音频URL并下载
+          # 3. 提取最高质量视频/音频流 URL
           VIDEO_URL=$(echo "$PLAYURL" | python3 -c "
           import sys,json
           d=json.load(sys.stdin)
-          # 选最高质量视频流
           videos = d['data']['dash']['video']
           best = max(videos, key=lambda v: v['bandwidth'])
           print(best['baseUrl'])
@@ -107,24 +95,23 @@ jobs:
           ")
 
           echo "下载视频流..."
-          curl -L -o videos/video.m4s \
+          curl -sSL -o videos/video.m4s \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
             "$VIDEO_URL"
           echo "下载音频流..."
-          curl -L -o videos/audio.m4s \
+          curl -sSL -o videos/audio.m4s \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
             "$AUDIO_URL"
 
-          # 4. ffmpeg合并
+          # 4. ffmpeg 合并
           ffmpeg -y -i videos/video.m4s -i videos/audio.m4s -c copy videos/bilibili_video.mp4
           ls -la videos/bilibili_video.mp4
           echo "$TITLE" > /tmp/video_title.txt
           echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
           echo "video_title=$TITLE" >> $GITHUB_ENV
           echo "下载完成: $TITLE"
-
 
       - name: 语音转写
         run: |
@@ -133,7 +120,13 @@ jobs:
       - name: 配置Claude Code技能路径
         run: |
           mkdir -p .claude/skills
-          cp -r .codebuddy/skills/science-content-ppt .claude/skills/
+          if [ -d .codebuddy/skills/science-content-ppt ]; then
+            cp -r .codebuddy/skills/science-content-ppt .claude/skills/
+          elif [ -d .claude/skills/science-content-ppt ]; then
+            echo "技能目录已存在，跳过复制"
+          else
+            echo "错误: 技能目录不存在，请将 science-content-ppt 提交到 .claude/skills/" && exit 1
+          fi
 
       - name: AI总结 & 生成PPT
         env:
