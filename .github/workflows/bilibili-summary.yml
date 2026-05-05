@@ -40,11 +40,8 @@ jobs:
       - name: 安装 uv
         run: pip install uv
 
-      - name: 下载 BBDown（TV API，无需 cookies）
-        run: |
-          wget -q https://github.com/nilaoda/BBDown/releases/latest/download/BBDown_linux-x64.zip
-          unzip -q BBDown_linux-x64.zip
-          chmod +x BBDown
+      - name: 安装 yt-dlp（带 curl_cffi 浏览器伪装）
+        run: pip install "yt-dlp[default,curl-cffi]"
 
       - name: 安装 Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
@@ -52,18 +49,22 @@ jobs:
       - name: 安装 Python 项目依赖
         run: uv sync
 
-      - name: 下载B站视频（BBDown TV API）
+      - name: 下载B站视频（TLS 指纹伪装）
         id: download
         run: |
           mkdir -p videos
-          ./BBDown -tv --work-dir ./videos "${{ inputs.bilibili_url }}"
-          VIDEO_FILE=$(find videos -name "*.mp4" -type f | head -1)
-          # 统一重命名为固定文件名，保持后续步骤兼容
-          mv "$VIDEO_FILE" videos/bilibili_video.mp4
+          yt-dlp \
+            --impersonate chrome \
+            -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+            --merge-output-format mp4 \
+            -o "videos/bilibili_video.%(ext)s" \
+            --print "%(title)s" \
+            --no-playlist \
+            "${{ inputs.bilibili_url }}" | tee /tmp/video_title.txt
           echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
-          VIDEO_TITLE=$(basename "$VIDEO_FILE" .mp4 | tr -d '\n\r')
+          VIDEO_TITLE=$(cat /tmp/video_title.txt | tr -d '\n\r')
           echo "video_title=${VIDEO_TITLE:-未命名视频}" >> $GITHUB_ENV
-          echo "下载完成: $VIDEO_TITLE"
+          echo "下载完成: $(cat /tmp/video_title.txt)"
 
       - name: 语音转写
         run: |
