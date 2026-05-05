@@ -49,11 +49,20 @@ jobs:
       - name: 安装 Python 项目依赖
         run: uv sync
 
-      - name: 下载B站视频（TLS 指纹伪装）
+      - name: 安装 Playwright + Chromium
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: 获取 B站 反爬 cookies（隐身浏览器）
+        run: python get_bilibili_cookies.py
+
+      - name: 下载B站视频（cookies + TLS 双重伪装）
         id: download
         run: |
           mkdir -p videos
           yt-dlp \
+            --cookies cookies.txt \
             --impersonate chrome \
             -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
             --merge-output-format mp4 \
