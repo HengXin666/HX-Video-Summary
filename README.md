@@ -7,7 +7,9 @@
 - 视频音频提取 + 语音转文字(带时间戳)
 - 视频任意时间点截图(供 AI 识图)
 - 转写结果配合 AI skill 生成 PPT 演示网页
-- **GitHub 工作流**: 输入 B 站视频链接, 自动下载 → 转写 → AI 总结 → 生成 PPT → 邮件发送
+- 索引页面(同一视频去重仅展示最新, 历史可展开)
+- **GitHub 工作流**: 输入 B 站视频链接, 自动下载 → 转写 → AI 总结 → 生成 PPT → 部署 Pages → 邮件发送
+- **可选的 Cloudflare Workers 部署**: 静态站点同步部署
 
 ## 依赖
 
@@ -66,6 +68,8 @@ uv run transcribe.py screenshot -i "D:\视频\座谈会.mp4" -t 00:05:30 -o ./sc
 | `DEEPSEEK_API_KEY` | DeepSeek API Key, 用于调用大模型 |
 | `QQ_EMAIL` | 发件人 QQ 邮箱地址, 如 `123456@qq.com` |
 | `QQ_SMTP_AUTH_CODE` | QQ 邮箱 SMTP 授权码(非 QQ 密码), 在 QQ 邮箱 `设置 > 账户 > POP3/SMTP服务` 中获取 |
+| `CF_API_TOKEN` | (可选) Cloudflare API Token, 用于同步部署到 Workers |
+| `CF_ACCOUNT_ID` | (可选) Cloudflare 账户 ID, 配合 CF_API_TOKEN 使用 |
 
 ### 触发工作流
 
@@ -77,15 +81,23 @@ uv run transcribe.py screenshot -i "D:\视频\座谈会.mp4" -t 00:05:30 -o ./sc
 
 ### 产物
 
-- **PPT HTML**: 工作流完成后可在 Actions 页面下载 `bilibili-ppt` artifact
-- **邮件**: PPT HTML 作为附件发送到指定邮箱(同时抄送发件人)
+- **转写结果(字幕)**: 单独的 artifact, 含纯转写文本
+- **完整产物包**: `转写结果.txt + summary.txt + bilibili_ppt.html` 打包为一个 zip artifact
+- **GitHub Pages**: PPT HTML + 纯文本总结部署到 `https://HengXin666.github.io/HX-Video-Summary/{run_number}/`
+- **索引页面**: `https://HengXin666.github.io/HX-Video-Summary/` 自动维护部署记录, 同一视频仅展示最新, 可展开历史
+- **Cloudflare Workers**: (可选, 需配置 secrets) 同步部署到 CF Workers 静态站点
+- **邮件**: 纯文本总结正文 + PPT 链接发送到指定邮箱
 
 ### 工作流架构
 
 ```
-用户输入B站URL → yt-dlp下载视频 → ffmpeg提取音频
+用户输入B站URL → API直连下载视频 → ffmpeg提取音频
 → FunASR语音转写 → Claude Code(AI)总结 + 截图辅助理解
-→ science-content-ppt skill 生成PPT网页 → 上传Artifact + QQ邮件发送
+→ science-content-ppt skill 生成PPT网页
+→ 产物打包(zip) → 上传Artifact
+→ GitHub Pages部署(含索引页面, 同视频去重)
+→ [可选] Cloudflare Workers同步部署
+→ QQ邮件发送
 ```
 
 ### AI 自动驾驶配置
@@ -104,22 +116,20 @@ CLAUDE_CODE_EFFORT_LEVEL=max
 
 非交互模式通过 `--permission-mode bypassPermissions` 实现全自动运行。
 
-## 工作流
-
-1. 使用 `transcribe.py` 将视频转写为带时间戳的文本
-2. 将转写结果交给 AI 进行总结
-3. 使用 science-content-ppt skill 生成 PPT 演示网页
-4. 对有疑惑的内容使用 `screenshot` 截图, 让 AI 结合图像理解
-
 ## 项目结构
 
 ```
 HX-Video-Summary/
 ├── transcribe.py                # 主脚本(转写 + 截图)
+├── generate_index.py            # GitHub Pages 索引页面生成器
 ├── send_email.py                # QQ邮箱发送工具
+├── get_bilibili_cookies.py      # B站 cookies 获取(Playwright)
 ├── pyproject.toml               # 项目配置
-├── output/                      # 转写结果输出目录
+├── output/                      # 转写/总结产物输出目录
+├── pages/                       # GitHub Pages 部署目录
+├── data/                        # 本地部署数据缓存
 ├── .codebuddy/skills/           # AI skill 定义
+│   └── science-content-ppt/     # 科普内容PPT生成 skill
 └── .github/workflows/           # GitHub Actions 工作流
     └── bilibili-summary.yml
 ```

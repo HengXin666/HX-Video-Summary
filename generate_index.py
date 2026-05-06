@@ -7,6 +7,7 @@
 """
 
 import os
+import re
 import json
 import subprocess
 import urllib.request
@@ -111,47 +112,105 @@ def format_datetime(dt_str: str) -> str:
         return dt_str
 
 
-def generate_html(deployments: list) -> str:
-    """生成索引页面 HTML"""
+def extract_video_key(bilibili_url: str, title: str) -> str:
+    """提取视频唯一标识，用于去重分组"""
+    if bilibili_url:
+        m = re.search(r"BV[a-zA-Z0-9]+", bilibili_url)
+        if m:
+            return m.group(0)
+        m = re.search(r"video/([a-zA-Z0-9]+)", bilibili_url)
+        if m:
+            return m.group(1)
+    return title
+
+
+def group_deployments(deployments: list) -> list:
+    """按视频分组，每组包含最新记录和历史记录"""
+    groups = {}
+    for d in deployments:
+        key = extract_video_key(d.get("bilibili_url", ""), d.get("title", ""))
+        groups.setdefault(key, []).append(d)
+    for items in groups.values():
+        items.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    result = []
+    for key, items in sorted(
+        groups.items(),
+        key=lambda kv: kv[1][0].get("timestamp", ""),
+        reverse=True,
+    ):
+        result.append({"key": key, "latest": items[0], "history": items[1:]})
+    return result
+
+
+def render_card(d: dict, is_history: bool = False) -> str:
+    """渲染单张部署卡片 HTML"""
+    ts = format_datetime(d.get("timestamp", ""))
+    run_num = d.get("run_number", "")
+    title = d.get("title", "未知视频")
+    bilibili_url = d.get("bilibili_url", "")
+    ppt_url = f"{run_num}/bilibili_ppt.html"
+    summary_url = f"{run_num}/summary.txt"
+
+    bilibili_link = (
+        f'<a href="{bilibili_url}" target="_blank" class="bilibili-link">'
+        f'<i class="fa-brands fa-bilibili"></i> B站原视频</a>'
+        if bilibili_url
+        else ""
+    )
+    hist_cls = " history-item" if is_history else ""
+
+    return f"""
+          <div class="deploy-card{hist_cls}">
+            <div class="card-header">
+              <span class="run-badge">#{run_num}</span>
+              <span class="timestamp">{ts}</span>
+            </div>
+            <h3 class="video-title">{title}</h3>
+            <div class="card-actions">
+              <a href="{ppt_url}" target="_blank" class="btn btn-primary">
+                <i class="fa-solid fa-tv"></i> 查看PPT
+              </a>
+              <a href="{summary_url}" target="_blank" class="btn btn-secondary">
+                <i class="fa-solid fa-file-lines"></i> 文字总结
+              </a>
+              {bilibili_link}
+            </div>
+          </div>"""
+
+
+def generate_html(groups: list) -> str:
+    """生成索引页面 HTML（按视频分组，默认只展示最新，可展开历史）"""
+    total_deployments = sum(1 + len(g["history"]) for g in groups)
+    total_videos = len(groups)
+
     entries = ""
-    for i, d in enumerate(deployments):
-        ts = format_datetime(d.get("timestamp", ""))
-        run_num = d.get("run_number", "")
-        title = d.get("title", "未知视频")
-        bilibili_url = d.get("bilibili_url", "")
-        ppt_url = f"{run_num}/bilibili_ppt.html"
-        summary_url = f"{run_num}/summary.txt"
-
-        # 动画延迟
+    for i, g in enumerate(groups):
         delay = i * 0.08
-
-        bilibili_link = (
-            (
-                f'<a href="{bilibili_url}" target="_blank" class="bilibili-link">'
-                f'<i class="fa-brands fa-bilibili"></i> B站原视频</a>'
-            )
-            if bilibili_url
-            else ""
-        )
+        hist_count = len(g["history"])
 
         entries += f"""
-        <div class="deploy-card an" style="animation-delay: {delay}s">
-          <div class="card-header">
-            <span class="run-badge">#{run_num}</span>
-            <span class="timestamp">{ts}</span>
-          </div>
-          <h3 class="video-title">{title}</h3>
-          <div class="card-actions">
-            <a href="{ppt_url}" target="_blank" class="btn btn-primary">
-              <i class="fa-solid fa-tv"></i> 查看PPT
-            </a>
-            <a href="{summary_url}" target="_blank" class="btn btn-secondary">
-              <i class="fa-solid fa-file-lines"></i> 文字总结
-            </a>
-            {bilibili_link}
-          </div>
-        </div>
-"""
+        <div class="video-group an" style="animation-delay: {delay}s">
+          {render_card(g["latest"])}"""
+
+        if hist_count > 0:
+            gid = f"hist-{i}"
+            entries += f"""
+          <button class="history-toggle" onclick="toggleHistory('{gid}', this)" aria-expanded="false">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            展开历史记录 ({hist_count})
+            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+          </button>
+          <div class="history-list" id="{gid}" style="display:none">"""
+            for h in g["history"]:
+                entries += render_card(h, is_history=True)
+            entries += """
+          </div>"""
+
+        entries += """
+        </div>"""
+
+    # 最新 run_number 用于 header stats
+    latest_run = groups[0]["latest"]["run_number"] if groups else "-"
 
     html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -408,6 +467,76 @@ def generate_html(deployments: list) -> str:
       text-decoration: none;
     }}
 
+    /* ===== Video Group & History ===== */
+    .video-group {{
+      margin-bottom: 24px;
+    }}
+
+    .video-group .deploy-card {{
+      margin-bottom: 0;
+      border-radius: 16px 16px 0 0;
+    }}
+
+    .video-group .deploy-card.history-item {{
+      border-radius: 0;
+      border-top: none;
+      opacity: 0.7;
+    }}
+
+    .video-group .deploy-card.history-item:last-of-type {{
+      border-radius: 0 0 16px 16px;
+    }}
+
+    .video-group .deploy-card.history-item:hover {{
+      opacity: 1;
+    }}
+
+    .history-toggle {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 32px;
+      background: #1a1929;
+      border: 1px solid {COLORS["orange"]}22;
+      border-top: 1px solid {COLORS["orange"]}11;
+      border-radius: 0 0 16px 16px;
+      color: {COLORS["text_secondary"]};
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }}
+
+    .history-toggle:hover {{
+      background: #1e1d33;
+      border-color: {COLORS["orange"]}44;
+      color: {COLORS["amber"]};
+    }}
+
+    .history-toggle .toggle-icon {{
+      margin-left: auto;
+      transition: transform 0.3s ease;
+    }}
+
+    .history-toggle[aria-expanded="true"] .toggle-icon {{
+      transform: rotate(180deg);
+    }}
+
+    .history-list {{
+      overflow: hidden;
+    }}
+
+    .history-list .deploy-card::before {{
+      background: linear-gradient(180deg, {COLORS["text_secondary"]}44, {COLORS["orange"]}44);
+    }}
+
+    /* solo card (no history) gets full border-radius */
+    .video-group:not(:has(.history-toggle)) .deploy-card {{
+      border-radius: 16px;
+    }}
+
     /* ===== Animation ===== */
     .an {{
       opacity: 0;
@@ -440,11 +569,15 @@ def generate_html(deployments: list) -> str:
     <p class="subtitle">B站视频智能总结 & PPT 生成记录</p>
     <div class="stats">
       <div class="stat-item">
-        <span class="stat-num">{len(deployments)}</span>
+        <span class="stat-num">{total_videos}</span>
+        <span class="stat-label">独立视频</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">{total_deployments}</span>
         <span class="stat-label">总计部署</span>
       </div>
       <div class="stat-item">
-        <span class="stat-num">#{deployments[0]["run_number"] if deployments else "-"}</span>
+        <span class="stat-num">#{latest_run}</span>
         <span class="stat-label">最近部署</span>
       </div>
     </div>
@@ -469,9 +602,25 @@ def generate_html(deployments: list) -> str:
       &nbsp;自动部署于 GitHub Pages
     </p>
     <p style="margin-top:8px;font-size:0.8rem;color:{COLORS["text_secondary"]}77">
-      索引页面自动生成 · 最新部署显示在顶部
+      索引页面自动生成 · 同一视频仅展示最新 · 点击展开历史
     </p>
   </footer>
+
+  <script>
+    function toggleHistory(gid, btn) {{
+      const list = document.getElementById(gid);
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      if (expanded) {{
+        list.style.display = "none";
+        btn.setAttribute("aria-expanded", "false");
+        btn.style.borderRadius = "0 0 16px 16px";
+      }} else {{
+        list.style.display = "block";
+        btn.setAttribute("aria-expanded", "true");
+        btn.style.borderRadius = "0";
+      }}
+    }}
+  </script>
 </body>
 </html>"""
     return html
@@ -498,16 +647,20 @@ def main():
     save_deployments(Path("data/deployments.json"), deployments)
     save_deployments(output_dir / "deployments.json", deployments)
 
+    # 按视频分组（同一视频只展示最新，历史可展开）
+    groups = group_deployments(deployments)
+
     # 生成 HTML
-    html = generate_html(deployments)
+    html = generate_html(groups)
 
     # 写入输出
     output_file = output_dir / "index.html"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(html)
 
+    total = sum(1 + len(g["history"]) for g in groups)
     print(f"索引页面已生成: {output_file}")
-    print(f"共 {len(deployments)} 条部署记录")
+    print(f"共 {len(groups)} 个独立视频, {total} 条部署记录")
 
 
 if __name__ == "__main__":

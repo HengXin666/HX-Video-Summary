@@ -161,7 +161,7 @@ jobs:
         run: |
           echo "## 语音转写文本" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "以下为视频语音转写结果（可用于验证转写质量）：" >> $GITHUB_STEP_SUMMARY
+          echo "以下为视频语音转写结果(可用于验证转写质量): " >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
           cat output/转写结果.txt >> $GITHUB_STEP_SUMMARY
@@ -234,47 +234,55 @@ jobs:
           确认 output/bilibili_ppt.html 和 output/summary.txt 文件已正确生成。
           CLAUDE_PROMPT
 
-          # 重试循环：最多3次，记忆继承
-          MAX_RETRIES=3
+          # 首次运行
+          echo "========== AI 开始生成总结 & PPT =========="
+          claude -p --permission-mode bypassPermissions --verbose < /tmp/claude_prompt.txt 2>&1
+          EXIT_CODE=$?
+          echo "claude 退出码: $EXIT_CODE"
+
+          PPT_OK=false; SUMMARY_OK=false
+          [ -f output/bilibili_ppt.html ] && PPT_OK=true
+          [ -f output/summary.txt ] && SUMMARY_OK=true
+          echo "产物检查: bilibili_ppt.html=$PPT_OK summary.txt=$SUMMARY_OK"
+
+          # 重试循环: 最多2次额外尝试, --continue 继承记忆
+          MAX_RETRIES=2
           RETRY=0
-          while [ $RETRY -lt $MAX_RETRIES ]; do
-            echo "========== AI 尝试 $((RETRY+1))/$MAX_RETRIES =========="
-
-            if [ $RETRY -eq 0 ]; then
-              # 首次：全新运行
-              claude -p --permission-mode bypassPermissions --verbose < /tmp/claude_prompt.txt 2>&1
-            else
-              # 重试：--continue 继承记忆，给出纠正指令
-              MISSING=""
-              [ ! -f output/bilibili_ppt.html ] && MISSING="output/bilibili_ppt.html"
-              [ ! -f output/summary.txt ] && MISSING="$MISSING output/summary.txt"
-              claude --continue -p "任务未完成！缺少文件: $MISSING。你必须立即使用 Write 工具写出缺失的文件，确保完整且符合规范。不要再做多余分析，直接写文件！" 2>&1
-            fi
-
+          while [ $RETRY -lt $MAX_RETRIES ] && ! ($PPT_OK && $SUMMARY_OK); do
+            RETRY=$((RETRY+1))
+            echo "========== 产物不完整, 第 ${RETRY}/${MAX_RETRIES} 次重试 =========="
+            MISSING=""
+            [ ! -f output/bilibili_ppt.html ] && MISSING="output/bilibili_ppt.html"
+            [ ! -f output/summary.txt ] && MISSING="$MISSING output/summary.txt"
+            claude --continue -p "任务未完成！缺少文件: $MISSING。你必须立即使用 Write 工具写出缺失的文件，确保完整且符合规范。不要再做多余分析，直接写文件！" 2>&1
             EXIT_CODE=$?
             echo "claude 退出码: $EXIT_CODE"
 
-            # 校验产物
             PPT_OK=false; SUMMARY_OK=false
             [ -f output/bilibili_ppt.html ] && PPT_OK=true
             [ -f output/summary.txt ] && SUMMARY_OK=true
-
             echo "产物检查: bilibili_ppt.html=$PPT_OK summary.txt=$SUMMARY_OK"
-
-            if $PPT_OK && $SUMMARY_OK; then
-              echo "========== 产物检查通过 =========="
-              break
-            fi
-
-            RETRY=$((RETRY+1))
-            echo "产物不完整，准备重试..."
           done
 
-          # 最终校验
-          if [ ! -f output/bilibili_ppt.html ] || [ ! -f output/summary.txt ]; then
-            echo "错误: ${MAX_RETRIES}次尝试后仍未生成完整产物"
+          if $PPT_OK && $SUMMARY_OK; then
+            echo "========== 产物检查通过 =========="
+          else
+            echo "错误: 3次尝试后仍未生成完整产物"
             exit 1
           fi
+
+      - name: 打包完整产物 (转写+总结+PPT)
+        if: success()
+        run: |
+          zip -j output/完整产物包.zip output/转写结果.txt output/summary.txt output/bilibili_ppt.html
+          ls -lh output/完整产物包.zip
+
+      - name: 上传完整产物包
+        uses: actions/upload-artifact@v4
+        with:
+          name: 完整产物包-转写-总结-PPT
+          path: output/完整产物包.zip
+          retention-days: 30
 
       - name: 准备 Pages 发布内容
         run: |
@@ -307,6 +315,26 @@ jobs:
           destination_dir: .
           keep_files: true
           enable_jekyll: false
+
+      - name: 同步部署到 Cloudflare Workers (纯静态)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "未配置 CF_API_TOKEN / CF_ACCOUNT_ID secret，跳过 CF Workers 部署"
+            exit 0
+          fi
+          echo "检测到 Cloudflare 密钥，部署纯静态 Workers（无函数，不耗请求配额）..."
+          npm install -g wrangler
+          cat > wrangler.toml <<'WRANGLER'
+          name = "hx-video-summary"
+          compatibility_date = "2026-05-01"
+          [assets]
+          directory = "./pages"
+          WRANGLER
+          wrangler deploy
+          echo "CF Workers 静态站点部署完成"
 
       - name: 构建邮件正文(纯文本总结 + PPT链接)
         run: |
