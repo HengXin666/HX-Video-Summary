@@ -316,7 +316,7 @@ jobs:
           keep_files: true
           enable_jekyll: false
 
-      - name: 同步部署到 Cloudflare Workers (纯静态)
+      - name: 同步部署到 Cloudflare Workers (纯静态, 完整站点)
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -325,16 +325,20 @@ jobs:
             echo "未配置 CF_API_TOKEN / CF_ACCOUNT_ID secret，跳过 CF Workers 部署"
             exit 0
           fi
-          echo "检测到 Cloudflare 密钥，部署纯静态 Workers（无函数，不耗请求配额）..."
+          echo "从 gh-pages 分支拉取完整站点（含所有历史 run 子目录）..."
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages
+          echo "已拉取 $(find /tmp/gh-pages -maxdepth 1 -type d | wc -l) 个目录/文件"
           npm install -g wrangler
-          cat > wrangler.toml <<'WRANGLER'
+          cat > wrangler.toml <<WRANGLER
           name = "hx-video-summary"
           compatibility_date = "2026-05-01"
           [assets]
-          directory = "./pages"
+          directory = "/tmp/gh-pages"
           WRANGLER
           wrangler deploy
-          echo "CF Workers 静态站点部署完成"
+          echo "CF Workers 完整站点部署完成"
 
       - name: 构建邮件正文(纯文本总结 + PPT链接)
         run: |
