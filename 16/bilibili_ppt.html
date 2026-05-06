@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>如何在X(推特)上构建高质量信息获取系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --coral: #E76F51;
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --light: #FFFFFE;
+  --gray: #A7A9BE;
+  --red: #E71D36;
+  --teal: #2EC4B6;
+}
+
+/* Slide system */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:44px 70px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .an{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .an.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Decorative orbs */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.1),transparent)}
+
+/* Grid background */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.6}
+
+/* Floating particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Typography */
+.t-hero{font-size:5rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:4rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:3rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2.2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.7rem;font-weight:400;line-height:1.6;text-align:center}
+.t-sm{font-size:1.25rem;font-weight:400;line-height:1.5;text-align:center}
+
+/* Colors */
+.c-accent{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-teal{color:#2EC4B6}.c-red{color:#E71D36}.c-light{color:#FFFFFE}.c-gray{color:#A7A9BE}
+
+/* Highlights */
+.bg-accent{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-teal{background:rgba(46,196,182,.15);padding:5px 18px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.15);padding:5px 18px;border-radius:10px}
+
+.ul-accent{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-amber{text-decoration:underline;text-decoration-color:#F4A261;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:18px auto}
+
+/* Cards */
+.card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 18px;text-align:center;border:2px solid rgba(255,107,53,.12);box-shadow:0 4px 16px rgba(255,107,53,.06);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.18)}
+
+.card-left{border-left:5px solid;border-radius:0 16px 16px 0;background:rgba(26,25,50,.5);padding:28px 22px;text-align:left;box-shadow:0 4px 16px rgba(255,107,53,.06);transition:transform .3s,box-shadow .3s}
+.card-left:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.18)}
+.card-left.accent{border-left-color:#FF6B35}
+.card-left.amber{border-left-color:#F4A261}
+.card-left.coral{border-left-color:#E76F51}
+.card-left.teal{border-left-color:#2EC4B6}
+
+/* Icon badge */
+.icon-badge{width:68px;height:68px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;font-size:1.8rem}
+.ib-accent{background:linear-gradient(135deg,rgba(255,107,53,.25),rgba(255,107,53,.08));color:#FF6B35}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.25),rgba(244,162,97,.08));color:#F4A261}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.25),rgba(231,111,81,.08));color:#E76F51}
+.ib-teal{background:linear-gradient(135deg,rgba(46,196,182,.25),rgba(46,196,182,.08));color:#2EC4B6}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.25),rgba(231,29,54,.08));color:#E71D36}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;width:88%;max-width:1060px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:88%;max-width:1060px}
+
+/* Flow steps */
+.flow{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.12);padding:10px 18px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#F4A261;font-size:1.3rem}
+
+/* Number badge */
+.num-badge{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;color:#fff;flex-shrink:0}
+.nb-accent{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.nb-amber{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.nb-coral{background:linear-gradient(135deg,#E76F51,#FF6B35)}
+.nb-teal{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* Progress bar */
+.progress-bar{width:100%;height:6px;background:rgba(255,107,53,.12);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
+.pf-accent{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#F4A261,#E9C46A)}
+.pf-teal{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+.pf-coral{background:linear-gradient(90deg,#E76F51,#FF6B35)}
+
+/* Tag pill */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-accent{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-coral{background:rgba(231,111,81,.15);color:#E76F51}
+.tag-teal{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+
+/* Warn box and success box */
+.warn-box{background:rgba(231,29,54,.08);border-left:4px solid #E71D36;border-radius:0 12px 12px 0;padding:16px 20px;margin:8px 0}
+.success-box{background:rgba(46,196,182,.08);border-left:4px solid #2EC4B6;border-radius:0 12px 12px 0;padding:16px 20px;margin:8px 0}
+.info-box{background:rgba(255,107,53,.08);border-left:4px solid #FF6B35;border-radius:0 12px 12px 0;padding:16px 20px;margin:8px 0}
+
+/* Icon row */
+.icon-row{display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap}
+.icon-text{display:flex;align-items:center;gap:8px;font-size:1.2rem}
+
+/* Glow ring */
+.glow-ring{width:110px;height:110px;border-radius:50%;border:3px solid rgba(255,107,53,.2);display:flex;align-items:center;justify-content:center;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 16px rgba(255,107,53,0)}}
+
+/* Pulse icon */
+.pulse-icon{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+
+/* Gradient text */
+.gradient-text{font-size:4rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Concept word */
+.concept-word{font-size:5rem;font-weight:900;letter-spacing:8px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Glow text */
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:10px}
+
+/* VS row */
+.vs-row{display:flex;gap:32px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:28px 22px;border-radius:18px;text-align:center}
+.vs-mid{font-size:2.5rem;font-weight:900;color:#FF6B35}
+
+/* Shape circle */
+.shape-row{display:flex;gap:24px;margin:14px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-weight:900;color:#fff;transition:transform .3s;cursor:default}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:90px;height:90px;font-size:1.7rem}
+.sh-lg{width:120px;height:120px;font-size:2rem}
+.sh-accent{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.sh-amber{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sh-coral{background:linear-gradient(135deg,#E76F51,#FF6B35)}
+.sh-teal{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* Slide number */
+.slide-num{position:fixed;top:24px;left:32px;z-index:100;font-size:1.2rem;font-weight:700;color:rgba(255,107,53,.5);letter-spacing:3px}
+
+/* Nav dots */
+.slide-dots{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.2);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* Nav arrows */
+.nav-btn{position:fixed;bottom:28px;z-index:100;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:#FF6B35;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.1rem}
+.nav-btn:hover{background:rgba(255,107,53,.2);border-color:rgba(255,107,53,.5)}
+.nav-prev{right:100px}
+.nav-next{right:40px}
+
+/* Bg variants */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 80% 40%,#1A1932 0%,#0F0E17 100%)}
+.bg-7{background:radial-gradient(ellipse at 20% 60%,#1A1932 0%,#0F0E17 100%)}
+.bg-8{background:radial-gradient(ellipse at 60% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-9{background:radial-gradient(ellipse at 40% 40%,#1A1932 0%,#0F0E17 100%)}
+.bg-10{background:radial-gradient(ellipse at 80% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-11{background:radial-gradient(ellipse at 20% 80%,#1A1932 0%,#0F0E17 100%)}
+
+/* Shine overlay */
+.shine{position:relative;overflow:hidden}
+.shine::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,107,53,.06),transparent);transform:skewX(-25deg);animation:shine-move 5s ease-in-out infinite}
+@keyframes shine-move{0%{left:-100%}100%{left:200%}}
+
+/* Shimmer text */
+.shimmer-text{background:linear-gradient(90deg,#FF6B35,#F4A261,#E76F51,#FF6B35);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+
+/* Border pulse effect */
+.border-pulse{position:relative;border-radius:16px}
+.border-pulse::before{content:'';position:absolute;inset:-2px;border-radius:18px;padding:2px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51,#FF6B35);background-size:400% 400%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:border-glow 4s linear infinite}
+@keyframes border-glow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* Float up animation */
+.float-up{animation:floatUpAnimation 4s ease-in-out infinite}
+@keyframes floatUpAnimation{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}
+
+/* Scale in animation */
+.scale-in{animation:scaleInAnimation .8s cubic-bezier(.25,.46,.45,.94) forwards}
+@keyframes scaleInAnimation{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* Count badge */
+.count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;border-radius:18px;padding:0 12px;font-weight:900;font-size:1rem}
+.cb-accent{background:rgba(255,107,53,.2);color:#FF6B35}
+.cb-amber{background:rgba(244,162,97,.2);color:#F4A261}
+
+/* Highlight blockquote */
+.blockquote{border-left:3px solid #FF6B35;padding-left:16px;margin:8px 0;color:#A7A9BE;font-style:italic;font-size:1.15rem}
+
+/* Dot indicator bar */
+.dot-bar{display:flex;gap:6px;align-items:center;justify-content:center}
+.dot-bar .db-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,107,53,.3);transition:all .4s}
+.dot-bar .db-dot.done{background:#2EC4B6;width:12px;height:12px}
+.dot-bar .db-dot.current{background:#FF6B35;width:14px;height:14px;box-shadow:0 0 12px rgba(255,107,53,.5)}
+
+/* Emphasis */
+.em-box{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:16px 22px;margin:10px 0;text-align:center;max-width:800px}
+
+/* Step icon list */
+.step-list{display:flex;flex-direction:column;gap:14px;width:88%;max-width:900px}
+.step-item{display:flex;align-items:center;gap:16px;background:rgba(26,25,50,.5);border-radius:12px;padding:16px 22px;border:1px solid rgba(255,107,53,.1);transition:transform .3s,box-shadow .3s}
+.step-item:hover{transform:translateX(6px);box-shadow:0 4px 24px rgba(255,107,53,.12)}
+
+/* Two column layout */
+.two-col{display:flex;gap:32px;width:92%;max-width:1200px;align-items:stretch}
+.col-equal{flex:1;display:flex;flex-direction:column;gap:12px}
+
+/* Highlight card */
+.hl-card{background:rgba(26,25,50,.6);border-radius:16px;padding:24px 22px;border:2px solid rgba(255,107,53,.18);text-align:center;transition:transform .3s}
+.hl-card:hover{transform:translateY(-4px)}
+
+/* Final banner */
+.final-banner{background:linear-gradient(135deg,rgba(255,107,53,.08),rgba(244,162,97,.06),rgba(231,111,81,.08));border-radius:20px;padding:32px 28px;text-align:center;max-width:900px;border:1px solid rgba(255,107,53,.15)}
+
+/* Orbit decoration */
+.orbit-ring{position:absolute;border-radius:50%;border:1px dashed rgba(255,107,53,.1);animation:orbitSpin 20s linear infinite}
+.orbit-ring:nth-child(2){animation-duration:25s;animation-direction:reverse}
+@keyframes orbitSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* Snappy bounce */
+.bounce-in{animation:bounceIn .7s cubic-bezier(.68,-.55,.27,1.55) forwards}
+@keyframes bounceIn{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.95)}100%{transform:scale(1);opacity:1}}
+
+/* Fade slide up */
+.fade-slide{animation:fadeSlideUp .6s ease forwards}
+@keyframes fadeSlideUp{0%{transform:translateY(30px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+/* Pulsing dot indicator */
+.pulse-dot{width:12px;height:12px;border-radius:50%;background:#FF6B35;animation:dotPulse 1.4s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.6)}50%{box-shadow:0 0 0 14px rgba(255,107,53,0)}}
+
+/* Gradient border card */
+.gb-card{position:relative;background:rgba(26,25,50,.5);border-radius:16px;padding:2px}
+.gb-card-inner{background:rgba(26,25,50,.9);border-radius:14px;padding:22px 18px;text-align:center;height:100%}
+.gb-card::before{content:'';position:absolute;inset:0;border-radius:16px;padding:2px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.4}
+
+/* Tip box */
+.tip-box{background:rgba(244,162,97,.06);border:1px solid rgba(244,162,97,.2);border-radius:10px;padding:12px 18px;margin:6px 0;font-size:1.05rem}
+.tip-box i{color:#F4A261;margin-right:6px}
+
+/* Step counter horizontal */
+.step-row{display:flex;gap:0;align-items:center;justify-content:center;margin:10px 0}
+.step-node{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;color:#fff;z-index:1}
+.step-connector{width:40px;height:3px;background:linear-gradient(90deg,#FF6B35,#F4A261)}
+.sn-1{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.sn-2{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sn-3{background:linear-gradient(135deg,#E76F51,#FF6B35)}
+.sn-4{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ===== Slide 0: Cover ===== -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p0"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+  <div class="orbit-ring" style="width:420px;height:420px;top:50%;left:50%;margin-top:-210px;margin-left:-210px"></div>
+  <div class="orbit-ring" style="width:520px;height:520px;top:50%;left:50%;margin-top:-260px;margin-left:-260px"></div>
+
+  <div class="an" style="margin-bottom:18px">
+    <div class="glow-ring" style="width:130px;height:130px">
+      <i class="fa-brands fa-x-twitter" style="font-size:3rem;color:#FF6B35"></i>
+    </div>
+  </div>
+  <div class="an t-huge c-light">如何在 X 上构建</div>
+  <div class="an t-big c-accent" style="margin-top:6px">高质量信息获取系统</div>
+  <div class="an line"></div>
+  <div class="an t-mid c-amber" style="margin-top:6px">
+    <i class="fa-solid fa-arrow-right"></i> 四步养成你的高质量信息流账号 <i class="fa-solid fa-arrow-left"></i>
+  </div>
+  <div class="an shape-row" style="margin-top:18px">
+    <div class="shape-circle sh-sm sh-accent">
+      <i class="fa-solid fa-user-plus"></i>关注
+    </div>
+    <div class="shape-circle sh-sm sh-amber">
+      <i class="fa-solid fa-comments"></i>交互
+    </div>
+    <div class="shape-circle sh-sm sh-coral">
+      <i class="fa-solid fa-bookmark"></i>收藏
+    </div>
+    <div class="shape-circle sh-sm sh-teal">
+      <i class="fa-solid fa-robot"></i>AI加速
+    </div>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:10px">
+    <i class="fa-solid fa-globe"></i> 无需提高英语水平 &nbsp;|&nbsp;
+    <i class="fa-solid fa-bolt"></i> 简单操作即可 &nbsp;|&nbsp;
+    <i class="fa-solid fa-infinity"></i> 源源不断获取
+  </div>
+
+  <div class="an step-row" style="margin-top:14px">
+    <div class="step-node sn-1">1</div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-2">2</div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-3">3</div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-4">4</div>
+  </div>
+  <div class="an t-sm c-gray">关注 <span class="c-amber">→</span> 交互 <span class="c-amber">→</span> 收藏 <span class="c-amber">→</span> Grok加速</div>
+</div>
+
+<!-- ===== Slide 1: 核心问题 ===== -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:450px;height:450px;bottom:-150px;right:-150px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:10px">
+    <i class="fa-solid fa-circle-exclamation pulse-icon"></i> 中文互联网的困境
+  </div>
+  <div class="an t-big c-light">
+    低质量信息<span class="c-red bold ul-accent">泛滥</span>，干货难寻
+  </div>
+  <div class="an line"></div>
+  <div class="an t-body c-gray" style="margin-top:8px">各种平台充斥食聊内容，真正有价值的知识被淹没在信息洪流中</div>
+
+  <div class="an em-box" style="margin-top:16px">
+    <div class="t-mid c-light">
+      <i class="fa-brands fa-x-twitter c-accent"></i>
+      X（原 Twitter）—— <span class="c-amber bold">全球最大的博文与短讯平台</span>
+    </div>
+    <div class="t-body c-gray" style="margin-top:6px">汇聚了大量<span class="c-accent bold">一手高质量信息源</span>，覆盖以下领域：</div>
+    <div class="shape-row" style="margin-top:10px">
+      <div class="shape-circle sh-sm sh-accent"><i class="fa-solid fa-brain"></i>AI</div>
+      <div class="shape-circle sh-sm sh-amber"><i class="fa-solid fa-paint-brush"></i>设计</div>
+      <div class="shape-circle sh-sm sh-coral"><i class="fa-solid fa-code"></i>编程</div>
+      <div class="shape-circle sh-sm sh-teal"><i class="fa-solid fa-chart-line"></i>产品</div>
+    </div>
+    <div class="t-sm c-gray" style="margin-top:6px">自媒体 &middot; 个人成长 &middot; 艺术 &middot; 体育 &middot; 更多…</div>
+  </div>
+
+  <div class="an success-box" style="margin-top:14px;max-width:800px">
+    <div class="t-body c-light">
+      <i class="fa-solid fa-check-circle c-teal"></i>
+      <span class="bold">无需提高英语水平</span>，仅靠简单操作即可源源不断获取优质信息
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 2: 先决条件 ===== -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-180px;left:-180px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:8px">
+    <i class="fa-solid fa-gear pulse-icon"></i> 先决条件 —— 四大准备
+  </div>
+  <div class="an line"></div>
+
+  <div class="an grid-4" style="margin-top:10px">
+    <div class="card shine">
+      <div class="icon-badge ib-accent"><i class="fa-solid fa-crown"></i></div>
+      <div class="t-body bold c-accent">充值会员</div>
+      <div class="t-sm c-gray">规避风控风险<br>解锁蓝V认证<br>开启Grok AI权限</div>
+      <div class="tag tag-accent">
+        <i class="fa-solid fa-tag"></i> 黑五/圣诞约85折
+      </div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-amber"><i class="fa-solid fa-desktop"></i></div>
+      <div class="t-body bold c-amber">电脑浏览</div>
+      <div class="t-sm c-gray">形成信息闭环<br>从"消费"到"积累"<br>效率比手机高得多</div>
+      <div class="tag tag-amber">
+        <i class="fa-solid fa-check"></i> 核心推荐
+      </div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-coral"><i class="fa-solid fa-puzzle-piece"></i></div>
+      <div class="t-body bold c-coral">安装插件</div>
+      <div class="t-sm c-gray">沉浸式翻译<br>Clip to Notion<br>AIX + IDM 下载器</div>
+      <div class="tag tag-coral">
+        <i class="fa-solid fa-plug"></i> Chrome 浏览器
+      </div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-teal"><i class="fa-solid fa-mobile-screen"></i></div>
+      <div class="t-body bold c-teal">移动端方案</div>
+      <div class="t-sm c-gray">iOS：美区ID下载<br>安卓：Google Play<br>或直接安装APK</div>
+      <div class="tag tag-teal">
+        <i class="fa-solid fa-circle-check"></i> 备选方案
+      </div>
+    </div>
+  </div>
+
+  <div class="an warn-box" style="margin-top:14px;max-width:800px">
+    <div class="t-sm c-light">
+      <i class="fa-solid fa-triangle-exclamation c-red"></i>
+      <span class="bold c-red">注意：</span>X对账号行为有风控机制 —— 频繁切换IP、注册时间短、操作过快都可能触发限制。充值会员相当于<span class="bold c-amber">支付保护费</span>，向平台证明你是正常付费用户。
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 3: 为什么用电脑 ===== -->
+<div class="slide bg-4" id="s2b">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:380px;height:380px;top:-100px;left:-100px"></div>
+  <div class="deco deco-amber" style="width:300px;height:300px;bottom:-80px;right:-80px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:8px">
+    <i class="fa-solid fa-circle-question pulse-icon"></i> 为什么更推荐用电脑刷X？
+  </div>
+  <div class="an line"></div>
+
+  <div class="an vs-row" style="margin-top:12px">
+    <div class="vs-box" style="border:2px solid rgba(46,196,182,.2);background:rgba(46,196,182,.04)">
+      <i class="fa-solid fa-desktop" style="font-size:4rem;color:#2EC4B6"></i>
+      <div class="t-mid c-teal bold" style="margin-top:6px">电脑端</div>
+      <div class="vs-detail" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left">
+        <div class="icon-text c-teal"><i class="fa-solid fa-check-circle"></i> <span>信息收集闭环：阅读→收藏→整理→检索→调用</span></div>
+        <div class="icon-text c-teal"><i class="fa-solid fa-check-circle"></i> <span>Chrome 插件生态系统加持</span></div>
+        <div class="icon-text c-teal"><i class="fa-solid fa-check-circle"></i> <span>直接存入Notion/Obsidian，分门别类</span></div>
+        <div class="icon-text c-teal"><i class="fa-solid fa-check-circle"></i> <span>沉浸式翻译打通外语壁垒</span></div>
+        <div class="icon-text c-teal"><i class="fa-solid fa-check-circle"></i> <span>从"单纯消费"转变为"知识积累"</span></div>
+      </div>
+    </div>
+    <div class="vs-mid">VS</div>
+    <div class="vs-box" style="border:2px solid rgba(231,29,54,.15);background:rgba(231,29,54,.04)">
+      <i class="fa-solid fa-mobile-screen" style="font-size:4rem;color:#E71D36"></i>
+      <div class="t-mid c-red bold" style="margin-top:6px">手机端</div>
+      <div class="vs-detail" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left">
+        <div class="icon-text c-red"><i class="fa-solid fa-xmark"></i> <span>信息流刷过即消失</span></div>
+        <div class="icon-text c-red"><i class="fa-solid fa-xmark"></i> <span>无法形成完整收集闭环</span></div>
+        <div class="icon-text c-red"><i class="fa-solid fa-xmark"></i> <span>难以安装浏览器插件</span></div>
+        <div class="icon-text c-red"><i class="fa-solid fa-xmark"></i> <span>不方便做笔记和整理</span></div>
+        <div class="icon-text c-red"><i class="fa-solid fa-xmark"></i> <span>信息利用率极低，等于白看</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="an success-box" style="margin-top:12px;max-width:800px">
+    <div class="t-body c-teal bold">
+      <i class="fa-solid fa-lightbulb"></i> 核心优势：电脑端把刷X从 <span class="c-red">单纯的消费</span> 变成了 <span class="c-accent bold">可复用的知识积累</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 4: 第一步 - 关注优质博主 ===== -->
+<div class="slide bg-5" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:400px;height:400px;top:50%;left:50%;margin-top:-200px;margin-left:-200px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:6px">
+    <span class="num-badge nb-accent" style="display:inline-flex">1</span> 第一步
+  </div>
+  <div class="an t-big c-light">关注优质博主，锁定<span class="c-amber bold">高质量信息源</span></div>
+  <div class="an line"></div>
+
+  <div class="an step-list" style="margin-top:10px">
+    <div class="step-item">
+      <div class="num-badge nb-accent" style="width:42px;height:42px;font-size:1.2rem">1</div>
+      <div>
+        <div class="t-body bold c-light"><i class="fa-solid fa-magnifying-glass c-accent"></i> 使用搜索功能找到目标博主</div>
+        <div class="t-sm c-gray">按领域关键词搜索，发现各领域的顶尖内容创作者</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-amber" style="width:42px;height:42px;font-size:1.2rem">2</div>
+      <div>
+        <div class="t-body bold c-light"><i class="fa-solid fa-hand-pointer c-amber"></i> 鼠标悬停查看博主档案</div>
+        <div class="t-sm c-gray">快速查看关注者数量、哪些大V关注了他，判断博主质量</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-coral" style="width:42px;height:42px;font-size:1.2rem">3</div>
+      <div>
+        <div class="t-body bold c-light"><i class="fa-solid fa-robot c-coral"></i> 用 Grok"个人资料摘要"评估</div>
+        <div class="t-sm c-gray">让AI快速总结博主风格和内容方向，判断是否对胃口</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-teal" style="width:42px;height:42px;font-size:1.2rem">4</div>
+      <div>
+        <div class="t-body bold c-light"><i class="fa-solid fa-building c-teal"></i> 企业账户 + 个人创作者双管齐下</div>
+        <div class="t-sm c-gray">关注 Google、Anthropic 等企业获取官方指南；关注个人创作者获取深度内容</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 4: 第二步 - 反复交互 ===== -->
+<div class="slide bg-6" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;bottom:-200px;right:-180px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:6px">
+    <span class="num-badge nb-amber" style="display:inline-flex">2</span> 第二步（最核心）
+  </div>
+  <div class="an t-big c-light">反复交互，<span class="c-accent bold">训练算法</span></div>
+  <div class="an line"></div>
+
+  <div class="an em-box" style="margin-top:8px;max-width:800px">
+    <div class="t-body c-light">
+      <i class="fa-solid fa-lightbulb c-amber pulse-icon"></i>
+      <span class="bold">马斯克已公开 X 推荐算法机制</span> —— 你的每一次互动，都是训练数据
+    </div>
+  </div>
+
+  <div class="an grid-2" style="margin-top:12px">
+    <div class="card-left accent">
+      <div class="icon-text c-accent"><i class="fa-solid fa-reply"></i> <span class="bold">回复评论</span></div>
+      <div class="t-sm c-gray">像贴吧一样认真互动，回复15字以上，让算法识别你的偏好</div>
+      <div class="progress-bar"><div class="progress-fill pf-accent" data-width="95%"></div></div>
+    </div>
+    <div class="card-left amber">
+      <div class="icon-text c-amber"><i class="fa-solid fa-bookmark"></i> <span class="bold">收藏到书签</span></div>
+      <div class="t-sm c-gray">将好帖子保存到分类文件夹，告诉系统"这是我喜欢的"</div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="88%"></div></div>
+    </div>
+    <div class="card-left coral">
+      <div class="icon-text c-coral"><i class="fa-solid fa-heart"></i> <span class="bold">滑到底部点赞</span></div>
+      <div class="t-sm c-gray">阅读长文时必须滑到底部，点击心心，证明你认真看完</div>
+      <div class="progress-bar"><div class="progress-fill pf-coral" data-width="90%"></div></div>
+    </div>
+    <div class="card-left teal">
+      <div class="icon-text c-teal"><i class="fa-solid fa-retweet"></i> <span class="bold">转发优质内容</span></div>
+      <div class="t-sm c-gray">增加帖子在你的推荐流中的权重，触发更多类似推送</div>
+      <div class="progress-bar"><div class="progress-fill pf-teal" data-width="82%"></div></div>
+    </div>
+  </div>
+
+  <div class="an tip-box" style="margin-top:8px;max-width:800px">
+    <i class="fa-solid fa-lightbulb"></i> <span class="bold c-amber">小技巧：</span>浏览长文时不要跳过——滑到底部、点击心心、再转发，三个动作会让算法最大程度记住你的偏好。
+  </div>
+
+  <div class="an flow" style="margin-top:10px">
+    <span class="flow-step"><i class="fa-solid fa-thumbs-up c-accent"></i> 点赞</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step"><i class="fa-solid fa-bookmark c-amber"></i> 收藏</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step"><i class="fa-solid fa-comment c-coral"></i> 评论</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step"><i class="fa-solid fa-retweet c-teal"></i> 转发</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step" style="background:rgba(255,107,53,.2)"><i class="fa-solid fa-arrow-up-right-dots c-accent"></i> <span class="c-accent bold">算法加权</span></span>
+  </div>
+
+  <div class="an t-sm c-gray" style="margin-top:6px">
+    通过持续高质量交互 → 让算法认为你是一个<span class="c-amber bold">喜欢高质量信息的人</span> → 推荐流越来越好
+  </div>
+</div>
+
+<!-- ===== Slide 5: 第三步 - 建立收藏夹 ===== -->
+<div class="slide bg-7" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:400px;height:400px;top:-120px;right:-120px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:6px">
+    <span class="num-badge nb-coral" style="display:inline-flex">3</span> 第三步
+  </div>
+  <div class="an t-big c-light">建立收藏夹，<span class="c-coral bold">沉淀知识资产</span></div>
+  <div class="an line"></div>
+
+  <div class="an grid-2" style="margin-top:12px">
+    <div class="hl-card">
+      <div class="icon-badge ib-accent" style="margin:0 auto"><i class="fa-solid fa-folder-plus"></i></div>
+      <div class="t-body bold c-accent">X 内置书签功能</div>
+      <div class="t-sm c-gray">创建分类收藏夹（AI资讯、设计、编程等），分类别类保存贴文</div>
+      <div class="tag tag-accent"><i class="fa-solid fa-triangle-exclamation"></i> 偶尔加载失败</div>
+    </div>
+    <div class="hl-card">
+      <div class="icon-badge ib-amber" style="margin:0 auto"><i class="fa-solid fa-note-sticky"></i></div>
+      <div class="t-body bold c-amber">Notion 笔记软件</div>
+      <div class="t-sm c-gray">分享→复制链接→粘贴到 Notion；或使用 Clip to Notion 插件自动保存</div>
+      <div class="tag tag-amber"><i class="fa-solid fa-check"></i> 推荐优先使用</div>
+    </div>
+  </div>
+
+  <div class="an info-box" style="margin-top:14px;max-width:800px">
+    <div class="t-body c-light">
+      <i class="fa-solid fa-circle-info c-accent"></i>
+      <span class="bold">信息收集闭环：</span>
+      阅读 → 收藏 → 分类整理 → 可检索 → 未来调用
+    </div>
+  </div>
+
+  <div class="an grid-2" style="margin-top:10px">
+    <div class="hl-card">
+      <div class="icon-badge ib-coral" style="margin:0 auto"><i class="fa-solid fa-file-code"></i></div>
+      <div class="t-body bold c-coral">Clip to Notion 插件</div>
+      <div class="t-sm c-gray">自动将贴文以 <span class="c-accent bold">Markdown 格式</span> 保存到指定 Notion 页面，方便后续检索</div>
+    </div>
+    <div class="hl-card">
+      <div class="icon-badge ib-teal" style="margin:0 auto"><i class="fa-solid fa-video"></i></div>
+      <div class="t-body bold c-teal">AIX + IDM 视频下载</div>
+      <div class="t-sm c-gray">使用免费机器人或浏览器插件组合，保存 X 上的高质量视频内容</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 6: 第四步 - 配合Grok ===== -->
+<div class="slide bg-8" id="s6">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:550px;height:550px;bottom:-200px;left:-200px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:6px">
+    <span class="num-badge nb-teal" style="display:inline-flex">4</span> 第四步
+  </div>
+  <div class="an t-big c-light">配合 Grok，<span class="c-teal bold">加速信息吸收与获取</span></div>
+  <div class="an line"></div>
+
+  <div class="an grid-4" style="margin-top:12px">
+    <div class="card shine">
+      <div class="icon-badge ib-accent"><i class="fa-solid fa-file-lines"></i></div>
+      <div class="t-body bold c-accent">快速总结</div>
+      <div class="t-sm c-gray">点击"解释这个帖子"<br>图文/视频秒出摘要<br>不限语言都能总结</div>
+      <div class="progress-bar"><div class="progress-fill pf-accent" data-width="95%"></div></div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-amber"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+      <div class="t-body bold c-amber">信息核查</div>
+      <div class="t-sm c-gray">发送链接+Grok<br>"请为我进行信息核查"<br>甄别内容真伪与来源</div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="85%"></div></div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-coral"><i class="fa-solid fa-filter-circle-dollar"></i></div>
+      <div class="t-body bold c-coral">去伪存真</div>
+      <div class="t-sm c-gray">识别逻辑谬误<br>剔除主观偏见<br>提取核心干货</div>
+      <div class="progress-bar"><div class="progress-fill pf-coral" data-width="80%"></div></div>
+    </div>
+    <div class="card shine">
+      <div class="icon-badge ib-teal"><i class="fa-solid fa-language"></i></div>
+      <div class="t-body bold c-teal">语言提示</div>
+      <div class="t-sm c-gray">英文资料用英文提问<br>中文提问可能幻觉<br>效果才是最好的</div>
+      <div class="progress-bar"><div class="progress-fill pf-teal" data-width="75%"></div></div>
+    </div>
+  </div>
+
+  <div class="an em-box" style="margin-top:14px;max-width:800px">
+    <div class="t-body c-light">
+      <i class="fa-solid fa-robot c-accent pulse-icon"></i>
+      Grok AI：<span class="c-amber bold">摘要</span> →
+      <span class="c-coral bold">核查</span> →
+      <span class="c-teal bold">去偏</span>
+      &nbsp;三重信息提纯，让知识吸收更纯净
+    </div>
+  </div>
+
+  <div class="an warn-box" style="margin-top:8px;max-width:800px">
+    <div class="t-sm c-light">
+      <i class="fa-solid fa-triangle-exclamation c-red"></i>
+      <span class="bold c-red">注意：</span>最新政策已不允许免费使用 Grok 提问，需购买 X Premium 会员才能体验完整功能。
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 7: Grok高级用法详解 ===== -->
+<div class="slide bg-10" id="s6b">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px;opacity:.6"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:6px">
+    <i class="fa-solid fa-microchip pulse-icon"></i> Grok AI 高级用法详解
+  </div>
+  <div class="an line"></div>
+
+  <div class="an grid-2" style="margin-top:10px;max-width:1000px">
+    <div class="card-left accent border-pulse">
+      <div class="icon-text c-accent"><i class="fa-solid fa-bolt"></i> <span class="bold">用法一：秒出摘要</span></div>
+      <div class="t-sm c-gray">打开任意贴文，点击右上角 <span class="c-accent bold">"解释这个帖子"</span> 按钮，Grok 立即提供完整摘要。无论原帖是图文还是视频，无论什么语言，都能快速总结</div>
+      <div class="t-sm c-teal" style="margin-top:4px"><i class="fa-solid fa-check"></i> 特别适合：斯坦福公开课等长视频的快速内容摘要</div>
+    </div>
+    <div class="card-left amber border-pulse">
+      <div class="icon-text c-amber"><i class="fa-solid fa-shield-halved"></i> <span class="bold">用法二：信息核查</span></div>
+      <div class="t-sm c-gray">将文章链接发送给 Grok，附上 <span class="c-amber bold">"请为我进行信息核查"</span>，即可甄别内容真伪、追溯信息来源、判断说法可靠性</div>
+      <div class="t-sm c-teal" style="margin-top:4px"><i class="fa-solid fa-check"></i> 特别适合：对来源存疑的爆款文章进行交叉验证</div>
+    </div>
+    <div class="card-left coral border-pulse">
+      <div class="icon-text c-coral"><i class="fa-solid fa-filter"></i> <span class="bold">用法三：去伪存真</span></div>
+      <div class="t-sm c-gray">针对高浏览量爆款文章，使用提示词让 Grok 识别并剔除<span class="c-coral bold">逻辑谬误</span>和<span class="c-coral bold">主观偏见</span>，还原客观核心观点</div>
+      <div class="t-sm c-gray" style="margin-top:4px"><i class="fa-solid fa-quote-right c-accent"></i> "取其精华，去其糟粕"——让知识吸收更纯净</div>
+    </div>
+    <div class="card-left teal border-pulse">
+      <div class="icon-text c-teal"><i class="fa-solid fa-language"></i> <span class="bold">用法四：语言匹配</span></div>
+      <div class="t-sm c-gray">查询的资料是英文 → <span class="c-teal bold">用英文提问</span>；查询的资料是中文 → 用中文提问。语言不匹配时，Grok 可能出现<span class="c-red bold">幻觉</span></div>
+      <div class="warn-box" style="margin-top:4px;font-size:0.95rem">
+        <i class="fa-solid fa-triangle-exclamation c-red"></i> 中文提问英文资料 → 幻觉风险增加
+      </div>
+    </div>
+  </div>
+
+  <div class="an flow" style="margin-top:12px">
+    <span class="flow-step"><i class="fa-solid fa-file-import c-accent"></i> 原始信息</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step" style="background:rgba(46,196,182,.12)"><i class="fa-solid fa-compress c-teal"></i> Grok 摘要</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step" style="background:rgba(244,162,97,.12)"><i class="fa-solid fa-magnifying-glass-chart c-amber"></i> 信息核查</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step" style="background:rgba(231,111,81,.15)"><i class="fa-solid fa-filter c-coral"></i> 去偏提纯</span>
+    <span class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="flow-step" style="background:rgba(255,107,53,.2)"><i class="fa-solid fa-gem c-accent"></i> <span class="bold">纯净知识</span></span>
+  </div>
+</div>
+
+<!-- ===== Slide 8: 核心洞察总结 ===== -->
+<div class="slide bg-9" id="s7">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p7"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px;opacity:.4"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:8px">
+    <i class="fa-solid fa-gem pulse-icon"></i> 核心洞察总结
+  </div>
+  <div class="an line"></div>
+
+  <div class="an grid-2" style="margin-top:10px;max-width:960px">
+    <div class="card-left accent">
+      <div class="icon-text c-accent"><i class="fa-solid fa-chess-queen"></i> <span class="bold">策略 > 信息源</span></div>
+      <div class="t-sm c-gray">获取信息的策略远比信息源本身更重要，建立稳定的信息获取流程是关键</div>
+    </div>
+    <div class="card-left amber">
+      <div class="icon-text c-amber"><i class="fa-solid fa-arrows-spin"></i> <span class="bold">互动训练算法</span></div>
+      <div class="t-sm c-gray">每次点赞、完播、收藏、评论都是训练数据，持续与高质量内容互动</div>
+    </div>
+    <div class="card-left coral">
+      <div class="icon-text c-coral"><i class="fa-solid fa-circle-nodes"></i> <span class="bold">电脑信息闭环</span></div>
+      <div class="t-sm c-gray">阅读→收藏→分类→检索→调用，将消费转化为可复用知识积累</div>
+    </div>
+    <div class="card-left teal">
+      <div class="icon-text c-teal"><i class="fa-solid fa-microchip"></i> <span class="bold">AI 三重提纯</span></div>
+      <div class="t-sm c-gray">Grok AI：摘要→核查→去偏，让知识吸收更纯净、更高效</div>
+    </div>
+  </div>
+
+  <div class="an final-banner" style="margin-top:16px">
+    <div class="concept-word" style="font-size:3.2rem">用算法训练算法，用AI提纯信息</div>
+    <div class="t-body c-gray" style="margin-top:8px">这就是 X 平台高质量信息获取的核心逻辑</div>
+    <div class="t-sm c-accent" style="margin-top:6px">
+      <i class="fa-solid fa-shield-halved"></i> 对 Web3 / 虚拟币 / 炒股等高风险内容，<span class="bold c-red">不懂就不碰</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Slide 8: 日后奋斗方向 ===== -->
+<div class="slide bg-2" id="s8">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:450px;height:450px;bottom:-150px;left:-150px"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;top:-120px;right:-120px"></div>
+
+  <div class="an t-mid c-accent" style="margin-bottom:8px">
+    <i class="fa-solid fa-rocket pulse-icon"></i> 日后奋斗方向
+  </div>
+  <div class="an line"></div>
+
+  <div class="an step-list" style="margin-top:8px">
+    <div class="step-item">
+      <div class="num-badge nb-accent" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-shuffle"></i></div>
+      <div>
+        <div class="t-body bold c-accent">从"被动刷信息"转向"主动养信息流"</div>
+        <div class="t-sm c-gray">让技术为己所用，做信息的主人而非奴隶</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-amber" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-list-check"></i></div>
+      <div>
+        <div class="t-body bold c-amber">持续优化关注列表</div>
+        <div class="t-sm c-gray">定期清理不再活跃或低质量的信息源，保持信息流的纯净度</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-coral" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-database"></i></div>
+      <div>
+        <div class="t-body bold c-coral">建立个人知识管理体系</div>
+        <div class="t-sm c-gray">Notion/Obsidian 分类归档 + AI 检索调用，打造第二大脑</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-teal" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-robot"></i></div>
+      <div>
+        <div class="t-body bold c-teal">深化 Grok 等 AI 工具的运用</div>
+        <div class="t-sm c-gray">提升信息处理深度和效率，从"看信息"到"用信息"</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-accent" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-expand"></i></div>
+      <div>
+        <div class="t-body bold c-accent">方法论迁移到其他场景</div>
+        <div class="t-sm c-gray">学术研究、行业分析等场景均可复用这套信息获取系统</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="num-badge nb-amber" style="width:42px;height:42px;font-size:1rem"><i class="fa-solid fa-clock"></i></div>
+      <div>
+        <div class="t-body bold c-amber">坚持长期主义</div>
+        <div class="t-sm c-gray">每天高质量交互15分钟，三个月后你的信息流将<span class="c-accent bold">脱胎换骨</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="an glow-text" style="margin-top:12px;font-size:1.8rem;letter-spacing:6px">
+    <i class="fa-solid fa-bullseye"></i> 让信息为你服务，而非被信息洪流裹挟 <i class="fa-solid fa-bullseye"></i>
+  </div>
+</div>
+
+<!-- ===== Slide 9: 终页 ===== -->
+<div class="slide bg-1" id="s9">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p9"></div>
+  <div class="deco deco-orange" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.4"></div>
+  <div class="orbit-ring" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px"></div>
+  <div class="orbit-ring" style="width:620px;height:620px;top:50%;left:50%;margin-top:-310px;margin-left:-310px"></div>
+
+  <div class="an" style="margin-bottom:16px">
+    <div class="glow-ring" style="width:150px;height:150px">
+      <i class="fa-solid fa-check-circle" style="font-size:3.5rem;color:#FF6B35"></i>
+    </div>
+  </div>
+  <div class="an t-huge c-light">四步完成！</div>
+  <div class="an t-big c-accent" style="margin-top:6px">你的高质量 X 信息流账号已养成</div>
+  <div class="an line"></div>
+  <div class="an t-mid c-gray" style="margin-top:8px">
+    跟随大V脚步，洞察前沿风口，学习宝贵经验
+  </div>
+  <div class="an shape-row" style="margin-top:16px">
+    <div class="shape-circle sh-lg sh-accent">
+      <i class="fa-solid fa-user-plus"></i>关注
+    </div>
+    <div class="shape-circle sh-lg sh-amber">
+      <i class="fa-solid fa-comments"></i>交互
+    </div>
+    <div class="shape-circle sh-lg sh-coral">
+      <i class="fa-solid fa-bookmark"></i>收藏
+    </div>
+    <div class="shape-circle sh-lg sh-teal">
+      <i class="fa-solid fa-robot"></i>AI加速
+    </div>
+  </div>
+  <div class="an gradient-text" style="margin-top:14px;font-size:2.5rem">开 始 你 的 信 息 进 阶 之 旅</div>
+</div>
+
+</div>
+
+<!-- Slide number -->
+<div class="slide-num" id="slideNum">01 / 12</div>
+
+<!-- Navigation dots -->
+<div class="slide-dots" id="slideDots"></div>
+
+<!-- Navigation buttons -->
+<div class="nav-btn nav-prev" id="navPrev"><i class="fa-solid fa-chevron-left"></i></div>
+<div class="nav-btn nav-next" id="navNext"><i class="fa-solid fa-chevron-right"></i></div>
+
+<script>
+(function() {
+
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+const dotsContainer = document.getElementById('slideDots');
+const slideNum = document.getElementById('slideNum');
+
+// Create dots
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => go(i));
+  dotsContainer.appendChild(dot);
+}
+
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === cur);
+  });
+  slideNum.textContent = String(cur + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+}
+
+function animateProgressBars(slide) {
+  slide.querySelectorAll('.progress-fill').forEach(bar => {
+    const w = bar.dataset.width || '0%';
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = w; }, 600);
+  });
+}
+
+function resetAnimations(slide) {
+  slide.querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item) {
+    var clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+}
+
+function go(n) {
+  if (n < 0 || n >= total || n === cur) return;
+
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.an').forEach(e => e.classList.remove('show'));
+
+  cur = n;
+
+  resetAnimations(slides[cur]);
+
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.an').forEach((e, i) => {
+    e.classList.remove('show');
+    setTimeout(() => e.classList.add('show'), 200 + i * 220);
+  });
+
+  animateProgressBars(slides[cur]);
+  updateDots();
+}
+
+// Initial animation
+slides[0].querySelectorAll('.an').forEach((e, i) => setTimeout(() => e.classList.add('show'), 400 + i * 260));
+setTimeout(() => animateProgressBars(slides[0]), 800);
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+});
+
+// Mouse wheel
+let wc = false;
+document.addEventListener('wheel', e => {
+  if (wc) return; wc = true; setTimeout(() => wc = false, 800);
+  e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+});
+
+// Touch
+let tx = 0, ty = 0;
+document.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; ty = e.changedTouches[0].screenY; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - tx, dy = e.changedTouches[0].screenY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { dx < 0 ? go(cur + 1) : go(cur - 1); }
+});
+
+// Nav buttons
+document.getElementById('navPrev').addEventListener('click', () => go(cur - 1));
+document.getElementById('navNext').addEventListener('click', () => go(cur + 1));
+
+// Floating particles
+function createParticles(containerId, count) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const colors = ['rgba(255,107,53,.3)', 'rgba(244,162,97,.25)', 'rgba(231,111,81,.22)', 'rgba(46,196,182,.2)'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 8 + 3;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random() * 100}%;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      animation-duration:${Math.random() * 7 + 5}s;
+      animation-delay:${Math.random() * 7}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles('p0', 15);
+createParticles('p7', 12);
+createParticles('p9', 18);
+
+})();
+</script>
+
+</body>
+</html>
