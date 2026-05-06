@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="揭秘UE5 Lumen实时全局光照技术——从渲染方程到工程奇迹的完整科普">
+<title>揭秘Lumen — UE5实时全局光照的圣杯之路</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh;user-select:none}
+
+:root{--accent:#FF6B35;--accent2:#F4A261;--accent3:#E76F51;--accent-glow:rgba(255,107,53,0.3);--dark:#0F0E17;--dark2:#1A1932;--gray:#A7A9BE;--red:#E71D36;--teal:#2EC4B6}
+
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 60px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Decorations */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.10),transparent)}
+.deco-teal{background:radial-gradient(circle,rgba(46,196,182,.08),transparent)}
+
+/* Grid bg */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;background-image:radial-gradient(circle,rgba(255,107,53,.05) 1px,transparent 1px);background-size:40px 40px;opacity:.6}
+
+/* Particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+
+/* Typography */
+.t-hero{font-size:4.8rem;font-weight:900;line-height:1.15;text-align:center;letter-spacing:2px}
+.t-huge{font-size:3.6rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:2.8rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.55rem;font-weight:400;line-height:1.7;text-align:center}
+.t-sm{font-size:1.2rem;font-weight:400;line-height:1.5;text-align:center}
+
+.c-orange{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}.c-red{color:#E71D36}.c-teal{color:#2EC4B6}.c-gray{color:#A7A9BE}.c-white{color:#FFFFFE}
+.bg-orange{background:rgba(255,107,53,.15);padding:4px 16px;border-radius:8px}
+.bg-amber{background:rgba(244,162,97,.15);padding:4px 16px;border-radius:8px}
+.bg-coral{background:rgba(231,111,81,.15);padding:4px 16px;border-radius:8px}
+.bg-teal{background:rgba(46,196,182,.15);padding:4px 16px;border-radius:8px}
+.bg-red{background:rgba(231,29,54,.15);padding:4px 16px;border-radius:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+
+.line{width:80px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:16px auto}
+
+/* Layout */
+.two-col{display:flex;gap:28px;width:90%;max-width:1150px;align-items:stretch}
+.col-card{flex:1;background:rgba(26,25,50,.4);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.col-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(255,107,53,.15)}
+.card-icon{font-size:2.8rem;margin-bottom:8px}
+
+.col-left{border-left:5px solid #FF6B35}
+.col-right{border-left:5px solid #F4A261}
+.col-teal{border-left:5px solid #2EC4B6}
+.col-red{border-left:5px solid #E71D36}
+.col-coral{border-left:5px solid #E76F51}
+
+/* Flow steps */
+.flow{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.12);padding:6px 16px;border-radius:10px;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35;font-size:1.1rem}
+
+/* Cards grid */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;width:88%;max-width:1000px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:90%;max-width:1060px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:90%;max-width:1100px}
+.info-card{background:rgba(26,25,50,.5);border-radius:14px;padding:20px 16px;text-align:center;border:2px solid rgba(255,107,53,.12);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s, border-color .3s}
+.info-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(255,107,53,.2);border-color:rgba(255,107,53,.35)}
+
+/* Icon badge */
+.icon-badge{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:2px;font-size:1.6rem}
+.ib-orange{background:linear-gradient(135deg,rgba(255,107,53,.25),rgba(255,107,53,.1));color:#FF6B35}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.25),rgba(244,162,97,.1));color:#F4A261}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.25),rgba(231,111,81,.1));color:#E76F51}
+.ib-teal{background:linear-gradient(135deg,rgba(46,196,182,.25),rgba(46,196,182,.1));color:#2EC4B6}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.25),rgba(231,29,54,.1));color:#E71D36}
+
+/* Progress bar */
+.progress-bar{width:100%;height:6px;background:rgba(255,107,53,.12);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
+.pf-orange{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#F4A261,#E9C46A)}
+.pf-teal{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+
+/* Highlight boxes */
+.highlight-box{padding:16px 24px;border-radius:12px;background:rgba(26,25,50,.5);border-left:4px solid #FF6B35;margin:8px 0;max-width:900px}
+.highlight-box h4{color:#FF6B35;font-size:1.3rem;margin-bottom:6px}
+.highlight-box p{color:#A7A9BE;font-size:1.05rem;line-height:1.6}
+
+/* Warn / Success boxes */
+.warn-box{padding:14px 22px;border-radius:10px;background:rgba(231,29,54,.08);border-left:4px solid #E71D36;margin:8px 0;max-width:850px;font-size:1.05rem;color:#E71D36}
+.success-box{padding:14px 22px;border-radius:10px;background:rgba(46,196,182,.08);border-left:4px solid #2EC4B6;margin:8px 0;max-width:850px;font-size:1.05rem;color:#2EC4B6}
+
+/* Tag pill */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-orange{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-teal{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+
+/* Concept word */
+.concept-word{font-size:5rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Timeline */
+.timeline{position:relative;width:88%;max-width:1000px;margin:12px 0;padding-left:30px}
+.timeline-item{position:relative;padding:12px 0 12px 28px;border-left:2px solid rgba(255,107,53,.25)}
+.timeline-item::before{content:'';position:absolute;left:-7px;top:18px;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.timeline-item .year{font-size:1.1rem;font-weight:900;color:#FF6B35}
+.timeline-item .desc{font-size:1rem;color:#A7A9BE;margin-top:2px}
+
+/* VS Row */
+.vs-row{display:flex;gap:24px;align-items:center;justify-content:center;width:85%;max-width:950px}
+.vs-cell{flex:1;padding:22px 18px;border-radius:14px;text-align:center;background:rgba(26,25,50,.4);border:2px solid rgba(231,29,54,.15)}
+.vs-cell.good{border-color:rgba(46,196,182,.2)}
+.vs-cell.bad{border-color:rgba(231,29,54,.2)}
+.vs-sep{font-size:2.5rem;font-weight:900;color:#FF6B35}
+
+/* Glow ring */
+.glow-ring{width:100px;height:100px;border-radius:50%;border:3px solid rgba(255,107,53,.2);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-pulse 3s ease-in-out infinite;font-size:2rem;color:#FF6B35}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.25)}50%{box-shadow:0 0 0 14px rgba(255,107,53,0)}}
+
+/* Shine */
+.shine{position:relative;overflow:hidden}
+
+/* Slide indicator dots */
+.slide-indicator{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,107,53,.2);transition:all .35s}
+.dot.active{background:#FF6B35;width:24px;border-radius:5px}
+
+/* Page badge */
+.page-badge{position:absolute;top:18px;left:26px;font-size:1rem;color:#FF6B35;font-weight:900;letter-spacing:2px;opacity:.8}
+.page-badge span{color:#A7A9BE;font-size:.8rem;font-weight:400}
+
+/* Nav buttons */
+.nav-btn{position:fixed;top:50%;transform:translateY(-50%);z-index:101;width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,107,53,.25);background:rgba(15,14,23,.7);color:#FF6B35;font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;backdrop-filter:blur(8px)}
+.nav-btn:hover{background:rgba(255,107,53,.15);border-color:#FF6B35}
+.nav-prev{left:16px}.nav-next{right:16px}
+
+/* Step flow diagram */
+.step-row{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.step-box{padding:10px 18px;border-radius:10px;background:rgba(26,25,50,.6);border:2px solid rgba(255,107,53,.2);font-weight:700;font-size:1rem;display:flex;align-items:center;gap:6px;transition:all .3s}
+.step-box:hover{background:rgba(255,107,53,.12);border-color:#FF6B35;transform:translateY(-2px)}
+.step-box.hi{border-color:#E76F51;background:rgba(231,111,81,.12)}
+.step-box.teal{border-color:#2EC4B6;background:rgba(46,196,182,.1)}
+.step-arrow{color:#F4A261;font-size:1rem}
+
+/* Pulse glow icon */
+.pulse-icon{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:.8}}
+
+/* Big number */
+.big-num{font-size:3.5rem;font-weight:900;background:linear-gradient(135deg,#FF6B35,#F4A261);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* background variants */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 20% 80%,#1A1932 0%,#0F0E17 100%)}
+
+/* Extra animations */
+@keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
+.shimmer{animation:shimmer 2s ease-in-out infinite}
+@keyframes bounce-in{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.bounce-in{animation:bounce-in .6s cubic-bezier(.68,-.55,.265,1.55)}
+@keyframes draw-line{to{stroke-dashoffset:0}}
+.draw-line{stroke-dasharray:500;stroke-dashoffset:500;animation:draw-line 2s ease forwards}
+@keyframes fade-up{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes spin-slow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.spin-slow{animation:spin-slow 20s linear infinite}
+@keyframes shake-warn{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.shake-warn{animation:shake-warn .5s ease-in-out infinite}
+@keyframes count-up{0%{opacity:0;transform:scale(.5)}100%{opacity:1;transform:scale(1)}}
+
+/* Link line animation */
+@keyframes dash-flow{to{stroke-dashoffset:-30}}
+.flow-line{stroke-dasharray:10 5;animation:dash-flow 1.2s linear infinite}
+
+/* Icon row spaced */
+.icon-row-wide{display:flex;gap:30px;justify-content:center;align-items:center;flex-wrap:wrap}
+
+/* Badge count */
+.badge-count{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-weight:900;font-size:1rem}
+.bc-orange{background:rgba(255,107,53,.2);color:#FF6B35}
+.bc-amber{background:rgba(244,162,97,.2);color:#F4A261}
+
+/* List group */
+.list-group{display:flex;flex-direction:column;gap:8px;width:85%;max-width:800px}
+.list-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;background:rgba(26,25,50,.35);border-radius:10px;font-size:1.05rem;color:#A7A9BE;text-align:left;transition:all .3s}
+.list-item:hover{background:rgba(255,107,53,.08);color:#FFFFFE}
+.list-item i{color:#FF6B35;margin-top:3px;flex-shrink:0}
+
+/* Connector SVG */
+.conn-group{display:flex;flex-direction:column;align-items:center;gap:2px}
+
+/* Animated border card */
+.anim-border{position:relative;overflow:hidden}
+.anim-border::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,#FF6B35,#F4A261,transparent);animation:border-slide 3s linear infinite}
+@keyframes border-slide{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ========== Slide 1: 封面 ========== -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p0"></div>
+  <div class="deco deco-orange" style="width:520px;height:520px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:360px;height:360px;bottom:-120px;left:-100px"></div>
+  <div class="deco deco-coral" style="width:200px;height:200px;top:40%;right:10%"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <i class="fas fa-cube" style="font-size:4rem;color:#FF6B35;opacity:.8"></i>
+    <i class="fas fa-lightbulb" style="font-size:3.5rem;color:#F4A261;opacity:.7;margin-left:20px"></i>
+  </div>
+  <div class="anim-item t-hero c-white">揭秘 <span style="color:#FF6B35">Lumen</span></div>
+  <div class="anim-item t-big c-amber" style="margin-top:6px">UE5 实时全局光照的圣杯之路</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-body c-gray" style="max-width:700px;margin-top:12px">从渲染方程的数学之美，到 Lumen 的工程奇迹<br>一场跨越 60 年的图形学探索之旅</div>
+  <div class="anim-item" style="margin-top:20px;display:flex;gap:18px">
+    <span class="tag tag-orange"><i class="fas fa-gamepad"></i> 虚拟引擎</span>
+    <span class="tag tag-amber"><i class="fas fa-sun"></i> 全局光照</span>
+    <span class="tag tag-teal"><i class="fas fa-microchip"></i> 实时渲染</span>
+  </div>
+</div>
+
+<!-- ========== Slide 2: 开篇 UE5演示 ========== -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-100px;left:-120px"></div>
+  <div class="deco deco-amber" style="width:280px;height:280px;bottom:-80px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:14px"><i class="fas fa-calendar-alt c-orange"></i> 2020年4月</div>
+  <div class="anim-item t-huge c-white">一段视频<span class="c-orange bold">引爆全网</span></div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:10px">
+    逼真滚落的砂石 · 博物馆藏品的雕塑 · 极具沉浸感的光影<br>
+    <span class="c-amber bold">如果不是画面中的 CG 角色，很难相信这些都由计算机生成</span>
+  </div>
+  <div class="anim-item" style="margin:16px 0">
+    <div class="glow-ring" style="width:120px;height:120px;font-size:2.6rem">
+      <i class="fas fa-cube pulse-icon"></i>
+    </div>
+  </div>
+  <div class="anim-item t-big c-orange">Epic 发布 <span class="c-amber">UE5</span> 实际演示</div>
+  <div class="anim-item t-body c-gray" style="margin-top:8px;max-width:750px">
+    驱动这些画面的核心技术 —— <span class="c-orange bold bg-orange">Lumen</span><br>
+    一个全动态的实时全局光照系统，实现了光线的"无限次反弹"
+  </div>
+  <div class="anim-item" style="margin-top:12px">
+    <span class="tag tag-orange"><i class="fas fa-star"></i> 计算机图形学里程碑式突破</span>
+  </div>
+</div>
+
+<!-- ========== Slide 3: 什么是游戏引擎 ========== -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;bottom:-120px;right:-100px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:12px"><i class="fas fa-question-circle c-orange"></i> 基础概念</div>
+  <div class="anim-item t-huge c-white">什么是<span class="c-orange bold">游戏引擎</span>？</div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:8px">
+    游戏引擎是<span class="c-amber bold">预先编写好的程序组件集合</span>，开发者基于它们开发游戏<br>而不必从零开始造轮子
+  </div>
+  <div class="anim-item grid-2" style="margin-top:16px">
+    <div class="info-card shine">
+      <div class="icon-badge ib-orange"><i class="fas fa-cube"></i></div>
+      <div style="font-size:1.5rem;font-weight:800;color:#FF6B35">Unreal Engine</div>
+      <div class="t-sm c-gray">Epic Games 开发<br>AAA 大作首选<br>代表作：堡垒之夜、黑神话：悟空</div>
+      <div class="progress-bar"><div class="progress-fill pf-orange" data-width="95%"></div></div>
+      <span class="tag tag-orange"><i class="fas fa-crown"></i> 行业标杆</span>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-amber"><i class="fas fa-cubes"></i></div>
+      <div style="font-size:1.5rem;font-weight:800;color:#F4A261">Unity</div>
+      <div class="t-sm c-gray">Unity Technologies 开发<br>移动/独立游戏广泛使用<br>代表作：原神、空洞骑士</div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="88%"></div></div>
+      <span class="tag tag-amber"><i class="fas fa-mobile-alt"></i> 跨平台</span>
+    </div>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:14px">它们催生了无数我们耳熟能详的游戏大作，构建出栩栩如生的虚幻世界</div>
+</div>
+
+<!-- ========== Slide 4: 全局光照概念 ========== -->
+<div class="slide bg-4" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:450px;height:450px;top:50%;left:50%;margin-top:-225px;margin-left:-225px;opacity:.6"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px"><i class="fas fa-lightbulb c-amber"></i> 核心概念</div>
+  <div class="anim-item concept-word">全局光照</div>
+  <div class="anim-item t-big c-white" style="margin-top:6px">Global Illumination</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item" style="margin:12px 0">
+    <div class="step-row">
+      <div class="step-box hi"><i class="fas fa-sun"></i> 光源</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box"><i class="fas fa-arrow-down"></i> 直接光照射物体</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box teal"><i class="fas fa-redo"></i> 光线反弹</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box hi"><i class="fas fa-eye"></i> 间接光照亮场景</div>
+    </div>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:800px;margin-top:8px">
+    <span class="c-orange bold">直接光</span> + <span class="c-amber bold">间接光</span> 共同照亮 = 全局光照
+  </div>
+  <div class="anim-item" style="margin:10px 0">
+    <svg width="480" height="130" viewBox="0 0 480 130">
+      <defs>
+        <linearGradient id="gi-sun" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FF6B35"/>
+          <stop offset="100%" style="stop-color:#E76F51"/>
+        </linearGradient>
+        <radialGradient id="gi-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:.3"/>
+          <stop offset="100%" style="stop-color:#FF6B35;stop-opacity:0"/>
+        </radialGradient>
+      </defs>
+      <!-- Box frame -->
+      <rect x="15" y="15" width="210" height="100" rx="10" fill="none" stroke="rgba(255,107,53,.2)" stroke-width="1.5"/>
+      <text x="120" y="38" text-anchor="middle" fill="#A7A9BE" font-size="10" font-weight="700">传统光栅化 (仅有直接光)</text>
+      <!-- Sun -->
+      <circle cx="50" cy="70" r="20" fill="url(#gi-sun)" opacity=".8"/>
+      <text x="50" y="74" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">光源</text>
+      <!-- Direct light -->
+      <line x1="70" y1="70" x2="115" y2="50" stroke="#FF6B35" stroke-width="2.5"/>
+      <line x1="70" y1="70" x2="115" y2="70" stroke="#FF6B35" stroke-width="2.5"/>
+      <line x1="70" y1="70" x2="115" y2="90" stroke="#FF6B35" stroke-width="2.5"/>
+      <!-- Lit object -->
+      <rect x="120" y="50" width="25" height="40" rx="4" fill="rgba(255,107,53,.15)" stroke="#FF6B35" stroke-width="1.5"/>
+      <!-- Shadow area -->
+      <rect x="160" y="60" width="40" height="30" rx="3" fill="rgba(231,29,54,.08)" stroke="#E71D36" stroke-width="1" stroke-dasharray="3 2"/>
+      <text x="180" y="78" text-anchor="middle" fill="#E71D36" font-size="9">漆黑!</text>
+      <!-- Arrow to right -->
+      <line x1="230" y1="65" x2="255" y2="65" stroke="#A7A9BE" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+      <!-- GI side -->
+      <rect x="260" y="15" width="210" height="100" rx="10" fill="none" stroke="rgba(46,196,182,.2)" stroke-width="1.5"/>
+      <text x="365" y="38" text-anchor="middle" fill="#A7A9BE" font-size="10" font-weight="700">全局光照 (直接+间接)</text>
+      <circle cx="295" cy="70" r="20" fill="url(#gi-sun)" opacity=".8"/>
+      <text x="295" y="74" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">光源</text>
+      <line x1="315" y1="70" x2="355" y2="50" stroke="#FF6B35" stroke-width="2"/>
+      <line x1="315" y1="70" x2="355" y2="70" stroke="#FF6B35" stroke-width="2"/>
+      <line x1="315" y1="70" x2="355" y2="90" stroke="#FF6B35" stroke-width="2"/>
+      <rect x="360" y="50" width="25" height="40" rx="4" fill="rgba(46,196,182,.15)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <rect x="400" y="58" width="40" height="24" rx="3" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="1" stroke-dasharray="2 2"/>
+      <text x="420" y="75" text-anchor="middle" fill="#2EC4B6" font-size="9">有光!</text>
+      <path d="M385,60 Q400,40 420,60" fill="none" stroke="#2EC4B6" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <path d="M385,80 Q400,95 420,80" fill="none" stroke="#2EC4B6" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <defs><marker id="arrowGray" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,8 2.5,0 5" fill="#A7A9BE"/></marker></defs>
+    </svg>
+  </div>
+  <div class="anim-item success-box" style="margin-top:6px">
+    <i class="fas fa-check-circle"></i> 光栅化仅有直接光，暗处漆黑 → 手动补光打破能量守恒 → 效果依赖灯光师<br>
+    <strong>全局光照用物理法则模拟现实，消除主观性，画面因此更逼真</strong>
+  </div>
+</div>
+
+<!-- ========== Slide 5: 图形学演进（上） ========== -->
+<div class="slide bg-5" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:300px;height:300px;top:-80px;right:-60px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px"><i class="fas fa-history c-orange"></i> 计算机图形演进 · 上篇</div>
+  <div class="anim-item t-big c-white">从<span class="c-orange bold">拓荒时代</span>到<span class="c-amber bold">物理奠基</span></div>
+  <div class="anim-item timeline" style="margin-top:14px">
+    <div class="timeline-item">
+      <span class="year">1962</span>
+      <span class="desc">Ivan Sutherland 的 <strong>Sketchpad</strong> 博士论文，开创计算机图形学</span>
+    </div>
+    <div class="timeline-item">
+      <span class="year">1970s</span>
+      <span class="desc"><strong>光栅化渲染</strong> · <strong>Gouraud 着色</strong> 光滑棱角 · <strong>纹理映射</strong> 赋予模型现实纹理</span>
+    </div>
+    <div class="timeline-item">
+      <span class="year">1970s</span>
+      <span class="desc"><strong>材质模型</strong>：Lambert 漫反射 · Phong/Blinn-Phong 高光 —— 但都是经验公式，不精确</span>
+    </div>
+    <div class="timeline-item">
+      <span class="year">1984</span>
+      <span class="desc"><strong>Goral 等人</strong>将辐射度量学引入图形学 —— 光照首次有了<span class="c-orange bold">真实物理度量</span></span>
+    </div>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:10px">
+    此前光线没有单位，只能模糊度量强度。辐射度量学让光照计算有了科学基础。
+  </div>
+</div>
+
+<!-- ========== Slide 6: 图形学演进（下）渲染方程 ========== -->
+<div class="slide bg-6" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px;opacity:.5"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px"><i class="fas fa-flask c-orange"></i> 图形学演进 · 下篇</div>
+  <div class="anim-item t-big c-white">1986 · <span class="c-orange bold">渲染方程</span></div>
+  <div class="anim-item t-sm c-gray" style="margin-top:4px">James Kajiya — 史蒂文·孔斯奖获奖论文</div>
+  <div class="anim-item" style="margin:10px 0">
+    <div style="font-size:2.2rem;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51,#2EC4B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:Georgia,serif">
+      L<sub>o</sub> = L<sub>e</sub> + ∫ f<sub>r</sub> · L<sub>i</sub> · (ω·n) · dω
+    </div>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:780px">
+    渲染方程的离散形式是<span class="c-orange bold">无穷级数之和</span>：
+  </div>
+  <div class="anim-item" style="margin:8px 0">
+    <div class="step-row">
+      <div class="step-box"><i class="fas fa-star"></i> 自发光的</div>
+      <div class="step-arrow">+</div>
+      <div class="step-box hi"><i class="fas fa-sun"></i> 直接光</div>
+      <div class="step-arrow">+</div>
+      <div class="step-box teal"><i class="fas fa-redo"></i> 反弹 1 次</div>
+      <div class="step-arrow">+</div>
+      <div class="step-box teal"><i class="fas fa-redo"></i> 反弹 2 次</div>
+      <div class="step-arrow">+</div>
+      <div class="step-box"><i class="fas fa-ellipsis-h"></i></div>
+      <div class="step-arrow">+</div>
+      <div class="step-box" style="border-color:#F4A261"><i class="fas fa-infinity"></i> 无限次</div>
+    </div>
+  </div>
+  <div class="anim-item highlight-box" style="margin-top:10px">
+    <h4><i class="fas fa-key c-orange"></i> 核心意义</h4>
+    <p>渲染方程满足能量守恒，是<strong>图形真实感的数学描述</strong>。它宣告图形学蛮荒时代终结，为后人指明了方向：<br>想获得真实光照？求解渲染方程。</p>
+  </div>
+  <div class="anim-item" style="margin-top:8px">
+    <svg width="460" height="90" viewBox="0 0 460 90">
+      <text x="15" y="35" fill="#A7A9BE" font-size="11" font-weight="700">PBR 材质关键要素：</text>
+      <rect x="15" y="48" width="120" height="30" rx="6" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1"/>
+      <text x="75" y="68" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">菲涅尔反射 (1823)</text>
+      <rect x="150" y="48" width="130" height="30" rx="6" fill="rgba(244,162,97,.08)" stroke="#F4A261" stroke-width="1"/>
+      <text x="215" y="68" text-anchor="middle" fill="#F4A261" font-size="10" font-weight="700">次表面散射 (SSS)</text>
+      <rect x="295" y="48" width="100" height="30" rx="6" fill="rgba(46,196,182,.08)" stroke="#2EC4B6" stroke-width="1"/>
+      <text x="345" y="68" text-anchor="middle" fill="#2EC4B6" font-size="10" font-weight="700">PBR 材质模型</text>
+      <text x="70" y="88" text-anchor="middle" fill="#A7A9BE" font-size="9">基于真实物理公式</text>
+      <text x="215" y="88" text-anchor="middle" fill="#A7A9BE" font-size="9">半透/皮肤/蜡烛</text>
+      <text x="345" y="88" text-anchor="middle" fill="#A7A9BE" font-size="9">实验+经验+物理</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ========== Slide 7: 为什么实时全局光照是圣杯 ========== -->
+<div class="slide bg-1" id="s6">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p6"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-120px;right:-100px"></div>
+  <div class="deco deco-coral" style="width:300px;height:300px;bottom:-80px;left:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px"><i class="fas fa-trophy c-amber"></i> 图形学的圣杯</div>
+  <div class="anim-item t-huge c-white">为什么<span class="c-orange bold">实时</span>这么难？</div>
+  <div class="anim-item t-mid c-gray" style="margin-top:6px">实时全局光照 = 在极其有限的时间里完成天文数字般的计算</div>
+  <div class="anim-item vs-row" style="margin-top:16px">
+    <div class="vs-cell bad">
+      <i class="fas fa-film" style="font-size:2rem;color:#E71D36"></i>
+      <div class="t-big c-red" style="font-size:1.8rem">电影离线渲染</div>
+      <div class="t-body c-gray">超能陆战队：<br><span class="c-red bold">55,000 核电</span><br>一帧 = 几十小时</div>
+    </div>
+    <div class="vs-sep">VS</div>
+    <div class="vs-cell good">
+      <i class="fas fa-gamepad" style="font-size:2rem;color:#2EC4B6"></i>
+      <div class="t-big c-teal" style="font-size:1.8rem">游戏实时渲染</div>
+      <div class="t-body c-gray">60 FPS<br><span class="c-teal bold">每帧仅 17 毫秒</span></div>
+    </div>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:800px;margin-top:12px">
+    光线追踪的计算量 = <span class="c-orange bold">像素数 × 每像素光线数 × 三角形数 × 反弹次数</span>
+  </div>
+  <div class="anim-item warn-box" style="margin-top:8px">
+    <i class="fas fa-exclamation-triangle"></i> 高质量光照需要每像素<strong>几百根光线</strong>——而当前游戏算力连<strong>每像素一根光线都做不到</strong><br>
+    这是 Daniel Wright（Lumen 三名核心开发者之一）亲口所言
+  </div>
+  <div class="anim-item" style="margin-top:10px">
+    <svg width="500" height="55" viewBox="0 0 500 55">
+      <rect x="10" y="5" width="480" height="20" rx="8" fill="rgba(231,29,54,.08)"/>
+      <rect x="10" y="5" width="40" height="20" rx="8" fill="rgba(231,29,54,.25)"/>
+      <text x="250" y="19" text-anchor="middle" fill="#E71D36" font-size="10" font-weight="700">光线追踪计算量 = 像素数(N) × 每像素光线(R) × 三角形数(T) × 反弹次数(B)</text>
+      <rect x="10" y="30" width="480" height="20" rx="8" fill="rgba(255,107,53,.08)"/>
+      <rect x="10" y="30" width="180" height="20" rx="8" fill="rgba(255,107,53,.18)"/>
+      <text x="250" y="44" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">N=2M(1080p) × R=100+ × T=100万+ × B=5+ ≈ 天文数字!</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ========== Slide 8: Lumen突破(一) 距离场 ========== -->
+<div class="slide bg-3" id="s7">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;top:-80px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-puzzle-piece c-orange"></i> Lumen 核心突破</div>
+  <div class="anim-item t-big c-white">突破一：<span class="c-orange bold">距离场</span></div>
+  <div class="anim-item t-mid c-amber" style="margin-top:2px">Distance Field</div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:8px">
+    场景中每个点 → 计算到最近物体的距离 → 存储为<span class="c-orange bold">距离场数据</span>
+  </div>
+  <div class="anim-item" style="margin:12px 0">
+    <div class="step-row">
+      <div class="step-box hi"><i class="fas fa-map-pin"></i> 光线从 A 点出发</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box"><i class="fas fa-search"></i> 查询距离 = 3</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box teal"><i class="fas fa-shoe-prints"></i> 安全步进 3</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box"><i class="fas fa-redo"></i> 重复直到距离 &lt; 阈值</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box hi"><i class="fas fa-check"></i> 找到交点！</div>
+    </div>
+  </div>
+  <div class="anim-item highlight-box" style="margin-top:8px">
+    <h4><i class="fas fa-bolt c-orange"></i> 核心优势</h4>
+    <p>距离是<strong>预先算好</strong>的。运行时只需<strong>查询</strong>，不做复杂的三角形相交数学运算。<br>以该点为球心、距离为半径的球体内一定<strong>没有任何物体</strong>，光线可以放心前进。</p>
+  </div>
+  <div class="anim-item success-box">
+    <i class="fas fa-lightbulb"></i> 快速确定光线与哪个物体相交 —— 相比传统求交方法，性能质的飞跃
+  </div>
+  <div class="anim-item" style="margin-top:8px">
+    <svg width="440" height="70" viewBox="0 0 440 70">
+      <defs>
+        <marker id="arrowO" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#FF6B35"/></marker>
+      </defs>
+      <text x="20" y="25" fill="#A7A9BE" font-size="10">传统：</text>
+      <rect x="70" y="10" width="50" height="18" rx="5" fill="rgba(231,29,54,.15)" stroke="#E71D36" stroke-width="1"/>
+      <text x="95" y="24" text-anchor="middle" fill="#E71D36" font-size="9" font-weight="700">求交点</text>
+      <line x1="125" y1="19" x2="155" y2="19" stroke="#E71D36" stroke-width="1.5" marker-end="url(#arrowO)"/>
+      <rect x="160" y="10" width="55" height="18" rx="5" fill="rgba(231,29,54,.15)" stroke="#E71D36" stroke-width="1"/>
+      <text x="187" y="24" text-anchor="middle" fill="#E71D36" font-size="9" font-weight="700">判在内部?</text>
+      <line x1="220" y1="19" x2="250" y2="19" stroke="#E71D36" stroke-width="1.5" marker-end="url(#arrowO)"/>
+      <rect x="255" y="10" width="50" height="18" rx="5" fill="rgba(231,29,54,.15)" stroke="#E71D36" stroke-width="1"/>
+      <text x="280" y="24" text-anchor="middle" fill="#E71D36" font-size="9" font-weight="700">下一个△</text>
+      <line x1="310" y1="19" x2="330" y2="19" stroke="#E71D36" stroke-width="1.5"/>
+      <text x="345" y="24" fill="#E71D36" font-size="10" font-weight="700">...N次!</text>
+      <text x="40" y="55" fill="#A7A9BE" font-size="10">距离场：</text>
+      <rect x="120" y="40" width="70" height="18" rx="5" fill="rgba(46,196,182,.15)" stroke="#2EC4B6" stroke-width="1"/>
+      <text x="155" y="54" text-anchor="middle" fill="#2EC4B6" font-size="9" font-weight="700">查询距离</text>
+      <line x1="195" y1="49" x2="230" y2="49" stroke="#2EC4B6" stroke-width="2" marker-end="url(#arrowO)"/>
+      <rect x="235" y="40" width="65" height="18" rx="5" fill="rgba(46,196,182,.15)" stroke="#2EC4B6" stroke-width="1"/>
+      <text x="267" y="54" text-anchor="middle" fill="#2EC4B6" font-size="9" font-weight="700">安全步进</text>
+      <line x1="305" y1="49" x2="340" y2="49" stroke="#2EC4B6" stroke-width="2" marker-end="url(#arrowO)"/>
+      <text x="370" y="54" fill="#2EC4B6" font-size="11" font-weight="900">O(步数)!</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ========== Slide 9: Lumen突破(二) 表面缓存 ========== -->
+<div class="slide bg-4" id="s8">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:380px;height:380px;bottom:-100px;left:-100px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-puzzle-piece c-orange"></i> Lumen 核心突破</div>
+  <div class="anim-item t-big c-white">突破二：<span class="c-amber bold">表面缓存</span></div>
+  <div class="anim-item t-mid c-coral" style="margin-top:2px">Surface Cache</div>
+  <div class="anim-item t-body c-gray" style="max-width:780px;margin-top:8px">
+    距离场有<span class="c-red bold">致命缺陷</span>：只能判断光线与谁相交，无法获取材质信息，无法完成光线反弹计算
+  </div>
+  <div class="anim-item" style="margin:12px 0">
+    <div class="step-row">
+      <div class="step-box hi"><i class="fas fa-sun"></i> 光源发出光线</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box"><i class="fas fa-map-marked-alt"></i> 距离场找物体</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box teal" style="border-color:#E76F51;background:rgba(231,111,81,.15)"><i class="fas fa-database"></i> 存入表面缓存</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box hi"><i class="fas fa-sync-alt"></i> 解决间接光</div>
+    </div>
+  </div>
+  <div class="anim-item highlight-box">
+    <h4><i class="fas fa-archive c-amber"></i> 表面缓存的本质</h4>
+    <p>计算机为存储光照信息专门分配的空间。Lumen 先将直接光存入表面缓存，<br>再通过辐射度算法和帧间复用，在缓存中迭代累积间接光照信息。<br>它就像一个<strong>光照中转站</strong>，弥补了距离场无材质信息的缺陷。</p>
+  </div>
+</div>
+
+<!-- ========== Slide 10: Lumen突破(三) 辐射度算法 ========== -->
+<div class="slide bg-5" id="s9">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:350px;height:350px;top:-80px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-puzzle-piece c-orange"></i> Lumen 核心突破</div>
+  <div class="anim-item t-big c-white">突破三：<span class="c-coral bold">辐射度算法</span></div>
+  <div class="anim-item t-mid c-amber" style="margin-top:2px">Radiosity</div>
+  <div class="anim-item t-body c-gray" style="max-width:780px;margin-top:8px">
+    场景被<span class="c-orange bold">离散成面元</span>，每个面元的辐射能量 = 所有其他面元辐射给它的能量之和
+  </div>
+  <div class="anim-item" style="margin:10px 0;text-align:center">
+    <div style="font-size:2rem;font-weight:900;color:#F4A261;letter-spacing:2px">
+      B<sub>i</sub> = E<sub>i</sub> + ρ<sub>i</sub> · Σ F<sub>ij</sub> · B<sub>j</sub>
+    </div>
+  </div>
+  <div class="anim-item t-body c-gray" style="max-width:750px">
+    这与渲染方程在离散化后<span class="c-orange bold">等价</span>。面元划分越细密 → 间接光反弹次数越多 → 画面越逼真。
+  </div>
+  <div class="anim-item highlight-box" style="margin-top:8px">
+    <h4><i class="fas fa-cogs c-coral"></i> 传统困境</h4>
+    <p>经典做法需要联立方程组求解。面元越多方程越多，计算量指数级增长 —— <strong>不可能在一帧内完成</strong>。</p>
+  </div>
+  <div class="anim-item t-mid c-orange" style="margin-top:6px">Lumen 的解法？→ 下一个突破</div>
+</div>
+
+<!-- ========== Slide 11: Lumen突破(四) 复用策略 ========== -->
+<div class="slide bg-2" id="s10">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p10"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px;opacity:.4"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:4px"><i class="fas fa-puzzle-piece c-orange"></i> Lumen 核心突破</div>
+  <div class="anim-item t-big c-white">突破四：<span class="c-orange bold">复用策略</span></div>
+  <div class="anim-item t-mid c-amber" style="margin-top:2px">无限次反弹的真正含义</div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:10px">
+    游戏每秒<span class="c-orange bold">60 帧</span>，相邻两帧场景变化极少 → <span class="c-amber bold">可以复用上一帧的光照数据</span>
+  </div>
+  <div class="anim-item" style="margin:14px 0">
+    <div class="step-row">
+      <div class="step-box hi" style="font-weight:900"><i class="fas fa-circle"></i> 第 0 帧：只有直接光</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box"><i class="fas fa-database"></i> 存入缓存</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box teal"><i class="fas fa-redo"></i> 第 1 帧：复用第 0 帧</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box"><i class="fas fa-calculator"></i> 算出间接光</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box hi"><i class="fas fa-plus-circle"></i> 直接+间接=最终</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box"><i class="fas fa-arrow-up"></i> 更新缓存</div>
+      <div class="step-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="step-box" style="border-color:#E76F51"><i class="fas fa-repeat"></i> 第 2、3、4...帧迭代</div>
+    </div>
+  </div>
+  <div class="anim-item success-box">
+    <i class="fas fa-gem"></i> <strong>Lumen 巧妙的做了这一件事</strong>：将面元上一帧的光照当成下一帧的间接光来计算。随着帧数增加，面元接收的光照逐步累积更新，<strong>结果越来越准确</strong>。这就是"无限次反弹"的工程真谛！
+  </div>
+</div>
+
+<!-- ========== Slide 12: Lumen分层加速架构 ========== -->
+<div class="slide bg-3" id="s11">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-80px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px"><i class="fas fa-layer-group c-orange"></i> 工程架构</div>
+  <div class="anim-item t-big c-white">Lumen <span class="c-orange bold">分层加速</span>架构</div>
+  <div class="anim-item t-sm c-gray" style="margin-top:4px">根据距摄像机的距离，将场景分为四个区域，每区使用不同的加速方案</div>
+  <div class="anim-item grid-2" style="margin-top:16px">
+    <div class="info-card shine">
+      <div class="icon-badge ib-orange"><i class="fas fa-microscope"></i></div>
+      <div class="c-orange bold" style="font-size:1.3rem">超近距 &lt; 1.8m</div>
+      <div class="t-sm c-gray">像素级精致画面<br><span class="c-orange bold">屏幕空间追踪</span><br>最高精度全局光照</div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-amber"><i class="fas fa-map-marker-alt"></i></div>
+      <div class="c-amber bold" style="font-size:1.3rem">近距离 0~1.8m</div>
+      <div class="t-sm c-gray">精细光照计算<br><span class="c-amber bold">距离场加速</span><br>逐像素光线求交</div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-coral"><i class="fas fa-globe"></i></div>
+      <div class="c-coral bold" style="font-size:1.3rem">中距离 1.8~200m</div>
+      <div class="t-sm c-gray">范围光照传播<br><span class="c-coral bold">全局距离场 + 体素</span><br>平衡精度与性能</div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-teal"><i class="fas fa-mountain"></i></div>
+      <div class="c-teal bold" style="font-size:1.3rem">远距离 &gt; 200m</div>
+      <div class="t-sm c-gray">大范围环境光<br><span class="c-teal bold">简化光照模型</span><br>最低开销保证远景观感</div>
+    </div>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:780px;margin-top:12px">
+    Lumen 将光照与各位置的 BRDF 材质计算，反射光确定每个像素值。<br>
+    融合<span class="c-orange bold">两种经典全局光照思路</span>+<span class="c-amber bold">巧妙的工程手段</span>，解开了原本无法直接求解的渲染方程。
+  </div>
+</div>
+
+<!-- ========== Slide 13: 引擎驱动的世界 ========== -->
+<div class="slide bg-1" id="s12">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p12"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-100px;left:-100px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px"><i class="fas fa-globe-americas c-orange"></i> 超越游戏</div>
+  <div class="anim-item t-huge c-white">引擎驱动的<span class="c-orange bold">世界</span></div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:10px">
+    游戏引擎的身影早已超越了游戏本身，渗透到现实世界的各个角落
+  </div>
+  <div class="anim-item" style="margin:14px 0">
+    <div class="step-row">
+      <div class="step-box hi"><i class="fas fa-gamepad"></i> 1996 Quake 引擎</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box"><i class="fas fa-microchip"></i> 3D 独立显卡诞生</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box teal"><i class="fas fa-server"></i> GPU 问世</div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-box hi"><i class="fas fa-robot"></i> 训练 ChatGPT</div>
+    </div>
+  </div>
+  <div class="anim-item grid-3" style="margin-top:10px">
+    <div class="info-card">
+      <div class="big-num">14.9%</div>
+      <div class="t-sm c-gray">游戏对芯片产业<br><span class="c-orange bold">科技贡献率</span></div>
+    </div>
+    <div class="info-card">
+      <i class="fas fa-film c-amber" style="font-size:2rem"></i>
+      <div class="t-sm c-gray">影视动画<br><span class="c-amber bold">CG 特效革命</span></div>
+    </div>
+    <div class="info-card">
+      <i class="fas fa-industry c-coral" style="font-size:2rem"></i>
+      <div class="t-sm c-gray">建筑 · 汽车 · 元宇宙<br><span class="c-coral bold">数字孪生</span></div>
+    </div>
+  </div>
+  <div class="anim-item highlight-box" style="margin-top:10px">
+    <h4><i class="fas fa-industry c-orange"></i> 新型工业软件</h4>
+    <p>GPU 已成为芯片产业核心组成。游戏引擎被冠以"新型工业软件"称号 —— 它是未来数字经济的重要驱动，更是图形工业实力的集群体现。</p>
+  </div>
+</div>
+
+<!-- ========== Slide 14: 国产游戏工业 ========== -->
+<div class="slide bg-4" id="s13">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;top:-80px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px"><i class="fas fa-flag c-orange"></i> 中国力量</div>
+  <div class="anim-item t-huge c-white"><span class="c-orange bold">国产游戏</span>工业崛起</div>
+  <div class="anim-item grid-2" style="margin-top:16px">
+    <div class="info-card shine">
+      <div class="icon-badge ib-orange"><i class="fas fa-chart-line"></i></div>
+      <div class="c-orange bold">GDC 企业参与</div>
+      <div class="t-sm c-gray">演讲场次：<span class="c-orange bold">2019年 2场</span> → <span class="c-amber bold">近年 30+场</span><br>腾讯游戏一家就 18 场</div>
+      <div class="progress-bar"><div class="progress-fill pf-orange" data-width="93%"></div></div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-amber"><i class="fas fa-file-alt"></i></div>
+      <div class="c-amber bold">专利爆发增长</div>
+      <div class="t-sm c-gray">中国专利申请数量<br>占全球<span class="c-amber bold">三成</span>，远超日韩</div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="78%"></div></div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-coral"><i class="fas fa-hat-wizard"></i></div>
+      <div class="c-coral bold">《黑神话：悟空》</div>
+      <div class="t-sm c-gray">首个国产 AAA 商业大作<br>B站必刷，全网热议<br>用技术讲述中国文化故事</div>
+    </div>
+    <div class="info-card shine">
+      <div class="icon-badge ib-teal"><i class="fas fa-users"></i></div>
+      <div class="c-teal bold">《戴森球计划》</div>
+      <div class="t-sm c-gray">口碑佳作<br>5 人小团队上市前<br><span class="c-red bold">仍面临生死存亡</span></div>
+    </div>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:800px;margin-top:12px">
+    国产游戏崛起"不仅是口号。但大多数仍是<span class="c-red bold">小作坊式用爱发电</span>。<br>
+    文化软实力的彰显，需要<span class="c-orange bold">强大的技术硬实力</span>作为基础。
+  </div>
+  <div class="anim-item warn-box" style="margin-top:6px">
+    <i class="fas fa-exclamation-triangle"></i> 一款投入巨大、市场不明朗的游戏随时可能夭折。我们从未抵达本可以到达的地方，从未领略那本该领略的风景。
+  </div>
+  <div class="anim-item success-box" style="margin-top:4px">
+    <i class="fas fa-lightbulb"></i> 《黑神话：悟空》让人激动的原因：不仅讲述了猴子的故事，更是因为我们终于开始做出自己的 AAA 商业大作，用技术实力支撑起文化表达。
+  </div>
+</div>
+
+<!-- ========== Slide 15: 核心洞察总结 ========== -->
+<div class="slide bg-5" id="s14">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p14"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px;opacity:.35"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-brain c-orange"></i> 总结收尾</div>
+  <div class="anim-item concept-word" style="font-size:3.8rem">核心洞察总结</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item" style="margin:8px 0;width:85%;max-width:850px">
+    <div class="grid-2">
+      <div class="info-card shine" style="text-align:left;align-items:flex-start">
+        <div class="icon-badge ib-orange" style="width:44px;height:44px;font-size:1.1rem"><i class="fas fa-cogs"></i></div>
+        <div style="font-weight:800;color:#FF6B35;margin-top:4px">工程智慧的典范</div>
+        <div class="t-sm c-gray">距离场+表面缓存+辐射度+帧间复用，四种技术的精妙融合，在性能与效果间找到完美平衡</div>
+      </div>
+      <div class="info-card shine" style="text-align:left;align-items:flex-start">
+        <div class="icon-badge ib-amber" style="width:44px;height:44px;font-size:1.1rem"><i class="fas fa-flask"></i></div>
+        <div style="font-weight:800;color:#F4A261;margin-top:4px">图形学是工程学科</div>
+        <div class="t-sm c-gray">理论提供方向，落地实现往往与原始论文思路相去甚远。很少有理论能"一招鲜吃遍天"</div>
+      </div>
+      <div class="info-card shine" style="text-align:left;align-items:flex-start">
+        <div class="icon-badge ib-coral" style="width:44px;height:44px;font-size:1.1rem"><i class="fas fa-globe"></i></div>
+        <div style="font-weight:800;color:#E76F51;margin-top:4px">超越游戏的引擎</div>
+        <div class="t-sm c-gray">游戏引擎已成数字经济核心驱动力，渗透影视、建筑、元宇宙、汽车、AI训练等领域</div>
+      </div>
+      <div class="info-card shine" style="text-align:left;align-items:flex-start">
+        <div class="icon-badge ib-teal" style="width:44px;height:44px;font-size:1.1rem"><i class="fas fa-flag"></i></div>
+        <div style="font-weight:800;color:#2EC4B6;margin-top:4px">国产崛起与差距并存</div>
+        <div class="t-sm c-gray">GDC参与爆发增长，专利占全球三成，但大多数国产游戏仍靠小团队"用爱发电"</div>
+      </div>
+    </div>
+  </div>
+  <div class="anim-item highlight-box" style="margin-top:8px">
+    <h4><i class="fas fa-quote-right c-orange"></i> 感悟</h4>
+    <p>实时全局光照是"永远还有很长的路要走"的技术探索。Lumen 的核心启示：<span class="c-orange bold">数学家描述世界，工程师创造世界</span>。</p>
+  </div>
+</div>
+
+<!-- ========== Slide 16: 日后奋斗方向 ========== -->
+<div class="slide bg-1" id="s15">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p15"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px;opacity:.3"></div>
+  <div class="deco deco-coral" style="width:300px;height:300px;bottom:-100px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:4px"><i class="fas fa-rocket c-orange"></i> 展望未来</div>
+  <div class="anim-item concept-word" style="font-size:3.8rem">日后奋斗方向</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item" style="margin:10px 0;width:88%;max-width:900px">
+    <div class="grid-3">
+      <div class="info-card shine">
+        <div class="icon-badge ib-orange" style="width:52px;height:52px"><i class="fas fa-tachometer-alt"></i></div>
+        <div style="font-weight:800;color:#FF6B35;margin-top:2px">攻克性能瓶颈</div>
+        <div class="t-sm c-gray">持续突破实时渲染<br>算力与算法极限<br>让圣杯不再遥不可及</div>
+        <span class="tag tag-orange">技术入行打基础</span>
+      </div>
+      <div class="info-card shine">
+        <div class="icon-badge ib-amber" style="width:52px;height:52px"><i class="fas fa-code-branch"></i></div>
+        <div style="font-weight:800;color:#F4A261;margin-top:2px">发展自研引擎</div>
+        <div class="t-sm c-gray">增强国产引擎核心能力<br>打破国外技术壁垒<br>建立自主工业软件体系</div>
+        <span class="tag tag-amber">感知变化顺势为</span>
+      </div>
+      <div class="info-card shine">
+        <div class="icon-badge ib-coral" style="width:52px;height:52px"><i class="fas fa-project-diagram"></i></div>
+        <div style="font-weight:800;color:#E76F51;margin-top:2px">跨行业应用</div>
+        <div class="t-sm c-gray">推动数字孪生<br>工业仿真 · 智慧城市<br>释放引擎无限潜力</div>
+        <span class="tag tag-orange">不躺平持续拼</span>
+      </div>
+      <div class="info-card shine">
+        <div class="icon-badge ib-teal" style="width:52px;height:52px"><i class="fas fa-user-graduate"></i></div>
+        <div style="font-weight:800;color:#2EC4B6;margin-top:2px">培养复合人才</div>
+        <div class="t-sm c-gray">图形学 + 工程能力<br>理论与实践的桥梁<br>传承计算机图形学梦想</div>
+        <span class="tag tag-teal">以技术入行</span>
+      </div>
+      <div class="info-card shine">
+        <div class="icon-badge ib-orange" style="width:52px;height:52px"><i class="fas fa-hard-hat"></i></div>
+        <div style="font-weight:800;color:#FF6B35;margin-top:2px">夯实游戏工业</div>
+        <div class="t-sm c-gray">软实力需要硬基础<br>建立完整产业生态链<br>从"用爱发电"到工业体系</div>
+        <span class="tag tag-amber">顺势而为</span>
+      </div>
+      <div class="info-card shine">
+        <div class="icon-badge ib-coral" style="width:52px;height:52px"><i class="fas fa-theater-masks"></i></div>
+        <div style="font-weight:800;color:#E76F51;margin-top:2px">技术成就文化</div>
+        <div class="t-sm c-gray">让中国故事借力<br>世界级技术表达<br>抵达"本可抵达的风景"</div>
+        <span class="tag tag-teal">持续拼不躺平</span>
+      </div>
+    </div>
+  </div>
+  <div class="anim-item" style="margin-top:10px;display:flex;gap:22px">
+    <div class="glow-ring" style="width:80px;height:80px;font-size:1.6rem"><i class="fas fa-star"></i></div>
+    <div class="glow-ring" style="width:80px;height:80px;font-size:1.6rem;animation-delay:.5s"><i class="fas fa-heart"></i></div>
+    <div class="glow-ring" style="width:80px;height:80px;font-size:1.6rem;animation-delay:1s"><i class="fas fa-fire"></i></div>
+  </div>
+  <div class="anim-item t-body c-white" style="margin-top:8px">
+    <span class="c-amber italic">"坏消息是我们还有很长的路要走，好消息是我们仍还有很长的路要走。"</span>
+  </div>
+</div>
+
+</div>
+<!-- ==================== SLIDE CONTAINER END ==================== -->
+
+<!-- Slide navigation dots -->
+<!-- Slide indicators -->
+<div class="slide-indicator" id="indicators"></div>
+
+<!-- Nav buttons -->
+<div class="nav-btn nav-prev" id="navPrev"><i class="fas fa-chevron-left"></i></div>
+<div class="nav-btn nav-next" id="navNext"><i class="fas fa-chevron-right"></i></div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide'), total = slides.length;
+  let cur = 0;
+
+  // Build indicators
+  const ind = document.getElementById('indicators');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    ind.appendChild(d);
+  }
+  const dots = document.querySelectorAll('.dot');
+
+  function animateProgressBars(slide) {
+    slide.querySelectorAll('.progress-fill').forEach(bar => {
+      const w = bar.dataset.width || '0%';
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = w; }, 500);
+    });
+  }
+
+  function resetAnimations(slide) {
+    slide.querySelectorAll('.anim-item').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+  }
+
+  function go(n) {
+    if (n < 0 || n >= total || n === cur) return;
+    const prev = slides[cur];
+    prev.classList.remove('active');
+
+    // Reset previous slide animations via cloning
+    resetAnimations(prev);
+
+    cur = n;
+    const next = slides[cur];
+    next.classList.add('active');
+
+    // Re-trigger animations sequentially
+    const items = next.querySelectorAll('.anim-item');
+    items.forEach((e, i) => {
+      setTimeout(() => e.classList.add('show'), 120 + i * 220);
+    });
+
+    // Update dots
+    dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+
+    animateProgressBars(next);
+  }
+
+  // Initial slide animation
+  slides[0].querySelectorAll('.anim-item').forEach((e, i) =>
+    setTimeout(() => e.classList.add('show'), 180 + i * 240)
+  );
+  setTimeout(() => animateProgressBars(slides[0]), 600);
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+      e.preventDefault(); go(cur + 1);
+    } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+      e.preventDefault(); go(cur - 1);
+    } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+  });
+
+  // Touch
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', e => {
+    tx = e.changedTouches[0].screenX;
+    ty = e.changedTouches[0].screenY;
+  });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].screenX - tx;
+    const dy = e.changedTouches[0].screenY - ty;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      dx < 0 ? go(cur + 1) : go(cur - 1);
+    }
+  });
+
+  // Mouse wheel
+  let wc = false;
+  document.addEventListener('wheel', e => {
+    if (wc) return;
+    wc = true;
+    setTimeout(() => wc = false, 700);
+    e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+  });
+
+  // Nav buttons
+  document.getElementById('navPrev').addEventListener('click', () => go(cur - 1));
+  document.getElementById('navNext').addEventListener('click', () => go(cur + 1));
+
+  // Floating particles
+  function createParticles(id) {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const colors = [
+      'rgba(255,107,53,.3)',
+      'rgba(244,162,97,.25)',
+      'rgba(231,111,81,.2)',
+      'rgba(46,196,182,.18)'
+    ];
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 6 + 3;
+      p.style.cssText = `
+        width:${size}px;height:${size}px;
+        left:${Math.random() * 100}%;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration:${Math.random() * 5 + 7}s;
+        animation-delay:${Math.random() * 5}s;
+      `;
+      container.appendChild(p);
+    }
+  }
+  createParticles('p0');
+  createParticles('p6');
+  createParticles('p10');
+  createParticles('p12');
+  createParticles('p14');
+  createParticles('p15');
+})();
+</script>
+
+</body>
+</html>
