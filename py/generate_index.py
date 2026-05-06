@@ -14,8 +14,8 @@ import urllib.error
 from datetime import datetime
 from pathlib import Path
 
-# Pages 基础 URL(用于读取已有部署数据)
-BASE_URL = "https://HengXin666.github.io/HX-Video-Summary"
+# 从 raw GitHub 拉取(无 CDN 延迟, 避免并发竞态)
+RAW_URL = "https://raw.githubusercontent.com/HengXin666/HX-Video-Summary/gh-pages"
 
 # 配色方案(与 science-content-ppt skill 保持一致)
 COLORS = {
@@ -35,21 +35,28 @@ def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def fetch_existing_deployments() -> list:
-    """从 Pages URL 获取已有部署记录"""
-    url = f"{BASE_URL}/deployments.json"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            print(f"从 Pages 加载了 {len(data)} 条已有记录")
-            return data
-    except urllib.error.URLError as e:
-        print(f"无法从 Pages 获取已有数据(首次运行? ): {e}")
-        return []
-    except Exception as e:
-        print(f"解析已有数据失败: {e}")
-        return []
+def fetch_existing_deployments(retries: int = 3, delay: float = 0.5) -> list:
+    """从 raw GitHub 获取已有部署记录（零 CDN 延迟，带重试）"""
+    url = f"{RAW_URL}/deployments.json"
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                print(f"从 raw GitHub 加载了 {len(data)} 条已有记录")
+                return data
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print("deployments.json 不存在(首次运行?)")
+                return []
+            print(f"HTTP {e.code}, 重试 {attempt+1}/{retries}...")
+        except Exception as e:
+            print(f"获取失败: {e}, 重试 {attempt+1}/{retries}...")
+        if attempt < retries - 1:
+            import time
+            time.sleep(delay)
+    print("所有重试均失败, 返回空列表")
+    return []
 
 
 def load_local_deployments(data_file: Path) -> list:
