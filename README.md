@@ -1,6 +1,6 @@
-# 🎬 HX Video Summary
-
 <div align="center">
+
+# 🎬 HX Video Summary
 
 **B站视频 → 语音转写 → AI 总结 → PPT 网页 → 邮件送达 · 全自动**
 
