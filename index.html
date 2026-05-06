@@ -253,6 +253,76 @@
       text-decoration: none;
     }
 
+    /* ===== Video Group & History ===== */
+    .video-group {
+      margin-bottom: 24px;
+    }
+
+    .video-group .deploy-card {
+      margin-bottom: 0;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .video-group .deploy-card.history-item {
+      border-radius: 0;
+      border-top: none;
+      opacity: 0.7;
+    }
+
+    .video-group .deploy-card.history-item:last-of-type {
+      border-radius: 0 0 16px 16px;
+    }
+
+    .video-group .deploy-card.history-item:hover {
+      opacity: 1;
+    }
+
+    .history-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 32px;
+      background: #1a1929;
+      border: 1px solid #FF6B3522;
+      border-top: 1px solid #FF6B3511;
+      border-radius: 0 0 16px 16px;
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .history-toggle:hover {
+      background: #1e1d33;
+      border-color: #FF6B3544;
+      color: #F4A261;
+    }
+
+    .history-toggle .toggle-icon {
+      margin-left: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .history-toggle[aria-expanded="true"] .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .history-list {
+      overflow: hidden;
+    }
+
+    .history-list .deploy-card::before {
+      background: linear-gradient(180deg, #A7A9BE44, #FF6B3544);
+    }
+
+    /* solo card (no history) gets full border-radius */
+    .video-group:not(:has(.history-toggle)) .deploy-card {
+      border-radius: 16px;
+    }
+
     /* ===== Animation ===== */
     .an {
       opacity: 0;
@@ -285,11 +355,15 @@
     <p class="subtitle">B站视频智能总结 & PPT 生成记录</p>
     <div class="stats">
       <div class="stat-item">
-        <span class="stat-num">2</span>
+        <span class="stat-num">3</span>
+        <span class="stat-label">独立视频</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">3</span>
         <span class="stat-label">总计部署</span>
       </div>
       <div class="stat-item">
-        <span class="stat-num">#15</span>
+        <span class="stat-num">#17</span>
         <span class="stat-label">最近部署</span>
       </div>
     </div>
@@ -298,40 +372,63 @@
   <!-- Main Content -->
   <main class="container">
     
-        <div class="deploy-card an" style="animation-delay: 0.0s">
-          <div class="card-header">
-            <span class="run-badge">#15</span>
-            <span class="timestamp">2026-05-05 23:24:21</span>
-          </div>
-          <h3 class="video-title">【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南</h3>
-          <div class="card-actions">
-            <a href="15/bilibili_ppt.html" target="_blank" class="btn btn-primary">
-              <i class="fa-solid fa-tv"></i> 查看PPT
-            </a>
-            <a href="15/summary.txt" target="_blank" class="btn btn-secondary">
-              <i class="fa-solid fa-file-lines"></i> 文字总结
-            </a>
-            <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
-          </div>
-        </div>
-
-        <div class="deploy-card an" style="animation-delay: 0.08s">
-          <div class="card-header">
-            <span class="run-badge">#16</span>
-            <span class="timestamp">2026-05-05 23:24:21</span>
-          </div>
-          <h3 class="video-title">如何在X/推特学知识的终极指南(2026)</h3>
-          <div class="card-actions">
-            <a href="16/bilibili_ppt.html" target="_blank" class="btn btn-primary">
-              <i class="fa-solid fa-tv"></i> 查看PPT
-            </a>
-            <a href="16/summary.txt" target="_blank" class="btn btn-secondary">
-              <i class="fa-solid fa-file-lines"></i> 文字总结
-            </a>
-            <a href="https://www.bilibili.com/video/BV1kZD5BqEgd" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+        <div class="video-group an" style="animation-delay: 0.0s">
+          
+          <div class="deploy-card">
+            <div class="card-header">
+              <span class="run-badge">#17</span>
+              <span class="timestamp">2026-05-06 14:45:08</span>
+            </div>
+            <h3 class="video-title">Harness Engineering是什么？和提示词工程和上下文工程有什么关系？</h3>
+            <div class="card-actions">
+              <a href="17/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                <i class="fa-solid fa-tv"></i> 查看PPT
+              </a>
+              <a href="17/summary.txt" target="_blank" class="btn btn-secondary">
+                <i class="fa-solid fa-file-lines"></i> 文字总结
+              </a>
+              <a href="https://www.bilibili.com/video/BV1dpQTB3EXg" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+            </div>
           </div>
         </div>
-
+        <div class="video-group an" style="animation-delay: 0.08s">
+          
+          <div class="deploy-card">
+            <div class="card-header">
+              <span class="run-badge">#15</span>
+              <span class="timestamp">2026-05-05 23:24:21</span>
+            </div>
+            <h3 class="video-title">【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南</h3>
+            <div class="card-actions">
+              <a href="15/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                <i class="fa-solid fa-tv"></i> 查看PPT
+              </a>
+              <a href="15/summary.txt" target="_blank" class="btn btn-secondary">
+                <i class="fa-solid fa-file-lines"></i> 文字总结
+              </a>
+              <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.16s">
+          
+          <div class="deploy-card">
+            <div class="card-header">
+              <span class="run-badge">#16</span>
+              <span class="timestamp">2026-05-05 23:24:21</span>
+            </div>
+            <h3 class="video-title">如何在X/推特学知识的终极指南(2026)</h3>
+            <div class="card-actions">
+              <a href="16/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                <i class="fa-solid fa-tv"></i> 查看PPT
+              </a>
+              <a href="16/summary.txt" target="_blank" class="btn btn-secondary">
+                <i class="fa-solid fa-file-lines"></i> 文字总结
+              </a>
+              <a href="https://www.bilibili.com/video/BV1kZD5BqEgd" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+            </div>
+          </div>
+        </div>
   </main>
 
   <!-- Footer -->
@@ -343,8 +440,24 @@
       &nbsp;自动部署于 GitHub Pages
     </p>
     <p style="margin-top:8px;font-size:0.8rem;color:#A7A9BE77">
-      索引页面自动生成 · 最新部署显示在顶部
+      索引页面自动生成 · 同一视频仅展示最新 · 点击展开历史
     </p>
   </footer>
+
+  <script>
+    function toggleHistory(gid, btn) {
+      const list = document.getElementById(gid);
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        list.style.display = "none";
+        btn.setAttribute("aria-expanded", "false");
+        btn.style.borderRadius = "0 0 16px 16px";
+      } else {
+        list.style.display = "block";
+        btn.setAttribute("aria-expanded", "true");
+        btn.style.borderRadius = "0";
+      }
+    }
+  </script>
 </body>
 </html>
