@@ -9,7 +9,6 @@
 import os
 import re
 import json
-import subprocess
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -31,15 +30,9 @@ COLORS = {
 }
 
 
-def get_git_timestamp():
-    """获取当前 git commit 时间戳"""
-    try:
-        ts = subprocess.check_output(
-            ["git", "log", "-1", "--format=%cd", "--date=iso"], encoding="utf-8"
-        ).strip()
-        return ts.replace("T", " ").replace("+08:00", "")
-    except Exception:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def get_current_timestamp():
+    """获取当前时间戳(CI 部署时刻)"""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def fetch_existing_deployments() -> list:
@@ -79,14 +72,13 @@ def add_current_deployment(deployments: list) -> list:
     run_number = os.environ.get("RUN_NUMBER", "")
     run_title = os.environ.get("RUN_TITLE", "B站视频")
     bilibili_url = os.environ.get("BILIBILI_URL", "")
-    timestamp = get_git_timestamp()
 
-    # 检查是否已存在(避免重复)
+    # 检查是否已存在(相同 run_number 跳过, 避免重复)
     for d in deployments:
         if d.get("run_number") == run_number:
+            # 仅更新可变字段, 保留原始时间戳
             d["title"] = run_title
             d["bilibili_url"] = bilibili_url
-            d["timestamp"] = timestamp
             return deployments
 
     # 新增
@@ -95,7 +87,7 @@ def add_current_deployment(deployments: list) -> list:
             "run_number": run_number,
             "title": run_title,
             "bilibili_url": bilibili_url,
-            "timestamp": timestamp,
+            "timestamp": get_current_timestamp(),
             "ppt_file": "bilibili_ppt.html",
             "summary_file": "summary.txt",
         }
