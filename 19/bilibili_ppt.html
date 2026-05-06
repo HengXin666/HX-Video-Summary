@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>为什么中国不强力管控网络舆论？——制度创新"无人区"中的治理哲学</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --coral: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --rose: #E71D36;
+  --teal: #2EC4B6;
+}
+
+/* Font Awesome icons */
+.fa-wrap{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.fa-96{font-size:96px}.fa-80{font-size:80px}.fa-64{font-size:64px}
+.fa-48{font-size:48px}.fa-40{font-size:40px}.fa-36{font-size:36px}
+.fa-32{font-size:32px}.fa-28{font-size:28px}.fa-24{font-size:24px}
+.fa-20{font-size:20px}
+
+/* Slides */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:44px 70px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Deco */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.10),transparent)}
+.deco-purple{background:radial-gradient(circle,rgba(127,90,240,.1),transparent)}
+
+/* Floating particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Animated grid bg */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.6}
+
+/* Type */
+.t-hero{font-size:3.8rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:3.2rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:2.6rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.6rem;font-weight:400;line-height:1.6;text-align:center}
+.t-sm{font-size:1.2rem;font-weight:400;line-height:1.5;text-align:center}
+.t-xs{font-size:1rem;font-weight:400;line-height:1.5;text-align:center}
+
+/* Colors */
+.c-orange{color:#FF6B35}.c-rose{color:#E71D36}.c-coral{color:#E76F51}
+.c-amber{color:#F4A261}.c-teal{color:#2EC4B6}.c-gray{color:#A7A9BE}.c-white{color:#fff}
+
+/* BG highlight */
+.bg-orange{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-rose{background:rgba(231,29,54,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-teal{background:rgba(46,196,182,.15);padding:5px 18px;border-radius:10px}
+
+.ul-rose{text-decoration:underline;text-decoration-color:#E71D36;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-orange{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:18px auto}
+
+/* Layouts */
+.two-col{display:flex;gap:32px;width:92%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;border-radius:0 20px 20px 0;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+
+/* Flow */
+.flow{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.15);padding:8px 16px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;position:relative;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35}
+.flow-step-warn{background:rgba(231,29,54,.12);padding:8px 16px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px}
+
+/* Pulse */
+.pulse{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+
+/* VS */
+.vs-wrap{display:flex;gap:36px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:32px 24px;border-radius:18px;text-align:center;position:relative;overflow:hidden}
+.vs-mid{font-size:2.4rem;font-weight:900;color:#FF6B35;text-align:center}
+.vs-mid-sub{font-size:1rem;color:#A7A9BE;text-align:center;margin-top:4px}
+
+/* VS detail items */
+.vs-detail{display:flex;flex-direction:column;gap:8px;margin-top:12px;width:100%}
+.vs-item{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;padding:6px 10px;border-radius:8px}
+.vs-item-bad{background:rgba(231,29,54,.1);color:#E71D36}
+.vs-item-good{background:rgba(46,196,182,.1);color:#2EC4B6}
+
+/* Mini grid */
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;width:88%;max-width:1060px}
+.mini-card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 14px;text-align:center;border:2px solid rgba(255,107,53,.15);box-shadow:0 4px 16px rgba(255,107,53,.08);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s}
+.mini-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.2)}
+
+/* Icon badge */
+.icon-badge{width:68px;height:68px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.ib-orange{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.1))}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(244,162,97,.1))}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.2),rgba(231,111,81,.1))}
+.ib-teal{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.1))}
+.ib-rose{background:linear-gradient(135deg,rgba(231,29,54,.2),rgba(231,29,54,.1))}
+
+.icon-row{display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap}
+
+/* Progress bar */
+.progress-bar{width:100%;height:8px;background:rgba(255,107,53,.15);border-radius:4px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease}
+.pf-orange{background:linear-gradient(90deg,#FF6B35,#F4A261)}
+.pf-rose{background:linear-gradient(90deg,#FF6B35,#E71D36)}
+.pf-teal{background:linear-gradient(90deg,#2EC4B6,#06D6A0)}
+.pf-coral{background:linear-gradient(90deg,#E76F51,#F4A261)}
+
+/* Shapes */
+.shape-grid{display:flex;gap:20px;margin:14px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-weight:900;color:#fff;transition:transform .3s;cursor:default}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:90px;height:90px;font-size:1.7rem}
+.sh-lg{width:120px;height:120px;font-size:1.9rem}
+.sp{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.so{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sv{background:linear-gradient(135deg,#7F5AF0,#9B5DE5)}
+.st{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* Glowing ring */
+.glow-ring{width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* Glow text */
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:8px}
+
+/* Big number */
+.big-num{font-size:5rem;font-weight:900;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Warn box */
+.warn-box{border:2px solid rgba(231,29,54,.3);border-left:6px solid #E71D36;background:rgba(231,29,54,.06);border-radius:0 16px 16px 0;padding:20px 24px;margin:10px 0;text-align:left}
+
+/* Success box */
+.success-box{border:2px solid rgba(46,196,182,.3);border-left:6px solid #2EC4B6;background:rgba(46,196,182,.06);border-radius:0 16px 16px 0;padding:20px 24px;margin:10px 0;text-align:left}
+
+/* Info box */
+.info-box{border:2px solid rgba(255,107,53,.3);border-left:6px solid #FF6B35;background:rgba(255,107,53,.06);border-radius:0 16px 16px 0;padding:20px 24px;margin:10px 0;text-align:left}
+
+/* Two column grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:88%;max-width:1100px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;width:88%;max-width:1100px}
+
+/* Card with border left */
+.card-left{padding:18px 22px;border-radius:0 14px 14px 0;margin:6px 0}
+.card-left-orange{border-left:5px solid #FF6B35;background:rgba(255,107,53,.06)}
+.card-left-amber{border-left:5px solid #F4A261;background:rgba(244,162,97,.06)}
+.card-left-coral{border-left:5px solid #E76F51;background:rgba(231,111,81,.06)}
+.card-left-teal{border-left:5px solid #2EC4B6;background:rgba(46,196,182,.06)}
+.card-left-rose{border-left:5px solid #E71D36;background:rgba(231,29,54,.06)}
+
+/* Quote card */
+.quote-card{background:rgba(26,25,50,.4);border-radius:16px;padding:24px 28px;border:1px solid rgba(255,107,53,.12);max-width:880px;text-align:center}
+.quote-icon{color:#FF6B35;opacity:.4;font-size:2rem;margin-bottom:8px}
+
+/* Highlight number */
+.hl-num{display:inline-block;font-size:2.8rem;font-weight:900;color:#FF6B35;line-height:1;margin:0 6px}
+
+/* Concept word */
+.concept-word{font-size:3.2rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Final word */
+.final-word{font-size:3rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#E71D36,#FF6B35,#F4A261,#2EC4B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Tag pill */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.95rem;font-weight:700}
+.tag-orange{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-coral{background:rgba(231,111,81,.15);color:#E76F51}
+.tag-rose{background:rgba(231,29,54,.15);color:#E71D36}
+.tag-teal{background:rgba(46,196,182,.15);color:#2EC4B6}
+
+/* Slide number indicator */
+.slide-indicator{position:fixed;bottom:20px;right:30px;z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.25);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* Page number */
+.page-num{position:fixed;top:22px;left:30px;z-index:100;font-size:.95rem;font-weight:700;color:rgba(255,107,53,.5);letter-spacing:2px}
+
+/* Backgrounds */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 80% 40%,#1A1932 0%,#0F0E17 100%)}
+.bg-7{background:radial-gradient(ellipse at 50% 20%,#1A1932 0%,#0F0E17 100%)}
+
+/* Animated connection lines */
+.conn-line{stroke-dasharray:8 4;animation:dash-move 1.5s linear infinite}
+@keyframes dash-move{to{stroke-dashoffset:-24}}
+
+/* Shine effect */
+.shine{position:relative;overflow:hidden}
+.shine::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.03),transparent);transform:skewX(-15deg);animation:shine-sweep 4s ease-in-out infinite}
+@keyframes shine-sweep{0%{left:-100%}50%{left:120%}100%{left:120%}}
+
+/* Connector pulse */
+@keyframes connector-pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* arrowPulse */
+.arrow-pulse{animation:arrow-pulse 2s ease-in-out infinite}
+@keyframes arrow-pulse{0%,100%{opacity:.6;transform:translateX(0)}50%{opacity:1;transform:translateX(6px)}}
+
+/* accentPulse icon */
+.accent-pulse{animation:accent-pulse 2.5s ease-in-out infinite}
+@keyframes accent-pulse{0%,100%{transform:scale(1);text-shadow:0 0 8px rgba(255,107,53,.3)}50%{transform:scale(1.12);text-shadow:0 0 24px rgba(255,107,53,.6)}}
+
+/* highlight block */
+.hl-block{display:inline-block;background:linear-gradient(180deg,transparent 60%,rgba(255,107,53,.2) 60%);padding:2px 8px}
+
+/* divider star */
+.divider-star{display:flex;align-items:center;gap:14px;justify-content:center;margin:10px 0}
+.divider-star .line-side{width:50px;height:2px;background:rgba(255,107,53,.3);border-radius:1px}
+
+/* Additional animations */
+@keyframes fadeSlideUp{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{opacity:0;transform:scale(.3)}50%{transform:scale(1.05)}70%{transform:scale(.95)}100%{opacity:1;transform:scale(1)}}
+@keyframes rippleEffect{0%{box-shadow:0 0 0 0 rgba(255,107,53,.4)}100%{box-shadow:0 0 0 24px rgba(255,107,53,0)}}
+@keyframes orbitSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes countUpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15);color:#FF6B35}}
+@keyframes floatUpDown{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes borderGlow{0%,100%{border-color:rgba(255,107,53,.15)}50%{border-color:rgba(255,107,53,.5)}}
+@keyframes drawLine{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+
+/* Timeline */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#FF6B35,#F4A261,#E76F51);border-radius:2px}
+.timeline-item{position:relative;margin-bottom:16px;padding-left:20px}
+.timeline-item::before{content:'';position:absolute;left:-35px;top:6px;width:14px;height:14px;border-radius:50%;background:#FF6B35;border:3px solid #0F0E17;box-shadow:0 0 12px rgba(255,107,53,.4)}
+
+/* Stat bar */
+.stat-row{display:flex;align-items:center;gap:14px;width:100%;max-width:700px;margin:6px 0}
+.stat-label{min-width:120px;text-align:right;font-weight:700;font-size:1rem}
+.stat-bar-wrap{flex:1;height:24px;background:rgba(255,107,53,.08);border-radius:12px;overflow:hidden}
+.stat-bar{height:100%;border-radius:12px;transition:width 1.8s ease}
+.stat-bar-orange{background:linear-gradient(90deg,#E76F51,#FF6B35)}
+.stat-bar-amber{background:linear-gradient(90deg,#F4A261,#E9C46A)}
+.stat-bar-teal{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+.stat-bar-rose{background:linear-gradient(90deg,#E71D36,#FF6B35)}
+
+/* Card inner grid */
+.card-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+
+/* Medal badge */
+.medal-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:24px;font-weight:700;font-size:.9rem}
+.medal-gold{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(255,107,53,.1));color:#F4A261;border:1px solid rgba(244,162,97,.3)}
+.medal-teal{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.1));color:#2EC4B6;border:1px solid rgba(46,196,182,.3)}
+
+/* Large icon decorative */
+.deco-icon{position:absolute;opacity:.04;pointer-events:none;font-size:16rem}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- =========== Slide 0: 封面 =========== -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles0"></div>
+  <div class="deco deco-orange" style="width:520px;height:520px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:380px;height:380px;bottom:-120px;left:-100px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="fa-wrap fa-64 c-orange accent-pulse"><i class="fa-solid fa-scale-balanced"></i></span>
+  </div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px">一个引人深思的问题</div>
+  <div class="anim-item t-hero c-white">
+    为什么中国<span class="c-orange bold ul-orange">不强力管控</span><br>网络舆论？
+  </div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-body c-gray" style="max-width:800px">
+    每年用于补助低收入人群的资金超过<span class="c-amber bold" style="font-size:2rem">六万亿</span>，
+    拿出<span class="c-orange bold">百分之一</span>就是每年近<span class="c-rose bold">百亿美元</span>
+  </div>
+  <div class="anim-item" style="margin-top:12px">
+    <span class="tag tag-rose"><i class="fa-solid fa-circle-question"></i>&nbsp;为什么不用来管控舆论？</span>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:18px">制度创新"无人区"中的治理哲学</div>
+  <div class="deco-icon c-amber" style="bottom:-60px;right:40px"><i class="fa-solid fa-landmark"></i></div>
+</div>
+
+<!-- =========== Slide 1: 核心危机 =========== -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:480px;height:480px;top:-160px;right:-140px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px">舆论乱象 vs 真正的危机</div>
+  <div class="anim-item t-big c-white" style="margin-bottom:6px">
+    网上阴阳怪气 <span class="c-amber">只是小事</span>
+  </div>
+  <div class="anim-item" style="margin:8px 0">
+    <span class="fa-wrap fa-40 c-rose"><i class="fa-solid fa-arrow-down"></i></span>
+  </div>
+  <div class="anim-item t-big c-white" style="margin-bottom:12px">
+    真正的潜在危机是<span class="bg-rose c-rose bold" style="font-size:2.8rem">制度创新的不确定性</span>
+  </div>
+  <div class="anim-item line" style="margin:14px auto"></div>
+  <div class="anim-item" style="margin:8px 0;max-width:860px">
+    <div class="stat-row">
+      <span class="stat-label c-gray">年民生补助</span>
+      <div class="stat-bar-wrap"><div class="stat-bar stat-bar-orange" style="width:0%" data-width="100%"></div></div>
+      <span class="c-orange bold" style="font-size:1.3rem;min-width:90px">6万亿+</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label c-gray">舆论管控预算(概算1%)</span>
+      <div class="stat-bar-wrap"><div class="stat-bar stat-bar-amber" style="width:0%" data-width="8%"></div></div>
+      <span class="c-amber bold" style="font-size:1.3rem;min-width:90px">100亿美元</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label c-gray">实际管控力度</span>
+      <div class="stat-bar-wrap"><div class="stat-bar stat-bar-teal" style="width:0%" data-width="15%"></div></div>
+      <span class="c-teal bold" style="font-size:1.3rem;min-width:90px">仅在过线时出手</span>
+    </div>
+  </div>
+  <div class="anim-item grid-2" style="margin-top:16px">
+    <div class="warn-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#E71D36;margin-bottom:6px">
+        <i class="fa-solid fa-triangle-exclamation"></i>&nbsp;舆论混乱
+      </div>
+      <div class="t-sm c-gray">情绪化表达、带节奏、乌烟瘴气……可控、可纠偏，<span class="c-teal bold">属于"小事"</span></div>
+    </div>
+    <div class="warn-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#E71D36;margin-bottom:6px">
+        <i class="fa-solid fa-skull"></i>&nbsp;制度创新失败
+      </div>
+      <div class="t-sm c-gray">方向不清楚、标准不确定、结果不可控 —— 极端时<span class="c-rose bold">以国家和民族消亡为代价</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== Slide 2: 无人区困境 =========== -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;bottom:-180px;left:-150px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:14px">我们已经走进了"无人区"</div>
+  <div class="anim-item t-big c-white" style="margin-bottom:10px">
+    前面 <span class="c-orange bold" style="font-size:3rem">没有</span> 人了
+  </div>
+  <div class="anim-item grid-2" style="margin-top:12px">
+    <div class="info-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#FF6B35;margin-bottom:8px">
+        <i class="fa-solid fa-book"></i>&nbsp;苏联：只教了哪条路不通
+      </div>
+      <div class="t-sm c-gray">这位"大题老师"只告诉我们计划经济此路不通，却没有教我们<span class="c-amber bold">还有哪条路可以走</span></div>
+    </div>
+    <div class="info-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#FF6B35;margin-bottom:8px">
+        <i class="fa-solid fa-forward"></i>&nbsp;过去：摸着鹰酱过河
+      </div>
+      <div class="t-sm c-gray">曾经可以参考西方经验，但现在<span class="c-orange bold">中国走到了所有国家前面</span>，没有现成参考对象</div>
+    </div>
+  </div>
+  <div class="anim-item line" style="margin:14px auto"></div>
+  <div class="anim-item" style="max-width:900px;margin:8px 0">
+    <svg width="100%" height="100" viewBox="0 0 800 100">
+      <defs><linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#FF6B35"/>
+        <stop offset="100%" style="stop-color:#F4A261"/>
+      </linearGradient></defs>
+      <!-- Path into unknown -->
+      <line x1="40" y1="50" x2="180" y2="50" stroke="#4A90D9" stroke-width="3" opacity=".5"/>
+      <line x1="180" y1="50" x2="320" y2="50" stroke="#A7A9BE" stroke-width="3" stroke-dasharray="10 6" opacity=".6"/>
+      <line x1="320" y1="50" x2="500" y2="50" stroke="#FF6B35" stroke-width="3" stroke-dasharray="4 6" opacity=".8"/>
+      <line x1="500" y1="50" x2="700" y2="50" stroke="url(#pathGrad)" stroke-width="3" stroke-dasharray="2 4"/>
+      <!-- Labels -->
+      <text x="110" y="30" fill="#4A90D9" font-size="12" text-anchor="middle" font-weight="700">摸着鹰酱</text>
+      <text x="110" y="78" fill="#4A90D9" font-size="10" text-anchor="middle" opacity=".7">有参考对象</text>
+      <text x="250" y="30" fill="#A7A9BE" font-size="12" text-anchor="middle" font-weight="700">逐渐落后</text>
+      <text x="410" y="30" fill="#FF6B35" font-size="12" text-anchor="middle" font-weight="700">开始并跑</text>
+      <text x="600" y="30" fill="#F4A261" font-size="12" text-anchor="middle" font-weight="700">前面没人了</text>
+      <text x="600" y="78" fill="#F4A261" font-size="10" text-anchor="middle">?</text>
+      <!-- Arrow head -->
+      <polygon points="700,50 685,42 685,58" fill="#F4A261"/>
+      <!-- People icons fading -->
+      <circle cx="90" cy="50" r="14" fill="none" stroke="#4A90D9" stroke-width="1.5" opacity=".4"/>
+      <circle cx="410" cy="50" r="14" fill="none" stroke="#FF6B35" stroke-width="2" opacity=".7"/>
+      <circle cx="580" cy="50" r="18" fill="none" stroke="#F4A261" stroke-width="2.5"/>
+      <text x="580" y="54" fill="#F4A261" font-size="14" text-anchor="middle" font-weight="900">?</text>
+    </svg>
+  </div>
+  <div class="anim-item t-body c-white" style="max-width:880px">
+    结婚生育率下降、分配模式改进、劳资问题……<span class="c-amber bg-amber bold">这个世界都没有妥善解决的先例</span>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:8px">只能靠我们自己去摸索、试错和创新</div>
+</div>
+
+<!-- =========== Slide 3: 制度创新的凶险 =========== -->
+<div class="slide bg-4" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px;opacity:.4"></div>
+
+  <div class="anim-item t-mid c-white" style="margin-bottom:6px">
+    真正的<span class="c-rose bold ul-rose">制度创新</span>极其凶险
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:14px">因为你要面对的不是"不知道"，而是"你不知道自己不知道什么"</div>
+
+  <div class="anim-item grid-3" style="margin-top:10px">
+    <div class="mini-card shine">
+      <div class="icon-badge ib-rose">
+        <span class="fa-wrap fa-36 c-rose"><i class="fa-solid fa-compass"></i></span>
+      </div>
+      <div style="font-size:1.15rem;font-weight:700">方向不清楚</div>
+      <div class="t-xs c-gray">没有现成的路线图<br>需要自主探索</div>
+    </div>
+    <div class="mini-card shine">
+      <div class="icon-badge ib-orange">
+        <span class="fa-wrap fa-36 c-orange"><i class="fa-solid fa-ruler"></i></span>
+      </div>
+      <div style="font-size:1.15rem;font-weight:700">标准不确定</div>
+      <div class="t-xs c-gray">什么是"对"的制度？<br>没有评判标尺</div>
+    </div>
+    <div class="mini-card shine">
+      <div class="icon-badge ib-coral">
+        <span class="fa-wrap fa-36 c-coral"><i class="fa-solid fa-dice"></i></span>
+      </div>
+      <div style="font-size:1.15rem;font-weight:700">结果不可控</div>
+      <div class="t-xs c-gray">后果需要很长时间<br>才能切实展现</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:18px">
+    <div class="warn-box" style="max-width:860px">
+      <div style="font-size:1.2rem;font-weight:700;color:#E71D36;margin-bottom:8px">
+        <i class="fa-solid fa-landmark"></i>&nbsp;历史教训：罗马皇帝卡拉卡拉
+      </div>
+      <div class="t-sm c-gray">
+        普发公民权 → 看似进步的改革 → 导致<span class="c-rose bold">帝国崩溃</span>。
+        制度创新的结果，极端时<span class="c-rose bold">以国家和民族的消亡作为代价</span>。
+      </div>
+    </div>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:12px">
+    技术创新可以快速迭代，制度创新的后果却<span class="c-rose bold">难以逆转</span>
+  </div>
+  <div class="anim-item" style="margin-top:12px">
+    <svg width="760" height="70" viewBox="0 0 760 70">
+      <rect x="10" y="8" width="240" height="54" rx="12" fill="rgba(46,196,182,.06)" stroke="rgba(46,196,182,.25)" stroke-width="1.5"/>
+      <text x="130" y="32" fill="#2EC4B6" font-size="13" text-anchor="middle" font-weight="700">技术创新</text>
+      <text x="130" y="50" fill="#A7A9BE" font-size="10" text-anchor="middle">快速迭代 · 成本可控 · 可回滚</text>
+      <rect x="260" y="22" width="30" height="26" rx="6" fill="rgba(255,107,53,.12)"/>
+      <text x="275" y="40" fill="#FF6B35" font-size="14" text-anchor="middle" font-weight="900">VS</text>
+      <rect x="310" y="8" width="240" height="54" rx="12" fill="rgba(231,29,54,.06)" stroke="rgba(231,29,54,.25)" stroke-width="1.5"/>
+      <text x="430" y="32" fill="#E71D36" font-size="13" text-anchor="middle" font-weight="700">制度创新</text>
+      <text x="430" y="50" fill="#A7A9BE" font-size="10" text-anchor="middle">漫长验证 · 代价巨大 · 难以逆转</text>
+      <line x1="565" y1="35" x2="610" y2="35" stroke="#E71D36" stroke-width="2" marker-end="url(#arrowRed)"/>
+      <rect x="620" y="8" width="130" height="54" rx="12" fill="rgba(231,29,54,.12)" stroke="#E71D36" stroke-width="1.5"/>
+      <text x="685" y="28" fill="#E71D36" font-size="11" text-anchor="middle" font-weight="700">极端后果</text>
+      <text x="685" y="46" fill="#E71D36" font-size="10" text-anchor="middle">国家与民族消亡</text>
+      <defs><marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E71D36"/></marker></defs>
+    </svg>
+  </div>
+</div>
+
+<!-- =========== Slide 4: 第一重保障 - 保护异类 =========== -->
+<div class="slide bg-5" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:450px;height:450px;top:-150px;left:-130px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px">创新的第一重保障</div>
+  <div class="anim-item t-huge c-orange bold" style="margin-bottom:10px">
+    保护<span class="bg-orange">"异类"</span>
+  </div>
+  <div class="anim-item t-body c-gray" style="max-width:860px;margin-bottom:12px">
+    没有参考对象的创新是混沌的，多套方案逻辑互相排斥。此时<span class="c-amber bold">异类就是试验先锋</span>——因为是少数，即使失败也有纠错空间。
+  </div>
+
+  <div class="anim-item grid-2" style="margin-top:6px">
+    <div class="success-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#2EC4B6;margin-bottom:8px">
+        <i class="fa-solid fa-check-circle"></i>&nbsp;允许异类存在
+      </div>
+      <div class="t-sm c-gray">异类作为试验先锋 → 小范围试错 → 成功了推广，失败了<span class="c-teal bold">有纠错空间</span></div>
+    </div>
+    <div class="warn-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#E71D36;margin-bottom:8px">
+        <i class="fa-solid fa-xmark-circle"></i>&nbsp;统一思想管控舆论
+      </div>
+      <div class="t-sm c-gray">异类消失 → 管理"近亲繁殖" → 看得见的地方特别清楚，<span class="c-rose bold">看不见的角落永远看不到</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:14px">
+    <div class="info-box" style="max-width:860px">
+      <div style="font-size:1.1rem;font-weight:700;color:#FF6B35;margin-bottom:6px">
+        <i class="fa-solid fa-map-pin"></i>&nbsp;案例：香港——有意的制度试验
+      </div>
+      <div class="t-sm c-gray">
+        香港回归后的"纵容管理"不是疏忽，而是用这个<span class="c-amber bold">小地方、小代价</span>来检验西方票选制度在中华土地上的可行性。
+        试验进行到前几年才确定此路不通，中央出手拨乱反正 —— <span class="c-teal bold">对国家和人民极其划算</span>。
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:10px">
+    <span class="tag tag-teal"><i class="fa-solid fa-lightbulb"></i>&nbsp;案例：胖东来——如果所有老板思维一致，就不会出现这种"异类"企业</span>
+    <span class="tag tag-rose" style="margin-left:8px"><i class="fa-solid fa-globe"></i>&nbsp;反例：美国"反华政治正确"——尼克松时刻永远不可能重现</span>
+  </div>
+</div>
+
+<!-- =========== Slide 5: 第二重保障 - 基层监督 =========== -->
+<div class="slide bg-6" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:420px;height:420px;bottom:-140px;right:-120px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px">创新的第二重保障</div>
+  <div class="anim-item t-huge c-amber bold" style="margin-bottom:10px">
+    基层<span class="bg-amber">监督与纠偏</span>
+  </div>
+  <div class="anim-item t-body c-gray" style="max-width:860px;margin-bottom:12px">
+    领导层难以直观感受政策对民众的真实影响——<span class="c-orange bold">"何不食肉糜"往往是认知局限，而非道德问题</span>
+  </div>
+
+  <div class="anim-item" style="margin:6px 0">
+    <svg width="640" height="60" viewBox="0 0 640 60">
+      <rect x="10" y="8" width="140" height="44" rx="10" fill="rgba(255,107,53,.08)" stroke="rgba(255,107,53,.2)" stroke-width="1.5"/>
+      <text x="80" y="34" fill="#FF6B35" font-size="12" text-anchor="middle" font-weight="700">外卖小哥</text>
+      <line x1="155" y1="30" x2="190" y2="30" stroke="#A7A9BE" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+      <rect x="195" y="8" width="120" height="44" rx="10" fill="rgba(244,162,97,.06)" stroke="rgba(244,162,97,.15)" stroke-width="1"/>
+      <text x="255" y="34" fill="#F4A261" font-size="11" text-anchor="middle" font-weight="700">不知道</text>
+      <text x="130" y="56" fill="#A7A9BE" font-size="9" text-anchor="middle">处长的麻烦</text>
+      <text x="255" y="56" fill="#A7A9BE" font-size="9" text-anchor="middle">(认知鸿沟)</text>
+      <line x1="320" y1="30" x2="470" y2="30" stroke="#A7A9BE" stroke-width="2" stroke-dasharray="8 4" opacity=".4"/>
+      <rect x="475" y="8" width="120" height="44" rx="10" fill="rgba(231,111,81,.06)" stroke="rgba(231,111,81,.15)" stroke-width="1"/>
+      <text x="535" y="34" fill="#E76F51" font-size="11" text-anchor="middle" font-weight="700">也不知道</text>
+      <text x="535" y="56" fill="#A7A9BE" font-size="9" text-anchor="middle">工人的痛苦</text>
+      <defs><marker id="arrowGray" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#A7A9BE"/></marker></defs>
+    </svg>
+  </div>
+
+  <div class="anim-item two-col" style="margin-top:8px">
+    <div class="col-card shine" style="border-left:6px solid #FF6B35">
+      <span class="fa-wrap fa-48 c-orange"><i class="fa-solid fa-building-columns"></i></span>
+      <div class="t-mid c-white" style="font-size:1.5rem">领导层视角</div>
+      <div class="t-sm c-gray">依赖数据报表，但"数据就是个抖M，只要你玩命调教，他什么知音都能发出来"</div>
+      <div class="t-xs c-gray" style="margin-top:4px">局长厅长很难真实体会<br>流水线工人的痛苦</div>
+    </div>
+    <div class="col-card shine" style="border-left:6px solid #2EC4B6">
+      <span class="fa-wrap fa-48 c-teal"><i class="fa-solid fa-people-group"></i></span>
+      <div class="t-mid c-white" style="font-size:1.5rem">民间舆论监督</div>
+      <div class="t-sm c-gray">"鞋舒不舒服，穿鞋的总比做鞋的人更知道"——基层声音有时比专业声音更可贵</div>
+      <div class="t-xs c-gray" style="margin-top:4px">预防创新翻车的<br><span class="c-teal bold">第二道刹车片</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:16px">
+    <div class="grid-3" style="width:92%;max-width:960px">
+      <div class="card-left card-left-rose">
+        <div class="t-xs c-rose bold"><i class="fa-solid fa-burger"></i>&nbsp;鼠头变鸭脖</div>
+        <div class="t-xs c-gray">食品安全监督</div>
+      </div>
+      <div class="card-left card-left-orange">
+        <div class="t-xs c-orange bold"><i class="fa-solid fa-temperature-low"></i>&nbsp;河北老人取暖</div>
+        <div class="t-xs c-gray">环保政策纠偏</div>
+      </div>
+      <div class="card-left card-left-amber">
+        <div class="t-xs c-amber bold"><i class="fa-solid fa-graduation-cap"></i>&nbsp;保研丹事件</div>
+        <div class="t-xs c-gray">教育公平监督</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== Slide 6: 管理的本质 - 选择与代价 =========== -->
+<div class="slide bg-7" id="s6">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:50%;left:50%;margin-top:-250px;margin-left:-250px;opacity:.3"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px">管理的铁律</div>
+  <div class="anim-item t-huge c-white" style="margin-bottom:10px">
+    你不可能<span class="c-orange bold ul-orange">只要好处</span>而不接受代价
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:16px">小到健身减肥，大到国家管理，皆是如此</div>
+
+  <div class="anim-item vs-wrap">
+    <div class="vs-box shine" style="border:2px solid rgba(244,162,97,.2);background:rgba(244,162,97,.04)">
+      <span class="fa-wrap fa-48 c-amber"><i class="fa-solid fa-volume-high"></i></span>
+      <div class="c-amber bold" style="font-size:1.6rem;margin-top:8px">允许全民发声</div>
+      <div class="t-sm c-gray" style="margin-top:6px">中国当前的选择</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-good"><i class="fa-solid fa-check"></i>&nbsp;基层声音可被听到</div>
+        <div class="vs-item vs-item-good"><i class="fa-solid fa-check"></i>&nbsp;创新有纠偏手段</div>
+        <div class="vs-item vs-item-good"><i class="fa-solid fa-check"></i>&nbsp;异类有生存空间</div>
+        <div class="vs-item vs-item-bad"><i class="fa-solid fa-xmark"></i>&nbsp;网络舆论间歇性乌烟瘴气</div>
+        <div class="vs-item vs-item-bad"><i class="fa-solid fa-xmark"></i>&nbsp;有人利用情绪带节奏</div>
+      </div>
+    </div>
+    <div class="vs-mid">
+      <div>VS</div>
+      <div class="vs-mid-sub">选择即代价</div>
+    </div>
+    <div class="vs-box shine" style="border:2px solid rgba(46,196,182,.2);background:rgba(46,196,182,.04)">
+      <span class="fa-wrap fa-48 c-teal"><i class="fa-solid fa-volume-xmark"></i></span>
+      <div class="c-teal bold" style="font-size:1.6rem;margin-top:8px">严格管控舆论</div>
+      <div class="t-sm c-gray" style="margin-top:6px">另一种选择</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-good"><i class="fa-solid fa-check"></i>&nbsp;舆论更理性清爽</div>
+        <div class="vs-item vs-item-good"><i class="fa-solid fa-check"></i>&nbsp;不被情绪化信息干扰</div>
+        <div class="vs-item vs-item-bad"><i class="fa-solid fa-xmark"></i>&nbsp;有些声音永远听不到</div>
+        <div class="vs-item vs-item-bad"><i class="fa-solid fa-xmark"></i>&nbsp;问题只有天塌下来才能发现</div>
+        <div class="vs-item vs-item-bad"><i class="fa-solid fa-xmark"></i>&nbsp;异类消失，近亲繁殖</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:14px;max-width:780px">
+    <div class="t-xs c-gray" style="text-align:center;margin-bottom:8px">同样的选择逻辑，贯穿于各个领域</div>
+    <div class="grid-3" style="width:100%">
+      <div class="card-left card-left-amber">
+        <div class="t-xs c-amber bold"><i class="fa-solid fa-dollar-sign"></i>&nbsp;美国：金融立国</div>
+        <div class="t-xs c-gray">轻松挣钱 → <span class="c-rose">产业空心化</span></div>
+      </div>
+      <div class="card-left card-left-orange">
+        <div class="t-xs c-orange bold"><i class="fa-solid fa-industry"></i>&nbsp;中国：工业立国</div>
+        <div class="t-xs c-gray">制造业强国 → <span class="c-rose">人民币难国际化</span></div>
+      </div>
+      <div class="card-left card-left-coral">
+        <div class="t-xs c-coral bold"><i class="fa-solid fa-comments"></i>&nbsp;中国：让全民发声</div>
+        <div class="t-xs c-gray">基层声音可被听到 → <span class="c-rose">舆论间歇性混乱</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== Slide 7: 警惕管理惯性 =========== -->
+<div class="slide bg-1" id="s7">
+  <div class="grid-bg"></div>
+  <div class="deco deco-rose" style="width:480px;height:480px;top:-140px;right:-120px;opacity:.3"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:6px">最危险的陷阱</div>
+  <div class="anim-item t-huge c-rose bold" style="margin-bottom:14px">
+    管理惯性
+  </div>
+
+  <div class="anim-item" style="margin:8px 0">
+    <div class="flow" style="font-size:1.2rem">
+      <div class="flow-step-warn"><i class="fa-solid fa-comment-slash"></i>&nbsp;阴阳怪气被处理</div>
+      <span class="fa-wrap fa-24 c-rose arrow-pulse"><i class="fa-solid fa-arrow-right"></i></span>
+      <div class="flow-step-warn"><i class="fa-solid fa-ban"></i>&nbsp;不赞美变成罪过</div>
+      <span class="fa-wrap fa-24 c-rose arrow-pulse"><i class="fa-solid fa-arrow-right"></i></span>
+      <div class="flow-step-warn"><i class="fa-solid fa-skull-crossbones"></i>&nbsp;赞美不够大声也是异端</div>
+    </div>
+  </div>
+
+  <div class="anim-item line"></div>
+
+  <div class="anim-item grid-2" style="margin-top:12px">
+    <div class="warn-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#E71D36;margin-bottom:6px">
+        <i class="fa-solid fa-flag-usa"></i>&nbsp;反面教材：美国"反华政治正确"
+      </div>
+      <div class="t-sm c-gray">明知前面是坑也必须踩——<span class="c-rose bold">尼克松式的战略转机永远不可能重现</span></div>
+    </div>
+    <div class="warn-box">
+      <div style="font-size:1.1rem;font-weight:700;color:#E71D36;margin-bottom:6px">
+        <i class="fa-solid fa-award"></i>&nbsp;如果为国家发声变成"升职手段"
+      </div>
+      <div class="t-sm c-gray">管理铁律：你奖励什么，人就拼命做什么——可能<span class="c-rose bold">培养出PPT型官员</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-white" style="margin-top:16px;max-width:860px">
+    中国的策略：<span class="c-teal bg-teal bold">只在"太过分"时出手</span>，而<span class="c-orange bold">不制造"不可越雷池半步"的氛围</span>
+  </div>
+  <div class="anim-item" style="margin-top:14px">
+    <div class="vs-wrap" style="max-width:780px">
+      <div class="warn-box" style="flex:1;text-align:center">
+        <div style="font-size:1rem;font-weight:700;color:#E71D36;margin-bottom:4px">
+          <i class="fa-solid fa-arrow-trend-down"></i>&nbsp;管理惯性滑坡
+        </div>
+        <div class="t-xs c-gray">打击一切负面</div>
+        <div class="fa-wrap fa-16 c-rose arrow-pulse" style="margin:2px 0"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="t-xs c-rose bold">不赞美 = 罪过</div>
+        <div class="fa-wrap fa-16 c-rose arrow-pulse" style="margin:2px 0"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="t-xs c-rose bold">赞美不够大声 = 异端</div>
+        <div class="fa-wrap fa-16 c-rose arrow-pulse" style="margin:2px 0"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="t-xs c-gray">培养"PPT型官员"</div>
+        <div class="fa-wrap fa-16 c-rose arrow-pulse" style="margin:2px 0"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="t-xs c-white bold">创新路上的坑再也看不见</div>
+      </div>
+      <div class="vs-mid" style="min-width:30px">
+        <i class="fa-solid fa-xmark c-rose" style="font-size:2rem"></i>
+      </div>
+      <div class="success-box" style="flex:1;text-align:center">
+        <div style="font-size:1rem;font-weight:700;color:#2EC4B6;margin-bottom:4px">
+          <i class="fa-solid fa-shield"></i>&nbsp;中国的务实选择
+        </div>
+        <div class="t-xs c-gray">允许不同声音存在</div>
+        <div class="t-xs c-gray" style="margin-top:4px">违法越界才被处理</div>
+        <div class="t-xs c-teal bold" style="margin-top:6px">保留创新试错的纠偏空间</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== Slide 8: 核心洞察总结 =========== -->
+<div class="slide bg-4" id="s8">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles8"></div>
+  <div class="deco deco-orange" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.4"></div>
+
+  <div class="anim-item" style="margin-bottom:12px">
+    <span class="fa-wrap fa-64 c-orange accent-pulse"><i class="fa-solid fa-lightbulb"></i></span>
+  </div>
+  <div class="anim-item t-huge c-white" style="margin-bottom:8px">
+    核心洞察<span class="c-orange bold">总结</span>
+  </div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item" style="max-width:900px;margin-top:12px">
+    <div class="quote-card">
+      <div class="quote-icon"><i class="fa-solid fa-quote-left"></i></div>
+      <div class="t-body c-white" style="text-align:center;line-height:1.7">
+        中国不强力管控网络舆论的<span class="c-orange bold">根本原因</span>不是做不到，<br>
+        而是有<span class="c-amber bold">更重要的战略考量</span>——<br>
+        在制度创新进入<span class="c-rose bg-rose bold">"无人区"</span>的今天，<br>
+        保持言论的<span class="c-teal bold">适度宽松</span>是<br>
+        <span class="bold" style="font-size:1.8rem">防范系统性风险的必要代价</span>
+      </div>
+      <div class="quote-icon" style="margin-top:4px"><i class="fa-solid fa-quote-right"></i></div>
+    </div>
+  </div>
+
+  <div class="anim-item shape-grid" style="margin-top:18px">
+    <div class="shape-circle sh-sm sp">
+      <i class="fa-solid fa-shield-haltered"></i>&nbsp;保护异类
+    </div>
+    <div class="shape-circle sh-sm so">
+      <i class="fa-solid fa-eye"></i>&nbsp;基层监督
+    </div>
+    <div class="shape-circle sh-sm st">
+      <i class="fa-solid fa-scale-balanced"></i>&nbsp;选择代价
+    </div>
+    <div class="shape-circle sh-sm sv">
+      <i class="fa-solid fa-bell"></i>&nbsp;警惕惯性
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:14px;max-width:820px">
+    <svg width="100%" height="90" viewBox="0 0 800 90">
+      <defs>
+        <linearGradient id="sumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#FF6B35"/>
+          <stop offset="50%" style="stop-color:#F4A261"/>
+          <stop offset="100%" style="stop-color:#2EC4B6"/>
+        </linearGradient>
+      </defs>
+      <!-- Central balance beam -->
+      <line x1="80" y1="45" x2="720" y2="45" stroke="url(#sumGrad)" stroke-width="3"/>
+      <!-- Fulcrum triangle -->
+      <polygon points="400,28 388,48 412,48" fill="#F4A261" opacity=".8"/>
+      <!-- Left side: Innovation -->
+      <circle cx="180" cy="45" r="28" fill="none" stroke="#FF6B35" stroke-width="2.5" opacity=".6"/>
+      <text x="180" y="42" fill="#FF6B35" font-size="13" text-anchor="middle" font-weight="900">创新</text>
+      <text x="180" y="56" fill="#FF6B35" font-size="9" text-anchor="middle" opacity=".7">制度探索</text>
+      <!-- Right side: Stability -->
+      <circle cx="620" cy="45" r="28" fill="none" stroke="#2EC4B6" stroke-width="2.5" opacity=".6"/>
+      <text x="620" y="42" fill="#2EC4B6" font-size="13" text-anchor="middle" font-weight="900">稳定</text>
+      <text x="620" y="56" fill="#2EC4B6" font-size="9" text-anchor="middle" opacity=".7">防范系统性风险</text>
+      <!-- Center pivot -->
+      <circle cx="400" cy="45" r="6" fill="#F4A261"/>
+      <!-- Arrow lines connecting -->
+      <line x1="208" y1="40" x2="360" y2="32" stroke="#FF6B35" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <line x1="592" y1="40" x2="440" y2="32" stroke="#2EC4B6" stroke-width="1" stroke-dasharray="4 3" opacity=".4"/>
+      <!-- Labels at ends -->
+      <text x="60" y="68" fill="#A7A9BE" font-size="9" text-anchor="middle">"让不同声音存在"</text>
+      <text x="740" y="68" fill="#A7A9BE" font-size="9" text-anchor="middle">"底线不可逾越"</text>
+      <!-- The balancing text -->
+      <text x="400" y="80" fill="#F4A261" font-size="10" text-anchor="middle" font-weight="700">动态平衡</text>
+    </svg>
+  </div>
+</div>
+
+<!-- =========== Slide 9: 日后奋斗方向 =========== -->
+<div class="slide bg-5" id="s9">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles9"></div>
+  <div class="deco deco-amber" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px;opacity:.35"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="fa-wrap fa-64 c-amber accent-pulse"><i class="fa-solid fa-rocket"></i></span>
+  </div>
+  <div class="anim-item t-huge c-white" style="margin-bottom:8px">
+    日后<span class="c-amber bold">奋斗方向</span>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:8px">在制度创新的"无人区"中，我们每个人能做什么</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item grid-3" style="margin-top:14px">
+    <div class="mini-card shine">
+      <div class="icon-badge ib-teal">
+        <span class="fa-wrap fa-36 c-teal"><i class="fa-solid fa-code"></i></span>
+      </div>
+      <div class="bold c-teal" style="font-size:1.2rem">以技术入行打基础</div>
+      <div class="t-sm c-gray" style="line-height:1.5">
+        无论从事什么领域，先把<span class="c-white bold">专业技能</span>打磨扎实。
+        没有硬实力，任何思考都是空中楼阁。
+        脚踏实地，从做好手头的事开始。
+      </div>
+    </div>
+    <div class="mini-card shine">
+      <div class="icon-badge ib-amber">
+        <span class="fa-wrap fa-36 c-amber"><i class="fa-solid fa-water"></i></span>
+      </div>
+      <div class="bold c-amber" style="font-size:1.2rem">感知变化顺势而为</div>
+      <div class="t-sm c-gray" style="line-height:1.5">
+        世界在变，制度在变，技术在变。
+        保持<span class="c-white bold">敏锐的观察力</span>和开放心态，
+        不做固步自封的人。理解时代的方向。
+      </div>
+    </div>
+    <div class="mini-card shine">
+      <div class="icon-badge ib-orange">
+        <span class="fa-wrap fa-36 c-orange"><i class="fa-solid fa-person-running"></i></span>
+      </div>
+      <div class="bold c-orange" style="font-size:1.2rem">不躺平持续拼</div>
+      <div class="t-sm c-gray" style="line-height:1.5">
+        不抱怨、不躺平、不逃避。
+        国家的路要靠<span class="c-white bold">每一个人的努力</span>去试、
+        去闯。持续学习，持续进步。
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:20px">
+    <div class="quote-card">
+      <div class="t-body c-white" style="text-align:center">
+        "先锋队的知识应该是<span class="c-orange bold">带领人民</span>，而不是<span class="c-rose bold">鄙视人民</span>的。"
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item icon-row" style="margin-top:14px">
+    <div class="glow-ring"><span class="fa-wrap fa-36 c-orange"><i class="fa-solid fa-seedling"></i></span></div>
+    <div class="glow-ring" style="animation-delay:.5s"><span class="fa-wrap fa-36 c-amber"><i class="fa-solid fa-fire"></i></span></div>
+    <div class="glow-ring" style="animation-delay:1s"><span class="fa-wrap fa-36 c-coral"><i class="fa-solid fa-star"></i></span></div>
+    <div class="glow-ring" style="animation-delay:1.5s"><span class="fa-wrap fa-36 c-teal"><i class="fa-solid fa-earth-asia"></i></span></div>
+  </div>
+
+  <div class="anim-item final-word" style="margin-top:14px">
+    试错摸索 · 勇毅前行
+  </div>
+</div>
+
+</div><!-- /slide-container -->
+
+<!-- Navigation -->
+<div class="page-num" id="pageNum">01 / 10</div>
+<div class="slide-indicator" id="slideIndicator"></div>
+
+<script>
+(function() {
+
+// ===== Build slide dots =====
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const indicator = document.getElementById('slideIndicator');
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => go(i));
+  indicator.appendChild(dot);
+}
+
+let cur = 0;
+
+// ===== Page number update =====
+function updatePageNum() {
+  document.getElementById('pageNum').textContent =
+    String(cur + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+}
+
+// ===== Animate progress bars =====
+function animateProgressBars(slide) {
+  slide.querySelectorAll('.progress-fill').forEach(bar => {
+    const w = bar.dataset.width || '0%';
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = w; }, 600);
+  });
+}
+
+// ===== Slide navigation =====
+function go(n) {
+  if (n < 0 || n >= total || n === cur) return;
+
+  // Remove active from current
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.anim-item').forEach(e => e.classList.remove('show'));
+
+  cur = n;
+
+  // Clone nodes to reset CSS animations
+  slides[cur].querySelectorAll('.anim-item, [style*="animation"]').forEach(function(item) {
+    var clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+
+  // Activate new slide
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.anim-item').forEach((e, i) => {
+    e.classList.remove('show');
+    setTimeout(() => e.classList.add('show'), 200 + i * 260);
+  });
+
+  // Update dots
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === cur);
+  });
+
+  updatePageNum();
+  animateProgressBars(slides[cur]);
+}
+
+// ===== Initial animation =====
+slides[0].querySelectorAll('.anim-item').forEach((e, i) => {
+  setTimeout(() => e.classList.add('show'), 400 + i * 300);
+});
+setTimeout(() => animateProgressBars(slides[0]), 800);
+updatePageNum();
+
+// ===== Keyboard navigation =====
+document.addEventListener('keydown', e => {
+  if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+    e.preventDefault(); go(cur + 1);
+  } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+    e.preventDefault(); go(cur - 1);
+  } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+});
+
+// ===== Touch navigation =====
+let tx = 0, ty = 0;
+document.addEventListener('touchstart', e => {
+  tx = e.changedTouches[0].screenX;
+  ty = e.changedTouches[0].screenY;
+});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - tx;
+  const dy = e.changedTouches[0].screenY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    dx < 0 ? go(cur + 1) : go(cur - 1);
+  }
+});
+
+// ===== Wheel navigation =====
+let wc = false;
+document.addEventListener('wheel', e => {
+  if (wc) return;
+  wc = true;
+  setTimeout(() => wc = false, 800);
+  e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+});
+
+// ===== Floating particles =====
+function createParticles(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const colors = [
+    'rgba(255,107,53,.35)', 'rgba(244,162,97,.3)',
+    'rgba(231,111,81,.25)', 'rgba(46,196,182,.25)'
+  ];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 8 + 4;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random() * 100}%;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      animation-duration:${Math.random() * 6 + 6}s;
+      animation-delay:${Math.random() * 6}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles('particles0');
+createParticles('particles8');
+createParticles('particles9');
+
+})();
+</script>
+
+</body>
+</html>
