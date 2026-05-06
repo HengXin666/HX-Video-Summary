@@ -13,7 +13,7 @@
 
 ## 📖 简介
 
-输入一个 B站视频链接，剩下的全部自动完成：
+输入一个 B站视频链接, 剩下的全部自动完成:
 
 > 下载视频 → 语音转文字 → AI 阅读理解 → 生成 PPT 演示网页 → 部署静态站点 → 邮件通知
 
@@ -21,21 +21,21 @@
 
 ## ✨ 核心特性
 
-- 🎙️ **FunASR 语音转写** — paraformer-zh 模型，带 VAD 语音端点检测 + 标点恢复，输出精确时间戳
-- 🤖 **AI 深度总结** — Claude Code + DeepSeek 驱动，自动阅读转写文本、截图辅助理解，生成结构化科普文章
-- 📊 **PPT 风格网页** — 内置 43+ 模板，暖色系卡片布局，Font Awesome 图标，键盘/触控翻页
-- 📦 **全自动 CI/CD** — GitHub Actions 一键触发，产物打包 zip，部署到 GitHub Pages + Cloudflare Workers
+- 🎙️ **FunASR 语音转写** — paraformer-zh 模型, 带 VAD 语音端点检测 + 标点恢复, 输出精确时间戳
+- 🤖 **AI 深度总结** — Claude Code + DeepSeek 驱动, 自动阅读转写文本、截图辅助理解, 生成结构化科普文章
+- 📊 **PPT 风格网页** — 内置 43+ 模板, 暖色系卡片布局, Font Awesome 图标, 键盘/触控翻页
+- 📦 **全自动 CI/CD** — GitHub Actions 一键触发, 产物打包 zip, 部署到 GitHub Pages + Cloudflare Workers
 - 📧 **邮件即达** — 纯文本总结正文 + PPT 链接发送到指定邮箱
-- 🗂️ **智能索引** — 同一视频多次总结去重，仅展示最新，历史可展开
-- ⚡ **纯静态部署** — CF Workers 零函数调用，不消耗请求配额
+- 🗂️ **智能索引** — 同一视频多次总结去重, 仅展示最新, 历史可展开
+- ⚡ **纯静态部署** — CF Workers 零函数调用, 不消耗请求配额
 
 ## 🚀 快速开始
 
 ### 环境要求
 
 - Python >= 3.12
-- ffmpeg（系统安装并加入 PATH）
-- [uv](https://github.com/astral-sh/uv)（Python 包管理器）
+- ffmpeg(系统安装并加入 PATH)
+- [uv](https://github.com/astral-sh/uv)(Python 包管理器)
 
 ### 安装
 
@@ -64,7 +64,7 @@ uv run python py/transcribe.py screenshot -i video.mp4 -t 120
 
 ## ☁️ GitHub Actions 工作流
 
-在 GitHub 上一键运行，无需本地 GPU。
+在 GitHub 上一键运行, 无需本地 GPU。
 
 ### 配置 Secrets
 
@@ -74,24 +74,24 @@ uv run python py/transcribe.py screenshot -i video.mp4 -t 120
 |--------|------|------|
 | `DEEPSEEK_API_KEY` | ✅ | DeepSeek API Key |
 | `QQ_EMAIL` | ✅ | 发件 QQ 邮箱 |
-| `QQ_SMTP_AUTH_CODE` | ✅ | QQ 邮箱 SMTP 授权码（在 `设置 → 账户 → POP3/SMTP服务` 获取） |
-| `CF_API_TOKEN` | ❌ | Cloudflare API Token（可选，用于 Workers 部署） |
-| `CF_ACCOUNT_ID` | ❌ | Cloudflare 账户 ID（可选） |
+| `QQ_SMTP_AUTH_CODE` | ✅ | QQ 邮箱 SMTP 授权码(在 `设置 → 账户 → POP3/SMTP服务` 获取) |
+| `CF_API_TOKEN` | ❌ | Cloudflare API Token(可选, 用于 Workers 部署) |
+| `CF_ACCOUNT_ID` | ❌ | Cloudflare 账户 ID(可选) |
 
 ### 触发
 
 1. 进入仓库 `Actions` → **B站视频总结 & PPT生成**
-2. 点击 `Run workflow`，填入 B站链接和接收邮箱
-3. 等待完成，查收邮件
+2. 点击 `Run workflow`, 填入 B站链接和接收邮箱
+3. 等待完成, 查收邮件
 
 ### 产物
 
 | 产物 | 说明 |
 |------|------|
-| 转写结果-字幕 | 纯转写文本，artifact 保留 30 天 |
+| 转写结果-字幕 | 纯转写文本, artifact 保留 30 天 |
 | 完整产物包 | 转写 + 总结 + PPT HTML 打包为 zip |
-| GitHub Pages | PPT 部署到 `{run_number}/` 子目录，索引页自动更新 |
-| CF Workers | 可选，同步部署完整站点（纯静态，零函数调用） |
+| GitHub Pages | PPT 部署到 `{run_number}/` 子目录, 索引页自动更新 |
+| CF Workers | 可选, 同步部署完整站点(纯静态, 零函数调用) |
 | 邮件 | 纯文本总结 + PPT 链接 |
 
 ## 📁 项目结构
@@ -99,14 +99,14 @@ uv run python py/transcribe.py screenshot -i video.mp4 -t 120
 ```
 HX-Video-Summary/
 ├── py/                           # Python 源码
-│   ├── transcribe.py             # 主脚本：语音转写 + 截图
+│   ├── transcribe.py             # 主脚本: 语音转写 + 截图
 │   ├── generate_index.py         # Pages 索引页面生成器
 │   ├── send_email.py             # QQ SMTP 邮件发送
 │   └── get_bilibili_cookies.py   # Playwright 获取 B站 cookies
 ├── .github/workflows/            # CI/CD 工作流
 │   └── bilibili-summary.yml
 ├── .codebuddy/skills/            # Claude Code 技能定义
-│   └── science-content-ppt/      # 科普内容 PPT 生成（43+ 模板）
+│   └── science-content-ppt/      # 科普内容 PPT 生成(43+ 模板)
 ├── output/                       # 转写/总结产物
 ├── pages/                        # Pages 部署暂存
 ├── pyproject.toml                # 项目配置 & 依赖
@@ -119,16 +119,16 @@ HX-Video-Summary/
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ B站 API      │────▶│ ffmpeg       │────▶│ FunASR       │
+│ B站 API      │────▶│ ffmpeg       │────▶│ FunASR      │
 │ 下载视频+音频 │     │ 合并/提取音频 │     │ paraformer-zh│
-└──────────────┘     └──────────────┘     └──────┬───────┘
-                                                 │
-                    ┌─────────────────────────────▼───┐
-                    │ Claude Code (DeepSeek 后端)      │
-                    │ · 阅读转写文本 + 截图辅助理解     │
-                    │ · 总结为结构化科普文章            │
+└──────────────┘     └──────────────┘     └───────┬──────┘
+                                                  │
+                    ┌─────────────────────────────▼─────┐
+                    │ Claude Code (DeepSeek 后端)       │
+                    │ · 阅读转写文本 + 截图辅助理解       │
+                    │ · 总结为结构化科普文章              │
                     │ · science-content-ppt skill 生PPT │
-                    └──────────────┬──────────────────┘
+                    └──────────────┬────────────────────┘
                                    │
             ┌──────────────────────┼──────────────────────┐
             ▼                      ▼                      ▼
