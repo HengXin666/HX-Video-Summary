@@ -18,9 +18,12 @@ permissions:
   actions: read
 
 jobs:
-  summarize:
+  # ──── 处理 Job: 可并发，做下载/转写/AI总结等重活 ────
+  process:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      video_title: ${{ steps.download.outputs.video_title }}
 
     steps:
       - name: 检出代码
@@ -103,6 +106,7 @@ jobs:
           CID=$(echo "$INFO" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['cid'])")
           TITLE=$(echo "$INFO" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['title'])")
           echo "cid=$CID title=$TITLE"
+          echo "video_title=$TITLE" >> $GITHUB_OUTPUT
 
           # 2. playurl API → DASH 流地址
           PLAYURL=$(curl -s -b cookies.txt \
@@ -141,9 +145,9 @@ jobs:
           # 4. ffmpeg 合并
           ffmpeg -y -i videos/video.m4s -i videos/audio.m4s -c copy videos/bilibili_video.mp4
           ls -la videos/bilibili_video.mp4
-          echo "$TITLE" > /tmp/video_title.txt
+          mkdir -p output
+          echo "$TITLE" > output/video_title.txt
           echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
-          echo "video_title=$TITLE" >> $GITHUB_ENV
           echo "下载完成: $TITLE"
 
       - name: 语音转写
@@ -153,7 +157,7 @@ jobs:
       - name: 上传转写产物(字幕)
         uses: actions/upload-artifact@v4
         with:
-          name: 转写结果-字幕
+          name: 转写结果-字幕-${{ github.run_number }}
           path: output/转写结果.txt
           retention-days: 30
 
@@ -192,7 +196,7 @@ jobs:
           PYTHONUNBUFFERED: 1
           NODE_OPTIONS: --no-warnings
         run: |
-          # 写入 promt 文件供重试复用
+          # 写入 prompt 文件供重试复用
           cat > /tmp/claude_prompt.txt <<'CLAUDE_PROMPT'
           你是视频内容总结PPT生成助手。请严格按以下流程完成任务:
 
@@ -280,15 +284,62 @@ jobs:
       - name: 上传完整产物包
         uses: actions/upload-artifact@v4
         with:
-          name: 完整产物包-转写-总结-PPT
+          name: 完整产物包-转写-总结-PPT-${{ github.run_number }}
           path: output/完整产物包.zip
           retention-days: 30
 
-      - name: 准备 Pages 发布内容
+      - name: 上传产物给 deploy Job
+        uses: actions/upload-artifact@v4
+        with:
+          name: process-outputs-${{ github.run_id }}
+          path: |
+            output/转写结果.txt
+            output/summary.txt
+            output/bilibili_ppt.html
+            output/video_title.txt
+          retention-days: 1
+
+
+  # ──── 部署 Job: 串行化，每次从 Pages 拉最新数据再生成索引 ────
+  deploy:
+    needs: process
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: 检出代码 (仅需 generate_index.py / send_email.py)
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Node.js (供 wrangler 使用)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 下载产物
+        uses: actions/download-artifact@v4
+        with:
+          name: process-outputs-${{ github.run_id }}
+          path: output/
+
+      - name: 读取视频标题
+        id: meta
+        run: |
+          TITLE=$(cat output/video_title.txt 2>/dev/null || echo "${{ needs.process.outputs.video_title }}")
+          echo "video_title=$TITLE"
+          echo "video_title=$TITLE" >> $GITHUB_OUTPUT
+
+      - name: 准备 Pages 并部署 PPT 到子目录
         run: |
           mkdir -p pages
           cp output/bilibili_ppt.html pages/
-          cp output/summary.txt pages/ 2>/dev/null || true
+          cp output/summary.txt pages/
 
       - name: 部署PPT到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -299,15 +350,19 @@ jobs:
           keep_files: true
           enable_jekyll: false
 
-      - name: 生成 Pages 索引页面
+      - name: 清理 pages 目录 (保留目录，清除 PPT 产物)
+        run: |
+          rm -f pages/bilibili_ppt.html pages/summary.txt
+
+      - name: 生成 Pages 索引页面 (从 Pages 拉最新数据合并)
         env:
           RUN_NUMBER: ${{ github.run_number }}
-          RUN_TITLE: ${{ env.video_title || 'B站视频' }}
+          RUN_TITLE: ${{ steps.meta.outputs.video_title || 'B站视频' }}
           BILIBILI_URL: ${{ inputs.bilibili_url }}
         run: |
-          uv run python py/generate_index.py
+          python py/generate_index.py
 
-      - name: 部署更新后的索引到 Pages
+      - name: 部署更新后的索引到 Pages (根目录)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -354,10 +409,10 @@ jobs:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
         run: |
-          uv run python py/send_email.py \
+          python py/send_email.py \
             --sender "$QQ_EMAIL" \
             --password "$QQ_SMTP_AUTH_CODE" \
             --to "${{ inputs.email }}" \
             --cc "$QQ_EMAIL" \
-            --subject "[B站视频总结] ${{ env.video_title || 'B站视频' }}" \
+            --subject "[B站视频总结] ${{ steps.meta.outputs.video_title || 'B站视频' }}" \
             --body "$(cat /tmp/email_body.txt)"
