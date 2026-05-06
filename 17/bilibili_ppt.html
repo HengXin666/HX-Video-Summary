@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Honeys Engineering 驾驭工程 — AI Agent开发的工程内核</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root{
+  --orange:#FF6B35;
+  --amber:#F4A261;
+  --coral:#E76F51;
+  --dark:#0F0E17;
+  --dark2:#1A1932;
+  --gray:#A7A9BE;
+  --red:#E71D36;
+  --green:#2EC4B6;
+  --white:#FFFFFE;
+}
+
+/* === Base Layout === */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 60px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* === Decorations === */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.1),transparent)}
+.bg-grid{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);background-size:40px 40px;opacity:.5}
+.deco-square{position:absolute;pointer-events:none;opacity:.04;border-radius:8px;border:3px solid;transform:rotate(45deg)}
+
+/* === Particles === */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:floatUp linear infinite;opacity:0}
+@keyframes floatUp{0%{transform:translateY(100vh) scale(0)}10%{opacity:.25}90%{opacity:.25}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+
+/* === Typography === */
+.t-hero{font-size:4.8rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:3.6rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:2.6rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.5rem;font-weight:400;line-height:1.7;text-align:center}
+.t-sm{font-size:1.15rem;font-weight:400;line-height:1.5;text-align:center}
+.t-xs{font-size:.95rem;font-weight:400;line-height:1.4;text-align:center}
+
+/* === Colors === */
+.c-orange{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-red{color:#E71D36}.c-green{color:#2EC4B6}.c-dark{color:#FFFFFE}
+.c-gray{color:#A7A9BE}.c-white{color:#fff}
+
+/* === BG Highlights === */
+.bg-orange{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.12);padding:5px 18px;border-radius:10px}
+.bg-green{background:rgba(46,196,182,.12);padding:5px 18px;border-radius:10px}
+
+/* === Underline === */
+.ul-orange{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-amber{text-decoration:underline;text-decoration-color:#F4A261;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-coral{text-decoration:underline;text-decoration-color:#E76F51;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:16px auto}
+
+/* === Cards === */
+.two-col{display:flex;gap:28px;width:94%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;background:rgba(26,25,50,.5);border-radius:20px;padding:28px 24px;border:2px solid rgba(255,107,53,.12);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.col-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(255,107,53,.15)}
+.col-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:20px 20px 0 0}
+
+/* === Layer Stack === */
+.layer-stack{width:88%;max-width:900px;display:flex;flex-direction:column;gap:0;position:relative}
+.layer-box{padding:20px 26px;display:flex;align-items:center;gap:16px;border:2px solid rgba(255,107,53,.12);background:rgba(26,25,50,.5);transition:transform .3s,box-shadow .3s}
+.layer-box:hover{transform:translateX(8px);box-shadow:0 4px 20px rgba(255,107,53,.15)}
+.layer-box:first-child{border-radius:18px 18px 0 0}
+.layer-box:last-child{border-radius:0 0 18px 18px}
+.layer-num{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.layer-content{flex:1}
+.layer-tag{display:inline-block;padding:3px 12px;border-radius:8px;font-size:.9rem;font-weight:700;margin-top:4px}
+
+/* === Flow === */
+.flow{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.15);padding:8px 16px;border-radius:10px;font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35;font-size:1.3rem}
+
+/* === Icon Row === */
+.icon-row{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap}
+.icon-badge{width:72px;height:72px;border-radius:18px;display:flex;align-items:center;justify-content:center}
+.ib-orange{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.1))}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(244,162,97,.1))}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.2),rgba(231,111,81,.1))}
+.ib-green{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.1))}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.2),rgba(231,29,54,.1))}
+
+/* === Shape Grid === */
+.shape-grid{display:flex;gap:18px;margin:12px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:900;color:#fff;transition:transform .3s}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:85px;height:85px;font-size:1.5rem}
+.sh-md{width:100px;height:100px;font-size:1.6rem}
+.sh-lg{width:120px;height:120px;font-size:1.8rem}
+.s1{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.s2{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.s3{background:linear-gradient(135deg,#E76F51,#FF6B35)}
+.s4{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* === Formula Box === */
+.formula-box{background:rgba(26,25,50,.5);border-radius:24px;padding:32px 44px;border:2px solid rgba(255,107,53,.15);display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(255,107,53,.1)}
+.formula-part{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
+.formula-op{font-size:3rem;font-weight:900;color:#FF6B35;position:relative;z-index:1}
+
+/* === Grid Cards === */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:88%;max-width:1100px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:90%;max-width:1100px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:90%;max-width:1100px}
+.info-card{background:rgba(26,25,50,.5);border-radius:16px;padding:22px 18px;border:2px solid rgba(255,107,53,.1);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;transition:transform .3s,box-shadow .3s}
+.info-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(255,107,53,.12)}
+
+/* === Ring Diagram === */
+.ring-diagram{position:relative;width:420px;height:420px;margin:8px auto}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-weight:900;font-size:1.2rem;text-align:center;box-shadow:0 8px 30px rgba(255,107,53,.25),0 0 60px rgba(255,107,53,.1);z-index:2;line-height:1.3;animation:centerPulse 3s ease-in-out infinite}
+@keyframes centerPulse{0%,100%{box-shadow:0 8px 30px rgba(255,107,53,.25),0 0 60px rgba(255,107,53,.1)}50%{box-shadow:0 8px 40px rgba(255,107,53,.4),0 0 80px rgba(255,107,53,.2)}}
+.ring-orbit{position:absolute;top:50%;left:50%;width:310px;height:310px;margin-top:-155px;margin-left:-155px;border-radius:50%;border:2.5px dashed rgba(255,107,53,.15);animation:orbitSpin 28s linear infinite}
+@keyframes orbitSpin{100%{transform:rotate(360deg)}}
+.ring-item{position:absolute;width:105px;height:105px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-weight:800;color:#fff;font-size:.95rem;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:1;transition:transform .3s,box-shadow .3s}
+.ring-item:hover{transform:scale(1.1)!important;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+
+/* === Animations === */
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 30px rgba(255,107,53,.1);transform:scale(1)}50%{box-shadow:0 0 60px rgba(255,107,53,.2);transform:scale(1.03)}}
+@keyframes dashFlow{100%{stroke-dashoffset:-20}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes arrowBounce{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+
+.conn-line{stroke-dasharray:6 4;animation:dashFlow 2s linear infinite}
+.glow-ring{width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,107,53,.2);display:flex;align-items:center;justify-content:center;animation:ringPulse 3s ease-in-out infinite}
+@keyframes ringPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* === Tag === */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-orange{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-coral{background:rgba(231,111,81,.15);color:#E76F51}
+.tag-green{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+
+/* === VS === */
+.vs-row{display:flex;gap:30px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-card{flex:1;padding:28px 22px;border-radius:18px;text-align:center;background:rgba(26,25,50,.5);border:2px solid rgba(255,107,53,.1)}
+.vs-mid{font-size:2.8rem;font-weight:900;color:#FF6B35}
+
+/* === Concept Text === */
+.concept-word{font-size:5rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:8px}
+
+/* === Subtitle Badge === */
+.subtitle-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 22px;border-radius:50px;font-size:1.05rem;font-weight:700;border:2px solid}
+
+/* === Page Badge === */
+.page-badge{position:absolute;top:24px;right:32px;font-size:.9rem;color:rgba(255,107,53,.45);font-weight:700;letter-spacing:2px;z-index:10}
+
+/* === Slide Indicator === */
+.slide-indicator{position:fixed;bottom:24px;right:32px;z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.2);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* === List === */
+.list-row{display:flex;align-items:flex-start;gap:12px;text-align:left;width:100%;padding:4px 0}
+.list-icon{flex-shrink:0;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+
+/* === Backgrounds === */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 20% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-7{background:radial-gradient(ellipse at 80% 40%,#1A1932 0%,#0F0E17 100%)}
+
+/* === Navigation Hints === */
+.nav-hint{position:fixed;bottom:28px;left:32px;z-index:100;font-size:.85rem;color:rgba(167,169,190,.5);display:flex;align-items:center;gap:10px}
+.nav-hint span{display:flex;align-items:center;gap:4px}
+.nav-hint kbd{display:inline-block;padding:2px 8px;border-radius:4px;border:1px solid rgba(167,169,190,.3);font-size:.8rem;color:rgba(167,169,190,.6)}
+
+/* === Detail Card === */
+.detail-row{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:8px;font-size:.95rem;font-weight:600;width:100%}
+
+/* === Icon text === */
+.icon-text{display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600}
+
+/* === Warn / Success boxes === */
+.warn-box{background:rgba(231,29,54,.08);border-left:4px solid #E71D36;padding:10px 16px;border-radius:0 8px 8px 0;margin:6px 0}
+.success-box{background:rgba(46,196,182,.08);border-left:4px solid #2EC4B6;padding:10px 16px;border-radius:0 8px 8px 0;margin:6px 0}
+
+/* === Highlight box === */
+.highlight-box{background:rgba(26,25,50,.6);border-radius:18px;padding:24px 32px;border:2px solid rgba(255,107,53,.18);box-shadow:0 6px 24px rgba(255,107,53,.08);text-align:center;max-width:850px}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ============ SLIDE 01: 封面 ============ -->
+<div class="slide bg-1 active" id="s0">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+  <div class="deco-square" style="width:60px;height:60px;border-color:#FF6B35;top:15%;left:8%"></div>
+  <div class="deco-square" style="width:40px;height:40px;border-color:#F4A261;bottom:20%;right:12%"></div>
+
+  <div class="anim-item" style="margin-bottom:14px">
+    <i class="fa-solid fa-microchip c-orange" style="font-size:4rem"></i>
+  </div>
+  <div class="anim-item t-hero c-dark">Honeys Engineering</div>
+  <div class="anim-item t-big c-orange" style="letter-spacing:10px;margin-top:4px">驾 驭 工 程</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-mid c-dark" style="margin-top:8px">AI Agent 开发的<span class="c-orange bold ul-orange">工程内核</span></div>
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:14px">
+    从<span class="c-amber bold">提示词工程</span>到<span class="c-coral bold">上下文工程</span>，<br>
+    再到<span class="c-orange bold">驾驭工程</span>——理解 AI Agent 开发的本质
+  </div>
+  <div class="anim-item icon-row" style="margin-top:20px">
+    <span class="tag tag-orange"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px"></i>提示词工程</span>
+    <i class="fa-solid fa-arrow-right c-gray" style="font-size:1.2rem"></i>
+    <span class="tag tag-amber"><i class="fa-solid fa-layer-group" style="margin-right:6px"></i>上下文工程</span>
+    <i class="fa-solid fa-arrow-right c-gray" style="font-size:1.2rem"></i>
+    <span class="tag tag-coral"><i class="fa-solid fa-crown" style="margin-right:6px"></i>驾驭工程</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 02: 大模型的本质 ============ -->
+<div class="slide bg-2" id="s1">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-130px;left:-130px"></div>
+
+  <div class="anim-item" style="margin-bottom:12px">
+    <span class="subtitle-badge" style="color:#FF6B35;border-color:rgba(255,107,53,.2);background:rgba(255,107,53,.04)">
+      <i class="fa-solid fa-brain c-orange" style="font-size:1.2rem"></i>&nbsp; 理解基石
+    </span>
+  </div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item" style="margin:10px 0;width:90%;max-width:1000px">
+    <div class="highlight-box">
+      <div style="font-size:1.4rem;color:#A7A9BE;text-align:center;line-height:2">
+        <span class="bold c-dark">大模型(LLM)</span> = <span class="bg-orange bold">磁盘上超大参数文件</span>
+        <br>加载到 <span class="c-amber bold">显卡内存</span> + <span class="c-orange bold">HTTP 接口</span> = 大模型 API 服务
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item flow" style="margin:16px 0">
+    <div class="flow-step">API 服务</div>
+    <i class="fa-solid fa-plus c-orange"></i>
+    <div class="flow-step" style="background:rgba(244,162,97,.12)">聊天界面</div>
+    <i class="fa-solid fa-arrow-right flow-arrow"></i>
+    <div class="flow-step" style="background:rgba(46,196,182,.1);color:#2EC4B6">AI 聊天助手</div>
+  </div>
+  <div class="anim-item flow">
+    <div class="flow-step">API 服务</div>
+    <i class="fa-solid fa-plus c-orange"></i>
+    <div class="flow-step" style="background:rgba(244,162,97,.12)">代码编辑器</div>
+    <i class="fa-solid fa-arrow-right flow-arrow"></i>
+    <div class="flow-step" style="background:rgba(46,196,182,.1);color:#2EC4B6">AI IDE</div>
+  </div>
+
+  <div class="anim-item warn-box" style="max-width:800px;margin-top:18px">
+    <i class="fa-solid fa-triangle-exclamation c-red" style="font-size:1.3rem"></i>
+    <span class="c-dark bold" style="margin-left:8px">核心能力：</span>
+    <span style="color:#A7A9BE">基于当前输入预测下一个字词 —— 本质上只是</span>
+    <span class="c-red bold">"猜你想要什么"</span>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="max-width:800px;margin-top:10px">
+    <i class="fa-solid fa-circle-exclamation c-orange"></i>&nbsp;
+    问题根源：指令<span class="c-amber bold">太宽泛</span> → 输出发散，难以控制
+  </div>
+</div>
+
+<!-- ============ SLIDE 03: 提示词工程 ============ -->
+<div class="slide bg-3" id="s2">
+  <div class="bg-grid"></div>
+  <div class="deco deco-coral" style="width:450px;height:450px;bottom:-150px;right:-150px"></div>
+  <div class="deco-square" style="width:45px;height:45px;border-color:#E76F51;top:12%;left:6%"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#FF6B35;border-color:rgba(255,107,53,.2);background:rgba(255,107,53,.04)">
+      <i class="fa-solid fa-wand-magic-sparkles c-orange" style="font-size:1.2rem"></i>&nbsp; Prompt Engineering
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark">提示词工程</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:900px;margin-bottom:12px">
+    <span class="bg-orange c-dark bold">定位</span>&nbsp; 解决<span class="c-red bold ul-coral">"大模型无引导乱说话"</span>的问题
+  </div>
+
+  <div class="anim-item grid-2" style="margin-top:6px">
+    <div class="info-card" style="border-left:5px solid #FF6B35">
+      <i class="fa-solid fa-user-tag c-orange" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">角色设定</div>
+      <div class="t-xs c-gray">定义模型的角色身份与行为边界</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #F4A261">
+      <i class="fa-solid fa-book c-amber" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">背景与历史</div>
+      <div class="t-xs c-gray">提供对话上下文和领域知识</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #E76F51">
+      <i class="fa-solid fa-file-lines c-coral" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">参考文档</div>
+      <div class="t-xs c-gray">嵌入相关参考资料提升准确度</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #2EC4B6">
+      <i class="fa-solid fa-list-check c-green" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">限制与格式</div>
+      <div class="t-xs c-gray">约束输出格式和禁止行为</div>
+    </div>
+  </div>
+
+  <div class="anim-item success-box" style="max-width:800px;margin-top:16px">
+    <i class="fa-solid fa-lightbulb c-green" style="font-size:1.3rem"></i>
+    <span class="c-dark bold" style="margin-left:8px">核心逻辑：</span>
+    <span style="color:#A7A9BE">有意识地调整和设计提示词，引导模型</span>
+    <span class="c-green bold">稳定输出</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 04: 上下文工程 ============ -->
+<div class="slide bg-4" id="s3">
+  <div class="bg-grid"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;top:-200px;left:50%;margin-left:-250px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#F4A261;border-color:rgba(244,162,97,.2);background:rgba(244,162,97,.04)">
+      <i class="fa-solid fa-layer-group c-amber" style="font-size:1.2rem"></i>&nbsp; Context Engineering
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark">上下文工程</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:900px">
+    <span class="bg-amber c-dark bold">上下文</span> = 提示词 + 文档 + 聊天记录 + 代码 + 环境信息 ...
+  </div>
+
+  <div class="anim-item" style="margin:12px 0">
+    <div class="warn-box" style="max-width:800px">
+      <i class="fa-solid fa-window-maximize c-red" style="font-size:1.3rem"></i>
+      <span class="c-dark bold" style="margin-left:8px">痛点：</span>
+      <span style="color:#A7A9BE">上下文窗口有限，多轮对话后打满 →</span>
+      <span class="c-red bold">上下文腐化 (Corruption)</span>
+    </div>
+  </div>
+
+  <div class="anim-item flow" style="margin:16px 0;gap:12px">
+    <span class="c-gray" style="font-size:1.3rem">三步策略：</span>
+    <div class="flow-step" style="background:rgba(255,107,53,.15);font-size:1.3rem">
+      <i class="fa-solid fa-magnifying-glass c-orange"></i> 召回 Retrieve
+    </div>
+    <i class="fa-solid fa-arrow-right flow-arrow"></i>
+    <div class="flow-step" style="background:rgba(244,162,97,.15);font-size:1.3rem">
+      <i class="fa-solid fa-compress c-amber"></i> 压缩 Compress
+    </div>
+    <i class="fa-solid fa-arrow-right flow-arrow"></i>
+    <div class="flow-step" style="background:rgba(46,196,182,.12);font-size:1.3rem;color:#2EC4B6">
+      <i class="fa-solid fa-puzzle-piece"></i> 组装 Assemble
+    </div>
+  </div>
+
+  <div class="anim-item grid-3" style="margin-top:8px">
+    <div class="info-card" style="border-top:4px solid #FF6B35">
+      <i class="fa-solid fa-database c-orange" style="font-size:1.6rem"></i>
+      <div class="t-sm c-dark bold">召回</div>
+      <div class="t-xs c-gray">从外部信息源<br>找出最相关内容</div>
+    </div>
+    <div class="info-card" style="border-top:4px solid #F4A261">
+      <i class="fa-solid fa-down-left-and-up-right-to-center c-amber" style="font-size:1.6rem"></i>
+      <div class="t-sm c-dark bold">压缩</div>
+      <div class="t-xs c-gray">总结精简信息<br>节省窗口空间</div>
+    </div>
+    <div class="info-card" style="border-top:4px solid #2EC4B6">
+      <i class="fa-solid fa-arrow-down-wide-short c-green" style="font-size:1.6rem"></i>
+      <div class="t-sm c-dark bold">组装</div>
+      <div class="t-xs c-gray">按优先级排列<br>越靠后越被关注</div>
+    </div>
+  </div>
+
+  <div class="anim-item highlight-box" style="margin-top:16px;border-color:rgba(231,29,54,.25)">
+    <i class="fa-solid fa-key c-red" style="font-size:1.2rem"></i>
+    <span class="c-dark bold" style="margin-left:6px">关键认知：</span>
+    <span style="color:#A7A9BE">不同 AI 工具上下文工程策略不同 →</span>
+    <span class="c-red bold">同一模型，效果差异巨大</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 05: 提示词工程 vs 上下文工程 ============ -->
+<div class="slide bg-5" id="s4">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px"></div>
+
+  <div class="anim-item" style="margin-bottom:8px">
+    <span class="subtitle-badge" style="color:#E76F51;border-color:rgba(231,111,81,.2);background:rgba(231,111,81,.04)">
+      <i class="fa-solid fa-code-branch c-coral" style="font-size:1.2rem"></i>&nbsp; 关系对比
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark">提示词工程 <span class="c-orange">vs</span> 上下文工程</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item vs-row" style="margin-top:10px">
+    <div class="vs-card" style="border-left:6px solid #FF6B35">
+      <i class="fa-solid fa-pen-to-square c-orange" style="font-size:2.5rem"></i>
+      <div class="t-mid c-orange bold" style="margin-top:8px">提示词工程</div>
+      <div class="t-sm c-gray" style="margin-top:4px">解决<span class="c-dark bold">"说什么"</span>的问题</div>
+      <div style="margin-top:10px;text-align:left">
+        <div class="detail-row"><i class="fa-solid fa-check c-orange"></i> 设计输入格式和约束</div>
+        <div class="detail-row"><i class="fa-solid fa-check c-orange"></i> 角色设定 + 输出模板</div>
+        <div class="detail-row"><i class="fa-solid fa-check c-orange"></i> 让模型明白"要什么"</div>
+      </div>
+    </div>
+    <div class="vs-mid">VS</div>
+    <div class="vs-card" style="border-left:6px solid #F4A261">
+      <i class="fa-solid fa-folder-tree c-amber" style="font-size:2.5rem"></i>
+      <div class="t-mid c-amber bold" style="margin-top:8px">上下文工程</div>
+      <div class="t-sm c-gray" style="margin-top:4px">解决<span class="c-dark bold">"给什么"</span>的问题</div>
+      <div style="margin-top:10px;text-align:left">
+        <div class="detail-row"><i class="fa-solid fa-check c-amber"></i> 管理有限窗口信息组织</div>
+        <div class="detail-row"><i class="fa-solid fa-check c-amber"></i> 召回 → 压缩 → 组装</div>
+        <div class="detail-row"><i class="fa-solid fa-check c-amber"></i> 让模型"记住上下文"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item highlight-box" style="margin-top:18px;border-color:rgba(255,107,53,.25)">
+    <i class="fa-solid fa-circle-info c-orange" style="font-size:1.2rem"></i>
+    <span class="c-dark bold" style="margin-left:6px">包含关系：</span>
+    <span style="color:#A7A9BE">提示词是上下文的一部分 → 提示词工程是上下文工程的一部分</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 06: 驾驭工程总览 ============ -->
+<div class="slide bg-1" id="s5">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+
+  <div class="anim-item" style="margin-bottom:8px">
+    <span class="subtitle-badge" style="color:#E76F51;border-color:rgba(231,111,81,.2);background:rgba(231,111,81,.04)">
+      <i class="fa-solid fa-crown c-coral" style="font-size:1.2rem"></i>&nbsp; Honeys Engineering
+    </span>
+  </div>
+  <div class="anim-item concept-word">驾驭工程</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:850px;margin-top:8px">
+    提示词工程+上下文工程让模型<span class="c-green bold">更聪明</span>，但只能<span class="c-amber bold">聊天</span><br>
+    驾驭工程让它<span class="c-orange bold ul-orange">"能干活"</span>
+  </div>
+
+  <div class="anim-item formula-box" style="margin-top:20px">
+    <div class="formula-part">
+      <i class="fa-solid fa-robot c-orange" style="font-size:3rem"></i>
+      <span style="font-size:1.6rem;font-weight:900;color:#FFFFFE">Agent</span>
+    </div>
+    <div class="formula-op">=</div>
+    <div class="formula-part">
+      <i class="fa-solid fa-brain c-amber" style="font-size:3rem"></i>
+      <span style="font-size:1.6rem;font-weight:900;color:#F4A261">大模型</span>
+    </div>
+    <div class="formula-op">+</div>
+    <div class="formula-part">
+      <i class="fa-solid fa-gears c-coral" style="font-size:3rem"></i>
+      <span style="font-size:1.6rem;font-weight:900;color:#E76F51">Honeys Engineering</span>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:16px;max-width:800px">
+    <i class="fa-solid fa-quote-left c-orange"></i>&nbsp;
+    <span class="italic">"只要不是大模型的那部分，都属于 Honeys Engineering 的范畴"</span>&nbsp;
+    <i class="fa-solid fa-quote-right c-orange"></i>
+  </div>
+
+  <!-- Four Layer Ring Diagram -->
+  <div class="anim-item ring-diagram" style="margin-top:10px">
+    <div class="ring-orbit"></div>
+    <div class="ring-center">四层<br>架构</div>
+    <div class="ring-item s1" style="top:0;left:50%;transform:translateX(-50%)">
+      <i class="fa-solid fa-brain"></i>记忆层
+    </div>
+    <div class="ring-item s2" style="top:50%;right:0;transform:translateY(-50%)">
+      <i class="fa-solid fa-terminal"></i>执行层
+    </div>
+    <div class="ring-item s3" style="bottom:0;left:50%;transform:translateX(-50%)">
+      <i class="fa-solid fa-rotate"></i>反馈层
+    </div>
+    <div class="ring-item s4" style="top:50%;left:0;transform:translateY(-50%)">
+      <i class="fa-solid fa-diagram-project"></i>编排层
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLIDE 07: 记忆层 ============ -->
+<div class="slide bg-2" id="s6">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-130px;left:-130px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#FF6B35;border-color:rgba(255,107,53,.2);background:rgba(255,107,53,.04)">
+      <i class="fa-solid fa-brain c-orange" style="font-size:1.2rem"></i>&nbsp; 第一层
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark"><span class="c-orange bold">记忆层</span> Memory Layer</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:850px;margin-bottom:10px">
+    <span class="bg-orange c-dark bold">核心思路：</span>保证每次上下文都包含<span class="c-orange bold">可复用的核心信息</span>
+  </div>
+
+  <div class="anim-item grid-2" style="margin-top:8px">
+    <div class="info-card" style="border-left:5px solid #FF6B35">
+      <i class="fa-solid fa-bullseye c-orange" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">项目目标</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #F4A261">
+      <i class="fa-solid fa-code c-amber" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">技术栈</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #E76F51">
+      <i class="fa-solid fa-paintbrush c-coral" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">代码风格</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #E71D36">
+      <i class="fa-solid fa-ban c-red" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">禁止事项</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:18px;max-width:850px">
+    <div class="highlight-box" style="text-align:left">
+      <div class="icon-text"><i class="fa-solid fa-file-code c-orange"></i> <span class="c-dark bold">实现方式：</span><span class="c-gray">写入规则文件</span><span class="bg-orange c-dark" style="margin-left:6px">CLAUDE.md</span><span class="c-gray"> / rules 文件，自动注入为系统提示词</span></div>
+      <div class="icon-text" style="margin-top:8px"><i class="fa-solid fa-puzzle-piece c-amber"></i> <span class="c-dark bold">优化策略：</span><span class="c-gray">文件过长时拆分 + 路由 →</span><span class="bg-amber c-dark" style="margin-left:6px">BG.md</span><span class="c-gray"> / </span><span class="bg-amber c-dark">STACK.md</span></div>
+      <div class="icon-text" style="margin-top:8px"><i class="fa-solid fa-lightbulb c-green"></i> <span class="c-dark bold">懒加载：</span><span class="c-gray">一般只加载路径，真正需要时才加载全部内容</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLIDE 08: 执行层 ============ -->
+<div class="slide bg-3" id="s7">
+  <div class="bg-grid"></div>
+  <div class="deco deco-amber" style="width:450px;height:450px;bottom:-150px;right:-150px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#F4A261;border-color:rgba(244,162,97,.2);background:rgba(244,162,97,.04)">
+      <i class="fa-solid fa-terminal c-amber" style="font-size:1.2rem"></i>&nbsp; 第二层
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark"><span class="c-amber bold">执行层</span> Execution Layer</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:850px;margin-bottom:12px">
+    赋予大模型<span class="c-amber bold ul-amber">操作外部世界</span>的能力 —— 从"只会聊天"到"能动手干活"的关键跨越
+  </div>
+
+  <div class="anim-item grid-3" style="margin-top:8px">
+    <div class="info-card" style="border-top:4px solid #FF6B35">
+      <i class="fa-solid fa-terminal c-orange" style="font-size:2.2rem"></i>
+      <div class="t-sm c-dark bold">Bash 沙箱</div>
+      <div class="t-xs c-gray">执行命令<br>运行脚本</div>
+    </div>
+    <div class="info-card" style="border-top:4px solid #F4A261">
+      <i class="fa-solid fa-folder-open c-amber" style="font-size:2.2rem"></i>
+      <div class="t-sm c-dark bold">文件系统</div>
+      <div class="t-xs c-gray">读写代码文件<br>管理项目</div>
+    </div>
+    <div class="info-card" style="border-top:4px solid #E76F51">
+      <i class="fa-solid fa-plug c-coral" style="font-size:2.2rem"></i>
+      <div class="t-sm c-dark bold">MCP</div>
+      <div class="t-xs c-gray">Model Context Protocol<br>连接外部工具</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:18px">
+    <div class="highlight-box">
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+        <div class="shape-circle sh-md s1">
+          <i class="fa-solid fa-comment-dots" style="font-size:1.2rem"></i>
+          <span style="font-size:.9rem">只会聊天</span>
+        </div>
+        <i class="fa-solid fa-arrow-right c-orange" style="font-size:2rem"></i>
+        <div class="shape-circle sh-lg s4" style="box-shadow:0 8px 28px rgba(46,196,182,.3)">
+          <i class="fa-solid fa-rocket" style="font-size:1.5rem"></i>
+          <span style="font-size:.9rem">能动手干活</span>
+        </div>
+      </div>
+      <div class="t-xs c-gray" style="margin-top:12px">读写代码文件 · 执行命令 · 运行测试 · 操作外部工具</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLIDE 09: 反馈层 ============ -->
+<div class="slide bg-4" id="s8">
+  <div class="bg-grid"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;top:-200px;left:50%;margin-left:-250px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#E76F51;border-color:rgba(231,111,81,.2);background:rgba(231,111,81,.04)">
+      <i class="fa-solid fa-rotate c-coral" style="font-size:1.2rem"></i>&nbsp; 第三层
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark"><span class="c-coral bold">反馈层</span> Feedback Layer</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item t-body c-gray" style="max-width:850px;margin-bottom:8px">
+    核心机制：<span class="c-orange bold bg-orange">ReAct 循环</span>（Reasoning + Acting）
+  </div>
+
+  <div class="anim-item flow" style="margin:14px 0;font-size:1.3rem;gap:14px">
+    <div class="shape-circle sh-sm s1">
+      <i class="fa-solid fa-lightbulb"></i>
+      <span style="font-size:.8rem">思考</span>
+    </div>
+    <i class="fa-solid fa-arrow-right flow-arrow" style="font-size:1.5rem"></i>
+    <div class="shape-circle sh-sm s2">
+      <i class="fa-solid fa-person-running"></i>
+      <span style="font-size:.8rem">行动</span>
+    </div>
+    <i class="fa-solid fa-arrow-right flow-arrow" style="font-size:1.5rem"></i>
+    <div class="shape-circle sh-sm s3">
+      <i class="fa-solid fa-eye"></i>
+      <span style="font-size:.8rem">观察</span>
+    </div>
+    <i class="fa-solid fa-arrow-right flow-arrow" style="font-size:1.5rem"></i>
+    <div class="shape-circle sh-sm s1">
+      <i class="fa-solid fa-lightbulb"></i>
+      <span style="font-size:.8rem">再思考</span>
+    </div>
+  </div>
+
+  <div class="anim-item grid-2" style="margin-top:10px">
+    <div class="info-card" style="border-left:5px solid #E76F51">
+      <i class="fa-solid fa-bug c-coral" style="font-size:1.8rem"></i>
+      <div class="t-sm c-dark bold">错误回传</div>
+      <div class="t-xs c-gray">执行报错和测试输出<br>回传至上下文</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #2EC4B6">
+      <i class="fa-solid fa-wrench c-green" style="font-size:1.8rem"></i>
+      <div class="t-sm c-dark bold">自动修复</div>
+      <div class="t-xs c-gray">Agent 下一轮循环<br>自动修复问题</div>
+    </div>
+  </div>
+
+  <div class="anim-item highlight-box" style="margin-top:16px;border-color:rgba(46,196,182,.25)">
+    <i class="fa-solid fa-infinity c-green" style="font-size:1.2rem"></i>
+    <span class="c-dark bold" style="margin-left:6px">Agent 的本质：</span>
+    <span style="color:#A7A9BE">一个</span>
+    <span class="c-orange bold" style="font-size:1.2rem">for 循环</span>
+    <span style="color:#A7A9BE">，边思考边行动，校验结果驱动自动修复</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 10: 编排层 ============ -->
+<div class="slide bg-5" id="s9">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#2EC4B6;border-color:rgba(46,196,182,.2);background:rgba(46,196,182,.04)">
+      <i class="fa-solid fa-diagram-project c-green" style="font-size:1.2rem"></i>&nbsp; 第四层
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark"><span class="c-green bold">编排层</span> Orchestration Layer</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item warn-box" style="max-width:800px;margin-bottom:10px">
+    <i class="fa-solid fa-triangle-exclamation c-red" style="font-size:1.3rem"></i>
+    <span class="c-dark bold" style="margin-left:8px">痛点：</span>
+    <span style="color:#A7A9BE">Agent 循环若缺乏全局规划，容易</span>
+    <span class="c-red bold">跑偏甚至陷入无效死循环</span>
+  </div>
+
+  <div class="anim-item" style="margin:10px 0;max-width:850px">
+    <div class="highlight-box" style="text-align:left">
+      <div class="icon-text"><i class="fa-solid fa-check-circle c-green"></i> <span class="c-dark bold">解决方案：</span><span class="c-gray">以全局规划为核心，对任务做拆解与全流程管控</span></div>
+      <div class="icon-text" style="margin-top:8px"><i class="fa-solid fa-list-ol c-orange"></i> <span class="c-dark bold">操作方式：</span><span class="c-gray">将大任务拆解为</span><span class="bg-orange c-dark">有明确执行标准的多个子任务</span></div>
+      <div class="icon-text" style="margin-top:8px"><i class="fa-solid fa-arrows-down-to-line c-amber"></i> <span class="c-dark bold">执行方式：</span><span class="c-gray">按规划驱动 Agent</span><span class="c-amber bold">逐步执行</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:16px;max-width:800px">
+    编排层是四层中<span class="c-orange bold">最高层的管控能力</span> —— 负责"做什么"和"什么算做完"
+  </div>
+</div>
+
+<!-- ============ SLIDE 11: 四层架构全景图 ============ -->
+<div class="slide bg-1" id="s10">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:800px;height:800px;top:50%;left:50%;margin-top:-400px;margin-left:-400px;opacity:.4"></div>
+
+  <div class="anim-item t-big c-dark" style="margin-bottom:4px">四层架构<span class="c-orange bold">全景图</span></div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item layer-stack">
+    <div class="layer-box">
+      <div class="layer-num" style="background:linear-gradient(135deg,#FF6B35,#E76F51)">4</div>
+      <div class="layer-content">
+        <div style="font-size:1.5rem;font-weight:800;color:#FFFFFE">
+          <span class="c-green bold">编排层</span> Orchestration
+          <span class="layer-tag" style="background:rgba(46,196,182,.12);color:#2EC4B6">最高管控</span>
+        </div>
+        <div style="font-size:1rem;color:#A7A9BE;margin-top:2px">全局规划 · 任务拆解 · 执行标准 · 全流程管控</div>
+      </div>
+      <i class="fa-solid fa-diagram-project c-green" style="font-size:2rem"></i>
+    </div>
+    <div class="layer-box">
+      <div class="layer-num" style="background:linear-gradient(135deg,#E76F51,#FF6B35)">3</div>
+      <div class="layer-content">
+        <div style="font-size:1.5rem;font-weight:800;color:#FFFFFE">
+          <span class="c-coral bold">反馈层</span> Feedback
+          <span class="layer-tag" style="background:rgba(231,111,81,.12);color:#E76F51">自动修复</span>
+        </div>
+        <div style="font-size:1rem;color:#A7A9BE;margin-top:2px">ReAct 循环 · 错误回传 · 自动修复 · 越做越好</div>
+      </div>
+      <i class="fa-solid fa-rotate c-coral" style="font-size:2rem"></i>
+    </div>
+    <div class="layer-box">
+      <div class="layer-num" style="background:linear-gradient(135deg,#F4A261,#E9C46A)">2</div>
+      <div class="layer-content">
+        <div style="font-size:1.5rem;font-weight:800;color:#FFFFFE">
+          <span class="c-amber bold">执行层</span> Execution
+          <span class="layer-tag" style="background:rgba(244,162,97,.12);color:#F4A261">工具赋能</span>
+        </div>
+        <div style="font-size:1rem;color:#A7A9BE;margin-top:2px">Bash 沙箱 · 文件系统 · MCP · 让 Agent 真正"动手"</div>
+      </div>
+      <i class="fa-solid fa-terminal c-amber" style="font-size:2rem"></i>
+    </div>
+    <div class="layer-box">
+      <div class="layer-num" style="background:linear-gradient(135deg,#2EC4B6,#06D6A0)">1</div>
+      <div class="layer-content">
+        <div style="font-size:1.5rem;font-weight:800;color:#FFFFFE">
+          <span class="c-green bold">记忆层</span> Memory
+          <span class="layer-tag" style="background:rgba(46,196,182,.12);color:#2EC4B6">核心约束</span>
+        </div>
+        <div style="font-size:1rem;color:#A7A9BE;margin-top:2px">规则文件注入 · 保证核心约束不丢失 · CLAUDE.md</div>
+      </div>
+      <i class="fa-solid fa-brain c-green" style="font-size:2rem"></i>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:18px;max-width:800px">
+    四层协同，形成包裹大模型的完整<span class="c-orange bold ul-orange">工程外壳</span><br>
+    大模型越强，外壳可以越薄 —— 但无论怎样，<span class="c-red bold">这层外壳都必须有</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 12: 落地实践 ============ -->
+<div class="slide bg-2" id="s11">
+  <div class="bg-grid"></div>
+  <div class="deco deco-amber" style="width:450px;height:450px;bottom:-150px;right:-150px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="subtitle-badge" style="color:#F4A261;border-color:rgba(244,162,97,.2);background:rgba(244,162,97,.04)">
+      <i class="fa-solid fa-rocket c-amber" style="font-size:1.2rem"></i>&nbsp; 落地实践
+    </span>
+  </div>
+  <div class="anim-item t-big c-dark">以 <span class="c-orange bold">Claude Code</span> 为例</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item grid-2" style="margin-top:10px">
+    <div class="info-card" style="border-left:5px solid #FF6B35">
+      <i class="fa-solid fa-feather-pointed c-orange" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">最轻量做法</div>
+      <div class="t-xs c-gray" style="line-height:1.6">
+        在 <span class="bg-orange c-dark">CLAUDE.md</span> 中写清楚：<br>
+        · 项目背景是什么<br>
+        · 希望模型做什么 / 别做什么<br>
+        · 做完要跑哪些 lint / 单测 / CI
+      </div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #F4A261">
+      <i class="fa-solid fa-puzzle-piece c-amber" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">进阶方案：SDD</div>
+      <div class="t-xs c-gray" style="line-height:1.6">
+        <span class="bg-amber c-dark">Spec-Driven Development</span><br>
+        · 生成约束文件 → 明确需求<br>
+        · 制定开发计划 → 拆解任务<br>
+        · 实际修改 + 测试<br>
+        · 每阶段更新 CLAUDE.md
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item success-box" style="max-width:800px;margin-top:16px">
+    <i class="fa-solid fa-check-double c-green" style="font-size:1.3rem"></i>
+    <span class="c-dark bold" style="margin-left:8px">SDD 本质：</span>
+    <span style="color:#A7A9BE">就是</span>
+    <span class="c-orange bold">Honeys Engineering 的落地实践</span>
+    <span style="color:#A7A9BE">——每一阶段注入上下文的尽可能都是核心信息</span>
+  </div>
+</div>
+
+<!-- ============ SLIDE 13: 核心洞察总结 ============ -->
+<div class="slide bg-3" id="s12">
+  <div class="bg-grid"></div>
+  <div class="deco deco-orange" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.35"></div>
+  <div class="deco-square" style="width:50px;height:50px;border-color:#FF6B35;top:10%;right:8%"></div>
+
+  <div class="anim-item" style="margin-bottom:8px">
+    <span class="subtitle-badge" style="color:#FF6B35;border-color:rgba(255,107,53,.2);background:rgba(255,107,53,.04)">
+      <i class="fa-solid fa-lightbulb c-orange" style="font-size:1.2rem"></i>&nbsp; Key Insights
+    </span>
+  </div>
+  <div class="anim-item t-huge c-dark">核心洞察<span class="c-orange bold">总结</span></div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item" style="width:90%;max-width:950px;margin-top:8px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #FF6B35">
+        <div class="icon-text"><i class="fa-solid fa-1 c-orange" style="font-size:1.3rem"></i> <span class="c-dark bold">提示词工程</span> <i class="fa-solid fa-arrow-right c-gray"></i> <span class="c-gray">让大模型</span><span class="c-orange bold">"听懂人话"</span><span class="c-gray"> —— 解决无引导输出问题</span></div>
+      </div>
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #F4A261">
+        <div class="icon-text"><i class="fa-solid fa-2 c-amber" style="font-size:1.3rem"></i> <span class="c-dark bold">上下文工程</span> <i class="fa-solid fa-arrow-right c-gray"></i> <span class="c-gray">让大模型</span><span class="c-amber bold">"记住上下文"</span><span class="c-gray"> —— 解决窗口腐化问题</span></div>
+      </div>
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #E76F51">
+        <div class="icon-text"><i class="fa-solid fa-3 c-coral" style="font-size:1.3rem"></i> <span class="c-dark bold">驾驭工程</span> <i class="fa-solid fa-arrow-right c-gray"></i> <span class="c-gray">让大模型</span><span class="c-coral bold">"持续按规范执行并交付成果"</span><span class="c-gray"> —— 四层协同</span></div>
+      </div>
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #2EC4B6">
+        <div class="icon-text"><i class="fa-solid fa-4 c-green" style="font-size:1.3rem"></i> <span class="c-dark bold">Agent 本质</span> <span class="c-gray">=</span> <span class="c-orange bold">for 循环</span><span class="c-gray">，循环不停，上下文持续膨胀 —— 驾驭工程在膨胀中保持核心约束</span></div>
+      </div>
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #E71D36">
+        <div class="icon-text"><i class="fa-solid fa-5 c-red" style="font-size:1.3rem"></i> <span class="c-dark bold">程序员的工作内容：</span><span class="bg-red c-dark">从"写代码" → "写规则和写 Skill"</span></div>
+      </div>
+      <div class="highlight-box" style="text-align:left;border-left:5px solid #FF6B35">
+        <div class="icon-text"><i class="fa-solid fa-6 c-orange" style="font-size:1.3rem"></i> <span class="c-dark bold">大模型越强，外壳越薄，但<span class="c-orange">外壳永远需要</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLIDE 14: 日后奋斗方向 ============ -->
+<div class="slide bg-4" id="s13">
+  <div class="bg-grid"></div>
+  <div class="particles" id="particles14"></div>
+  <div class="deco deco-orange" style="width:800px;height:800px;top:50%;left:50%;margin-top:-400px;margin-left:-400px;opacity:.3"></div>
+  <div class="deco-square" style="width:55px;height:55px;border-color:#F4A261;bottom:15%;left:5%"></div>
+
+  <div class="anim-item" style="margin-bottom:8px">
+    <span class="subtitle-badge" style="color:#F4A261;border-color:rgba(244,162,97,.2);background:rgba(244,162,97,.04)">
+      <i class="fa-solid fa-compass c-amber" style="font-size:1.2rem"></i>&nbsp; Future Direction
+    </span>
+  </div>
+  <div class="anim-item t-huge c-dark">日后<span class="c-orange bold">奋斗方向</span></div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item grid-2" style="margin-top:12px">
+    <div class="info-card" style="border-left:5px solid #FF6B35">
+      <i class="fa-solid fa-microchip c-orange" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">以技术入行打基础</div>
+      <div class="t-xs c-gray">深入掌握 Honeys Engineering<br>四层架构的设计与优化</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #F4A261">
+      <i class="fa-solid fa-book-bookmark c-amber" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">感知变化顺势而为</div>
+      <div class="t-xs c-gray">将 CLAUDE.md 等规则文件<br>打造为项目级知识资产</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #E76F51">
+      <i class="fa-solid fa-arrows-spin c-coral" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">不躺平持续拼</div>
+      <div class="t-xs c-gray">建立有效的反馈机制<br>让 Agent 能自主迭代改进</div>
+    </div>
+    <div class="info-card" style="border-left:5px solid #2EC4B6">
+      <i class="fa-solid fa-users-gear c-green" style="font-size:2rem"></i>
+      <div class="t-sm c-dark bold">拥抱多 Agent 协作</div>
+      <div class="t-xs c-gray">探索编排层高级实践<br>复杂任务规划与协作</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:20px;width:90%;max-width:900px">
+    <div class="highlight-box" style="text-align:left;border-left:6px solid #E76F51">
+      <div class="icon-text" style="margin-bottom:6px"><i class="fa-solid fa-bullhorn c-orange"></i> <span class="c-dark bold">持续跟进：</span><span class="c-gray">Spec-Driven Development 等落地方法论</span></div>
+      <div class="icon-text" style="margin-bottom:6px"><i class="fa-solid fa-code c-amber"></i> <span class="c-dark bold">能力升级：</span><span class="c-gray">从"写代码"转向"写规则、写 Skill、建体系"</span></div>
+      <div class="icon-text"><i class="fa-solid fa-star c-coral"></i> <span class="c-dark bold">核心信念：</span><span class="c-orange bold" style="font-size:1.2rem">不是大模型的那部分，才是人类工程师真正发挥价值的地方</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item t-mid c-orange" style="margin-top:16px">
+    <i class="fa-solid fa-crown"></i>&nbsp; 驾驭工程 —— 往后程序员的主战场 &nbsp;<i class="fa-solid fa-crown"></i>
+  </div>
+</div>
+
+</div><!-- /slide-container -->
+
+<!-- Slide Indicators -->
+<div class="slide-indicator" id="dots"></div>
+
+<!-- Navigation Hints -->
+<div class="nav-hint">
+  <span><kbd>←</kbd><kbd>→</kbd> 翻页</span>
+  <span><kbd>Space</kbd> 下一页</span>
+  <span>滚轮 翻页</span>
+</div>
+
+<script>
+(function() {
+
+// Create slide dots
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const dotsContainer = document.getElementById('dots');
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => go(i));
+  dotsContainer.appendChild(dot);
+}
+
+let cur = 0;
+
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === cur);
+  });
+}
+
+function go(n) {
+  if (n < 0 || n >= total || n === cur) return;
+
+  // Clone nodes to force CSS animation reset
+  slides[cur].querySelectorAll('.anim-item, .an, [style*="animation"]').forEach(function(item) {
+    var clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.anim-item').forEach(e => e.classList.remove('show'));
+
+  cur = n;
+  updateDots();
+
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.anim-item').forEach((e, i) => {
+    e.classList.remove('show');
+    setTimeout(() => e.classList.add('show'), 150 + i * 240);
+  });
+}
+
+// Initial animation
+slides[0].querySelectorAll('.anim-item').forEach((e, i) =>
+  setTimeout(() => e.classList.add('show'), 300 + i * 280)
+);
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+    e.preventDefault(); go(cur + 1);
+  } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+    e.preventDefault(); go(cur - 1);
+  } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+});
+
+// Touch
+let tx = 0, ty = 0;
+document.addEventListener('touchstart', e => {
+  tx = e.changedTouches[0].screenX; ty = e.changedTouches[0].screenY;
+});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - tx;
+  const dy = e.changedTouches[0].screenY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    dx < 0 ? go(cur + 1) : go(cur - 1);
+  }
+});
+
+// Mouse wheel
+let wc = false;
+document.addEventListener('wheel', e => {
+  if (wc) return; wc = true;
+  setTimeout(() => wc = false, 800);
+  e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+});
+
+// Create floating particles for last slide
+function createParticles(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const colors = [
+    'rgba(255,107,53,.3)',
+    'rgba(244,162,97,.25)',
+    'rgba(231,111,81,.2)',
+    'rgba(46,196,182,.2)'
+  ];
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 10 + 3;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random() * 100}%;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      animation-duration:${Math.random() * 8 + 8}s;
+      animation-delay:${Math.random() * 8}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles('particles14');
+
+})();
+</script>
+
+</body>
+</html>
