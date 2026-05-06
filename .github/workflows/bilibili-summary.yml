@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/modelscope
-          key: modelscope-${{ runner.os }}-${{ hashFiles('transcribe.py') }}
+          key: modelscope-${{ runner.os }}-${{ hashFiles('py/transcribe.py') }}
           restore-keys: modelscope-${{ runner.os }}-
 
       - name: 缓存 Python venv
@@ -86,7 +86,7 @@ jobs:
           playwright install chromium --with-deps
 
       - name: 获取 B站 反爬 cookies(隐身浏览器)
-        run: python get_bilibili_cookies.py "${{ inputs.bilibili_url }}"
+        run: python py/get_bilibili_cookies.py "${{ inputs.bilibili_url }}"
 
       - name: API直连下载B站视频
         id: download
@@ -148,7 +148,7 @@ jobs:
 
       - name: 语音转写
         run: |
-          uv run transcribe.py transcribe -i "${{ env.video_path }}" -o ./output -f
+          uv run python py/transcribe.py transcribe -i "${{ env.video_path }}" -o ./output -f
 
       - name: 上传转写产物(字幕)
         uses: actions/upload-artifact@v4
@@ -204,7 +204,7 @@ jobs:
           ### 第2步: 截图辅助理解(如需要)
           如果转写内容中有难以理解的模糊片段, 对已下载的视频截图辅助理解:
           ```
-          uv run transcribe.py screenshot -i videos/bilibili_video.mp4 -t <时间戳> -o ./output/screenshots
+          uv run python py/transcribe.py screenshot -i videos/bilibili_video.mp4 -t <时间戳> -o ./output/screenshots
           ```
           然后读取截图, 结合画面理解内容。
 
@@ -305,7 +305,7 @@ jobs:
           RUN_TITLE: ${{ env.video_title || 'B站视频' }}
           BILIBILI_URL: ${{ inputs.bilibili_url }}
         run: |
-          uv run generate_index.py
+          uv run python py/generate_index.py
 
       - name: 部署更新后的索引到 Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -354,7 +354,7 @@ jobs:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
         run: |
-          uv run send_email.py \
+          uv run python py/send_email.py \
             --sender "$QQ_EMAIL" \
             --password "$QQ_SMTP_AUTH_CODE" \
             --to "${{ inputs.email }}" \

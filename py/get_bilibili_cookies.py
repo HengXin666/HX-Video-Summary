@@ -1,6 +1,6 @@
 """用隐身 Playwright 访问 bilibili.com 首页 + 目标视频页，提取反爬 cookies 供 yt-dlp 使用。
 
-用法: python get_bilibili_cookies.py <视频URL>
+用法: python py/get_bilibili_cookies.py <视频URL>
 """
 import asyncio
 import sys
@@ -117,6 +117,6 @@ def _to_netscape(cookies: list) -> str:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("用法: python get_bilibili_cookies.py <视频URL>", file=sys.stderr)
+        print("用法: python py/get_bilibili_cookies.py <视频URL>", file=sys.stderr)
         sys.exit(1)
     asyncio.run(main(sys.argv[1]))

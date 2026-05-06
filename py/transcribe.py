@@ -4,10 +4,10 @@
 支持标点恢复和语音端点检测(VAD)
 
 用法:
-    uv run transcribe.py                    # 处理所有视频
-    uv run transcribe.py -n 1               # 只处理最新的1个视频
-    uv run transcribe.py -i video.mp4       # 处理指定视频
-    uv run transcribe.py screenshot -i video.mp4 -t 00:05:30   # 截图
+    uv run python py/transcribe.py                    # 处理所有视频
+    uv run python py/transcribe.py -n 1               # 只处理最新的1个视频
+    uv run python py/transcribe.py -i video.mp4       # 处理指定视频
+    uv run python py/transcribe.py screenshot -i video.mp4 -t 00:05:30   # 截图
 """
 
 import argparse
@@ -313,12 +313,12 @@ def build_parser() -> argparse.ArgumentParser:
         description="视频转写与截图工具",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""示例:
-  uv run transcribe.py                        处理所有视频
-  uv run transcribe.py -n 1                   只处理1个视频
-  uv run transcribe.py -i video.mp4           处理指定视频
-  uv run transcribe.py -o ./result            指定输出目录
-  uv run transcribe.py screenshot -i v.mp4 -t 00:05:30   截图
-  uv run transcribe.py screenshot -i v.mp4 -t 120         截图(秒)""",
+  uv run python py/transcribe.py                        处理所有视频
+  uv run python py/transcribe.py -n 1                   只处理1个视频
+  uv run python py/transcribe.py -i video.mp4           处理指定视频
+  uv run python py/transcribe.py -o ./result            指定输出目录
+  uv run python py/transcribe.py screenshot -i v.mp4 -t 00:05:30   截图
+  uv run python py/transcribe.py screenshot -i v.mp4 -t 120         截图(秒)""",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="子命令")

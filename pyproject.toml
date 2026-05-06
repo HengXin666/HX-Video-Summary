@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-HX-Video-Summary = "transcribe:main"
+HX-Video-Summary = "py.transcribe:main"
 
 [tool.uv.extra-build-dependencies]
 editdistance = ["pdm-backend"]
