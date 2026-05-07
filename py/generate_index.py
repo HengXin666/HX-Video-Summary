@@ -79,6 +79,7 @@ def add_current_deployment(deployments: list) -> list:
     run_number = os.environ.get("RUN_NUMBER", "")
     run_title = os.environ.get("RUN_TITLE", "B站视频")
     bilibili_url = os.environ.get("BILIBILI_URL", "")
+    cover_url = fetch_bilibili_cover(bilibili_url)
 
     # 检查是否已存在(相同 run_number 跳过, 避免重复)
     for d in deployments:
@@ -86,19 +87,22 @@ def add_current_deployment(deployments: list) -> list:
             # 仅更新可变字段, 保留原始时间戳
             d["title"] = run_title
             d["bilibili_url"] = bilibili_url
+            if cover_url:
+                d["cover_url"] = cover_url
             return deployments
 
     # 新增
-    deployments.append(
-        {
-            "run_number": run_number,
-            "title": run_title,
-            "bilibili_url": bilibili_url,
-            "timestamp": get_current_timestamp(),
-            "ppt_file": "bilibili_ppt.html",
-            "summary_file": "summary.txt",
-        }
-    )
+    entry = {
+        "run_number": run_number,
+        "title": run_title,
+        "bilibili_url": bilibili_url,
+        "timestamp": get_current_timestamp(),
+        "ppt_file": "bilibili_ppt.html",
+        "summary_file": "summary.txt",
+    }
+    if cover_url:
+        entry["cover_url"] = cover_url
+    deployments.append(entry)
     return deployments
 
 
@@ -121,6 +125,28 @@ def extract_video_key(bilibili_url: str, title: str) -> str:
         if m:
             return m.group(1)
     return title
+
+
+def fetch_bilibili_cover(bilibili_url: str) -> str:
+    """从 B站 API 获取视频封面图 URL"""
+    if not bilibili_url:
+        return ""
+    m = re.search(r"BV[a-zA-Z0-9]+", bilibili_url)
+    if not m:
+        return ""
+    bvid = m.group(0)
+    try:
+        api_url = f"https://api.bilibili.com/x/web-interface/view?bvid={bvid}"
+        req = urllib.request.Request(api_url, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://www.bilibili.com/",
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data.get("data", {}).get("pic", "")
+    except Exception as e:
+        print(f"获取封面失败 {bvid}: {e}")
+        return ""
 
 
 def group_deployments(deployments: list) -> list:
@@ -147,6 +173,7 @@ def render_card(d: dict, is_history: bool = False) -> str:
     run_num = d.get("run_number", "")
     title = d.get("title", "未知视频")
     bilibili_url = d.get("bilibili_url", "")
+    cover_url = d.get("cover_url", "")
     ppt_url = f"{run_num}/bilibili_ppt.html"
     summary_url = f"{run_num}/summary.txt"
 
@@ -158,21 +185,33 @@ def render_card(d: dict, is_history: bool = False) -> str:
     )
     hist_cls = " history-item" if is_history else ""
 
+    cover_html = ""
+    if cover_url:
+        cover_html = (
+            f'<div class="card-cover">'
+            f'<img src="{cover_url}" alt="{title}" loading="lazy" '
+            f'onerror="this.parentElement.style.display=\'none\'">'
+            f'</div>'
+        )
+
     return f"""
           <div class="deploy-card{hist_cls}">
-            <div class="card-header">
-              <span class="run-badge">#{run_num}</span>
-              <span class="timestamp">{ts}</span>
-            </div>
-            <h3 class="video-title">{title}</h3>
-            <div class="card-actions">
-              <a href="{ppt_url}" target="_blank" class="btn btn-primary">
-                <i class="fa-solid fa-tv"></i> 查看PPT
-              </a>
-              <a href="{summary_url}" target="_blank" class="btn btn-secondary">
-                <i class="fa-solid fa-file-lines"></i> 文字总结
-              </a>
-              {bilibili_link}
+            {cover_html}
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#{run_num}</span>
+                <span class="timestamp">{ts}</span>
+              </div>
+              <h3 class="video-title">{title}</h3>
+              <div class="card-actions">
+                <a href="{ppt_url}" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="{summary_url}" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                {bilibili_link}
+              </div>
             </div>
           </div>"""
 
@@ -319,11 +358,14 @@ def generate_html(groups: list) -> str:
       background: linear-gradient(135deg, #1a1929, #16151f);
       border: 1px solid {COLORS["orange"]}22;
       border-radius: 16px;
-      padding: 28px 32px;
       margin-bottom: 20px;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      display: flex;
+      gap: 20px;
+      padding: 20px 24px;
+      align-items: flex-start;
     }}
 
     .deploy-card::before {{
@@ -340,6 +382,27 @@ def generate_html(groups: list) -> str:
       border-color: {COLORS["orange"]}55;
       transform: translateX(4px);
       box-shadow: 0 8px 32px {COLORS["orange"]}22;
+    }}
+
+    /* ===== Card Cover ===== */
+    .card-cover {{
+      flex-shrink: 0;
+      width: 180px;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+    }}
+
+    .card-cover img {{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }}
+
+    .card-body {{
+      flex: 1;
+      min-width: 0;
     }}
 
     .card-header {{
@@ -553,7 +616,8 @@ def generate_html(groups: list) -> str:
     /* ===== Responsive ===== */
     @media (max-width: 640px) {{
       .header h1 {{ font-size: 2rem; }}
-      .deploy-card {{ padding: 20px 22px; }}
+      .deploy-card {{ padding: 16px; flex-direction: column; }}
+      .card-cover {{ width: 100%; }}
       .card-actions {{ flex-direction: column; align-items: flex-start; }}
       .header .stats {{ flex-direction: column; gap: 12px; }}
     }}
@@ -638,6 +702,14 @@ def main():
 
     # 添加当前部署
     deployments = add_current_deployment(deployments)
+
+    # 回填缺失的封面
+    for d in deployments:
+        if not d.get("cover_url") and d.get("bilibili_url"):
+            cover = fetch_bilibili_cover(d["bilibili_url"])
+            if cover:
+                d["cover_url"] = cover
+                print(f"回填封面: #{d.get('run_number')} -> {cover}")
 
     # 按时间戳倒序排列(最新的在最上面)
     deployments.sort(key=lambda x: x.get("timestamp", ""), reverse=True)

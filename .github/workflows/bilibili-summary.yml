@@ -306,7 +306,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: pages-deploy
-      cancel-in-progress: false
+      cancel-in-progress: true
 
     steps:
       - name: 检出代码 (仅需 generate_index.py / send_email.py)
