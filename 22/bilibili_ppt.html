@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI资讯早报制作全流程揭秘</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --bg: #0F0E17;
+  --bg-card: #1A1925;
+  --bg-card2: #201F2E;
+  --orange: #FF6B35;
+  --amber: #F4A261;
+  --coral: #E76F51;
+  --text: #FFFFFE;
+  --text2: #A7A9BE;
+  --text3: #6B6D7E;
+  --green: #2EC4B6;
+  --red: #E71D36;
+  --border: rgba(255,107,53,0.2);
+  --glow: rgba(255,107,53,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bg-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.glow-orb {
+  position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+  opacity: 0.12;
+}
+.glow-orb.o1 { width: 500px; height: 500px; background: var(--orange); top: -150px; right: -100px; }
+.glow-orb.o2 { width: 400px; height: 400px; background: var(--amber); bottom: -120px; left: -80px; }
+.glow-orb.o3 { width: 300px; height: 300px; background: var(--coral); top: 40%; left: 50%; }
+
+.particles {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+}
+
+.particle {
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: var(--orange); opacity: 0.4;
+  animation: floatParticle 8s infinite ease-in-out;
+}
+.particle:nth-child(1) { top:10%; left:20%; animation-delay:0s; }
+.particle:nth-child(2) { top:25%; left:70%; animation-delay:1.2s; width:2px; height:2px; }
+.particle:nth-child(3) { top:50%; left:35%; animation-delay:2.5s; }
+.particle:nth-child(4) { top:65%; left:80%; animation-delay:0.6s; width:2px; height:2px; }
+.particle:nth-child(5) { top:80%; left:15%; animation-delay:3s; }
+.particle:nth-child(6) { top:35%; left:55%; animation-delay:1.8s; width:4px; height:4px; }
+.particle:nth-child(7) { top:15%; left:45%; animation-delay:4s; width:2px; height:2px; }
+.particle:nth-child(8) { top:70%; left:50%; animation-delay:2.1s; }
+
+@keyframes floatParticle {
+  0%,100% { transform: translateY(0) translateX(0); opacity:0.3; }
+  33% { transform: translateY(-30px) translateX(15px); opacity:0.7; }
+  66% { transform: translateY(-15px) translateX(-10px); opacity:0.5; }
+}
+
+.container {
+  position: relative; z-index: 1;
+  width: 100%; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 80px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.slide.active { opacity: 1; pointer-events: auto; z-index: 2; }
+
+.slide-inner {
+  max-width: 1100px; width: 100%;
+}
+
+/* Cover */
+.cover-icon {
+  font-size: 80px; color: var(--orange); margin-bottom: 30px;
+}
+.cover-title {
+  font-size: 56px; font-weight: 900; line-height: 1.2; margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--orange), var(--coral));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.cover-subtitle {
+  font-size: 22px; color: var(--text2); margin-bottom: 40px;
+}
+.cover-meta {
+  display: flex; gap: 40px; font-size: 16px; color: var(--text3);
+}
+.cover-meta i { color: var(--amber); margin-right: 8px; }
+
+/* Section title */
+.sec-label {
+  font-size: 14px; text-transform: uppercase; letter-spacing: 4px;
+  color: var(--orange); margin-bottom: 12px;
+}
+.sec-title {
+  font-size: 40px; font-weight: 800; margin-bottom: 8px; line-height: 1.2;
+}
+.sec-title span { color: var(--orange); }
+.sec-desc {
+  font-size: 18px; color: var(--text2); margin-bottom: 36px; line-height: 1.6;
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 32px;
+  border-left: 4px solid var(--orange);
+  margin-bottom: 16px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--glow); }
+.card h3 { font-size: 20px; margin-bottom: 8px; color: var(--amber); }
+.card h3 i { margin-right: 10px; color: var(--orange); }
+.card p { font-size: 16px; color: var(--text2); line-height: 1.7; }
+
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+/* Flow steps */
+.flow-steps { display: flex; gap: 16px; margin-bottom: 28px; }
+.flow-step {
+  flex:1; background: var(--bg-card); border:1px solid var(--border);
+  border-radius: 14px; padding: 24px 20px; text-align: center;
+  position: relative;
+}
+.flow-step .step-num {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--coral));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; margin: 0 auto 14px;
+}
+.flow-step h4 { font-size: 17px; margin-bottom: 6px; color: var(--amber); }
+.flow-step p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.flow-step .step-icon { font-size: 28px; color: var(--orange); margin-bottom: 10px; }
+
+/* VS row */
+.vs-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px;
+}
+.vs-card {
+  background: var(--bg-card); border-radius: 14px; padding: 24px 28px;
+  border-top: 4px solid var(--orange);
+}
+.vs-card.green { border-top-color: var(--green); }
+.vs-card h4 { font-size: 18px; margin-bottom: 12px; }
+.vs-card h4 i { margin-right: 8px; }
+.vs-card ul { list-style: none; }
+.vs-card ul li { font-size: 15px; color: var(--text2); padding: 6px 0; line-height: 1.5; }
+.vs-card ul li i { margin-right: 8px; font-size: 12px; }
+.vs-card ul li i.fa-check { color: var(--green); }
+.vs-card ul li i.fa-star { color: var(--amber); }
+
+/* Platform grid */
+.platform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.platform-card {
+  background: var(--bg-card); border:1px solid var(--border);
+  border-radius: 14px; padding: 24px; text-align: center;
+}
+.platform-card i { font-size: 36px; color: var(--orange); margin-bottom: 12px; }
+.platform-card h4 { font-size: 18px; margin-bottom: 6px; }
+.platform-card p { font-size: 14px; color: var(--text2); line-height: 1.5; }
+
+/* Highlight text */
+.hl { color: var(--orange); font-weight: 700; }
+.hl-a { color: var(--amber); font-weight: 600; }
+.hl-box {
+  background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.3);
+  border-radius: 10px; padding: 20px 28px; margin: 20px 0;
+}
+.hl-box i { color: var(--orange); margin-right: 10px; }
+.hl-box p { font-size: 16px; color: var(--text); line-height: 1.7; }
+
+/* Warn box */
+.warn-box {
+  background: rgba(231,29,54,0.08); border: 1px solid rgba(231,29,54,0.3);
+  border-left: 4px solid var(--red); border-radius: 10px;
+  padding: 18px 24px; margin: 16px 0;
+}
+.warn-box i { color: var(--red); margin-right: 10px; }
+.warn-box span { font-size: 15px; color: var(--text2); line-height: 1.6; }
+
+/* Success box */
+.success-box {
+  background: rgba(46,196,182,0.08); border: 1px solid rgba(46,196,182,0.3);
+  border-left: 4px solid var(--green); border-radius: 10px;
+  padding: 18px 24px; margin: 16px 0;
+}
+.success-box i { color: var(--green); margin-right: 10px; }
+.success-box span { font-size: 15px; color: var(--text2); line-height: 1.6; }
+
+/* Icon text row */
+.icon-text { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.icon-text i { font-size: 20px; color: var(--orange); margin-top: 3px; min-width: 24px; text-align: center; }
+.icon-text div { flex:1; }
+.icon-text strong { font-size: 16px; display: block; margin-bottom: 2px; }
+.icon-text span { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+/* Paragraph */
+.pg { font-size: 17px; color: var(--text2); line-height: 1.9; margin-bottom: 18px; }
+
+/* list */
+.info-list { list-style: none; }
+.info-list li { font-size: 16px; color: var(--text2); padding: 8px 0; line-height: 1.7; padding-left: 24px; position: relative; }
+.info-list li::before {
+  content: ''; position: absolute; left: 0; top: 14px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--orange);
+}
+
+/* insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(244,162,97,0.06));
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 28px 32px; margin-bottom: 18px;
+  border-left: 5px solid var(--orange);
+}
+.insight-card .insight-num {
+  font-size: 32px; font-weight: 900; color: var(--orange); margin-bottom: 4px;
+}
+.insight-card h4 { font-size: 19px; margin-bottom: 6px; color: var(--amber); }
+.insight-card p { font-size: 15px; color: var(--text2); line-height: 1.7; }
+
+/* direction */
+.dir-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px 26px; text-align: center;
+}
+.dir-card i { font-size: 34px; color: var(--coral); margin-bottom: 10px; }
+.dir-card h4 { font-size: 17px; margin-bottom: 4px; color: var(--amber); }
+.dir-card p { font-size: 14px; color: var(--text2); line-height: 1.5; }
+
+/* Big title for closing pages */
+.big-title {
+  font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 28px;
+  background: linear-gradient(135deg, var(--orange), var(--coral));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.big-icon { font-size: 72px; color: var(--orange); margin-bottom: 24px; text-align: center; }
+
+/* Navigation */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(15,14,23,0.9); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px 32px; gap: 24px;
+}
+.nav-btn {
+  background: var(--bg-card2); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 24px; border-radius: 30px;
+  font-size: 15px; cursor: pointer;
+  transition: all 0.3s;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-btn:hover { background: var(--orange); border-color: var(--orange); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+.nav-btn i { font-size: 14px; }
+
+.page-indicator {
+  position: fixed; top: 32px; left: 40px; z-index: 100;
+  font-size: 18px; font-weight: 700; color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+.page-indicator .cur { font-size: 42px; color: var(--orange); font-weight: 900; }
+.page-indicator .sep { margin: 0 4px; color: var(--text3); }
+
+.progress-bar {
+  position: fixed; top:0; left:0; height:3px; z-index:101;
+  background: linear-gradient(90deg, var(--orange), var(--coral));
+  transition: width 0.4s ease;
+}
+
+/* Animations - base state */
+.an, .anim-item {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.an.visible, .anim-item.visible {
+  opacity: 1; transform: translateY(0);
+}
+
+/* Animation delays for cascade */
+.an.d1,.anim-item.d1 { transition-delay: 0.05s; }
+.an.d2,.anim-item.d2 { transition-delay: 0.1s; }
+.an.d3,.anim-item.d3 { transition-delay: 0.15s; }
+.an.d4,.anim-item.d4 { transition-delay: 0.2s; }
+.an.d5,.anim-item.d5 { transition-delay: 0.25s; }
+.an.d6,.anim-item.d6 { transition-delay: 0.3s; }
+.an.d7,.anim-item.d7 { transition-delay: 0.35s; }
+.an.d8,.anim-item.d8 { transition-delay: 0.4s; }
+.an.d9,.anim-item.d9 { transition-delay: 0.45s; }
+.an.d10,.anim-item.d10 { transition-delay: 0.5s; }
+
+/* pulse glow icon */
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.4); }
+  50% { box-shadow: 0 0 0 18px rgba(255,107,53,0); }
+}
+.pulse-glow { animation: pulseGlow 2.5s infinite; }
+
+/* float up */
+@keyframes floatUp {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.float-up { animation: floatUp 3s ease-in-out infinite; }
+
+/* ring pulse */
+@keyframes ringPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,107,53,0.5); }
+  100% { box-shadow: 0 0 0 30px rgba(255,107,53,0); }
+}
+
+/* shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Additional keyframe animations for visual richness */
+@keyframes borderGlow {
+  0%,100% { border-color: rgba(255,107,53,0.2); box-shadow: 0 0 0 0 rgba(255,107,53,0); }
+  50% { border-color: rgba(255,107,53,0.6); box-shadow: 0 0 20px 2px rgba(255,107,53,0.15); }
+}
+.border-glow { animation: borderGlow 3s ease-in-out infinite; }
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes rotateIn {
+  from { opacity: 0; transform: rotate(-10deg) scale(0.9); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+@keyframes ribbonSlide {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+@keyframes dotPulse {
+  0%,100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.5); opacity: 1; }
+}
+.dot-pulse { animation: dotPulse 1.6s ease-in-out infinite; }
+.dot-pulse.d2 { animation-delay: 0.2s; }
+.dot-pulse.d3 { animation-delay: 0.4s; }
+
+@keyframes progressFill {
+  from { width: 0; }
+  to { width: var(--target-width); }
+}
+
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gentleSwing {
+  0%,100% { transform: rotate(0deg); }
+  25% { transform: rotate(1.5deg); }
+  75% { transform: rotate(-1.5deg); }
+}
+.gentle-swing { animation: gentleSwing 5s ease-in-out infinite; }
+
+@keyframes breathe {
+  0%,100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.breathe { animation: breathe 3s ease-in-out infinite; }
+
+@keyframes orbitPulse {
+  0% { box-shadow: 0 0 0 0 rgba(244,162,97,0.5), 0 0 0 0 rgba(255,107,53,0.3); }
+  100% { box-shadow: 0 0 0 20px rgba(244,162,97,0), 0 0 0 40px rgba(255,107,53,0); }
+}
+
+/* Staggered text reveal for slide content */
+.stagger-text span {
+  display: inline-block; opacity: 0; transform: translateY(10px);
+  animation: fadeInUp 0.4s forwards;
+}
+.stagger-text span:nth-child(1) { animation-delay: 0.1s; }
+.stagger-text span:nth-child(2) { animation-delay: 0.2s; }
+.stagger-text span:nth-child(3) { animation-delay: 0.3s; }
+.stagger-text span:nth-child(4) { animation-delay: 0.4s; }
+
+/* Ribbon accent */
+.ribbon-accent {
+  position: relative; overflow: hidden;
+}
+.ribbon-accent::after {
+  content: ''; position: absolute; bottom: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--orange), var(--coral), var(--amber));
+  animation: ribbonSlide 1.5s ease forwards;
+}
+
+/* Badge tag */
+.badge {
+  display: inline-block; padding: 4px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  background: rgba(255,107,53,0.15); color: var(--orange);
+  border: 1px solid rgba(255,107,53,0.3);
+  margin-right: 8px; margin-bottom: 6px;
+}
+.badge.green { background: rgba(46,196,182,0.15); color: var(--green); border-color: rgba(46,196,182,0.3); }
+.badge.amber { background: rgba(244,162,97,0.15); color: var(--amber); border-color: rgba(244,162,97,0.3); }
+
+/* Divider */
+.divider {
+  height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 24px 0;
+}
+
+/* Tooltip-style highlight */
+.highlight-note {
+  background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(244,162,97,0.04));
+  border-radius: 8px; padding: 12px 18px;
+  font-size: 14px; color: var(--amber);
+  border: 1px dashed rgba(255,107,53,0.25);
+}
+
+/* Count number style for stats */
+.stat-num {
+  font-size: 48px; font-weight: 900; color: var(--orange); line-height: 1;
+}
+.stat-label { font-size: 14px; color: var(--text3); text-transform: uppercase; letter-spacing: 2px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .slide { padding: 40px 28px; }
+  .sec-title { font-size: 28px; }
+  .cover-title { font-size: 36px; }
+  .card-grid, .vs-row, .card-grid-3 { grid-template-columns: 1fr; }
+  .flow-steps { flex-wrap: wrap; }
+  .platform-grid { grid-template-columns: 1fr 1fr; }
+  .page-indicator { top: 20px; left: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow-orb o1"></div>
+<div class="glow-orb o2"></div>
+<div class="glow-orb o3"></div>
+
+<div class="particles">
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div>
+</div>
+
+<div class="page-indicator">
+  <span class="cur" id="curPage">01</span><span class="sep">/</span><span id="totalPage">12</span>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:8.33%"></div>
+
+<div class="container">
+
+<!-- Slide 01: Cover -->
+<div class="slide active" data-index="0">
+<div class="slide-inner" style="text-align:center;">
+  <div class="an d1"><div class="cover-icon pulse-glow"><i class="fa-solid fa-robot"></i></div></div>
+  <div class="an d2"><h1 class="cover-title">AI资讯早报<br>制作全流程揭秘</h1></div>
+  <div class="an d3"><p class="cover-subtitle">从信息采集到多平台分发的<span class="hl">AI驱动工作流</span>深度解析</p></div>
+  <div class="an d4" style="margin-top:20px;">
+    <p style="font-size:18px;color:var(--text2);">主讲：居丫 &nbsp;|&nbsp; 主题：AI早报幕后技术揭秘</p>
+  </div>
+  <div class="an d5"><div class="cover-meta" style="justify-content:center;margin-top:20px;">
+    <span><i class="fa-solid fa-newspaper"></i>每日AI资讯</span>
+    <span><i class="fa-solid fa-gears"></i>AI+人工混合流</span>
+    <span><i class="fa-solid fa-globe"></i>全平台覆盖</span>
+  </div></div>
+</div>
+</div>
+
+<!-- Slide 02: 核心概述 -->
+<div class="slide" data-index="1">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-circle-info"></i> 项目总览</div></div>
+  <div class="an d2"><h2 class="sec-title">一档<span>每日AI资讯早报</span>的诞生</h2></div>
+  <div class="an d3"><p class="sec-desc">在速度、成本和能力的三角约束下，采用<strong>AI处理 + 人工把关</strong>的混合工作流，而非完全自主Agent架构</p></div>
+
+  <div class="an d4 card-grid">
+    <div class="card">
+      <h3><i class="fa-solid fa-bolt"></i>速度优先</h3>
+      <p>每日定时发布，覆盖前一天全球AI领域重要动态，追求时效性</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-scale-balanced"></i>质量把控</h3>
+      <p>AI初筛+人工精筛双重过滤，保留最官方、最准确、最早的信源</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:16px;">
+    <div class="hl-box">
+      <i class="fa-solid fa-lightbulb"></i>
+      <p><strong>核心理念：</strong>整个项目"全都是AI浇筑的始山"——以AI为效率引擎驱动规模化信息处理，同时在关键节点保留人工判断，确保内容质量与可信度。</p>
+    </div>
+  </div>
+
+  <div class="an d6 flow-steps" style="margin-top:28px;">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <h4>信息采集</h4>
+      <p>RSS + X平台 + 手动 + 社区</p>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <h4>筛选处理</h4>
+      <p>AI四步并行 + 人工精筛</p>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <h4>多平台分发</h4>
+      <p>6大平台差异化发布</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 03: 信息采集 -->
+<div class="slide" data-index="2">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-magnifying-glass"></i> 第一环节</div></div>
+  <div class="an d2"><h2 class="sec-title">信息采集：<span>多渠道汇聚</span>AI前沿资讯</h2></div>
+  <div class="an d3"><p class="sec-desc">RSS主力渠道 + X平台实时追踪 + 手动补充 + 社区反馈，构建全方位信息雷达网</p></div>
+
+  <div class="an d4 card-grid">
+    <div class="card">
+      <h3><i class="fa-solid fa-rss"></i>RSS订阅源</h3>
+      <p>Linux Store、Reddit等原生支持RSS；通过<strong>RSS Hub</strong>桥接不支持RSS的主流网站。信息已结构化、正文保留样式，便于AI后续处理。</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-brands fa-x-twitter"></i>X 平台</h3>
+      <p>全球AI信息的前沿阵地。几乎<strong>所有国内外AI公司及大企业AI部门</strong>都在X设立官方账号发布信息，是不可或缺的实时信源。</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-hand-pointer"></i>手动采集</h3>
+      <p>使用<strong>Obsidian Web Clipper</strong>浏览器插件，手动提取页面元素并转化为带元信息的Markdown，再通过AI编写的自定义插件发送至后台。</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-comments"></i>社区反馈</h3>
+      <p>节目积累了一批紧跟AI热点的观众，<strong>评论区、私信和交流群</strong>成为获取最新资讯的重要补充渠道。</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:20px;">
+    <div class="success-box">
+      <i class="fa-solid fa-check-circle"></i>
+      <span><strong>信息源广度是核心竞争力：</strong>早报每天资讯丰富的关键，在于覆盖了从RSS到社交媒体、从自动化到人工的完整信息采集矩阵。</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 04: 信息筛选与处理 -->
+<div class="slide" data-index="3">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-filter"></i> 第二环节</div></div>
+  <div class="an d2"><h2 class="sec-title">信息筛选：<span>AI四步并行</span> + 人工精筛</h2></div>
+  <div class="an d3"><p class="sec-desc">采集的信息先由AI初筛（剔除无关或低价值内容），随后启动四项同步任务</p></div>
+
+  <div class="an d4" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:28px;font-weight:900;color:var(--orange);">01</span>
+        <h4 style="font-size:17px;color:var(--amber);">摘要生成</h4>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;">为每条信息制作摘要，辅助后续筛选和快速浏览</p>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:28px;font-weight:900;color:var(--orange);">02</span>
+        <h4 style="font-size:17px;color:var(--amber);">关键词提取</h4>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;">提取关键词用于信息分类和归档，构建结构化知识库</p>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:28px;font-weight:900;color:var(--orange);">03</span>
+        <h4 style="font-size:17px;color:var(--amber);">去重过滤</h4>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;">与上一期早报及<strong>72小时内</strong>进入初筛的内容比对，排除重复信息</p>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-size:28px;font-weight:900;color:var(--orange);">04</span>
+        <h4 style="font-size:17px;color:var(--amber);">AI 打分</h4>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;">对信息进行质量评分，<strong>低分直接排除</strong>，高分作为人工筛选参考</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:22px;">
+    <div class="warn-box">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span><strong>关键节点——人工精筛：</strong>AI处理完成后，人工只保留<strong>最官方、最准确或最早的信源</strong>，并补充更多官方信息。这一环节是保障内容质量的生命线。</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 05: 内容生成 -->
+<div class="slide" data-index="4">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-pen-to-square"></i> 第三环节</div></div>
+  <div class="an d2"><h2 class="sec-title">内容生成与<span>人工校对</span></h2></div>
+  <div class="an d3"><p class="sec-desc">各分类下的信息合并后作为上下文发送给AI，生成标题和正文，人工校对后配备链接和媒体素材</p></div>
+
+  <div class="an d4">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px 32px;margin-bottom:20px;">
+      <h3 style="margin-bottom:16px;color:var(--amber);"><i class="fa-solid fa-code-branch"></i> 生成流水线</h3>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;padding:10px 0;">
+        <span style="background:var(--bg-card2);padding:12px 20px;border-radius:10px;font-size:15px;color:var(--text2);">
+          <i class="fa-solid fa-layer-group" style="color:var(--orange);margin-right:8px;"></i>分类信息合并
+        </span>
+        <i class="fa-solid fa-arrow-right" style="color:var(--orange);"></i>
+        <span style="background:var(--bg-card2);padding:12px 20px;border-radius:10px;font-size:15px;color:var(--text2);">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--amber);margin-right:8px;"></i>AI生成标题+正文
+        </span>
+        <i class="fa-solid fa-arrow-right" style="color:var(--orange);"></i>
+        <span style="background:var(--bg-card2);padding:12px 20px;border-radius:10px;font-size:15px;color:var(--text2);">
+          <i class="fa-solid fa-user-check" style="color:var(--coral);margin-right:8px;"></i>人工校对审核
+        </span>
+        <i class="fa-solid fa-arrow-right" style="color:var(--orange);"></i>
+        <span style="background:var(--bg-card2);padding:12px 20px;border-radius:10px;font-size:15px;color:var(--text2);">
+          <i class="fa-solid fa-photo-film" style="color:var(--orange);margin-right:8px;"></i>配备媒体素材
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="an d5 card-grid">
+    <div class="card">
+      <h3><i class="fa-solid fa-align-left"></i>文字版处理</h3>
+      <p>AI使用<strong>Markdown格式</strong>优化排版——加粗、行内代码块、表格均由AI决定和修改。主标题、目录和每条资讯的摘要也在该环节生成。</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-video"></i>视频版处理</h3>
+      <p>AI根据正文生成<strong>口播稿</strong>（按事件分段），再按标点拆分短句，每个短句作为一次TTS请求，通过音频时长确定时间轴。</p>
+    </div>
+  </div>
+
+  <div class="an d6" style="margin-top:12px;">
+    <div class="hl-box">
+      <i class="fa-solid fa-gem"></i>
+      <p><strong>最终产出：</strong>每条资讯都配备好<span class="hl">标题、正文、来源链接和媒体资源</span>，形成可直接分发的完整内容包。</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 06: 模型与平台 -->
+<div class="slide" data-index="5">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-microchip"></i> 技术底座</div></div>
+  <div class="an d2"><h2 class="sec-title">模型选型与<span>推理平台</span></h2></div>
+  <div class="an d3"><p class="sec-desc">文本生成和语音合成均在JMC Cloud推理引擎平台完成，在效果、成本和速度间取得最佳平衡</p></div>
+
+  <div class="an d4 vs-row">
+    <div class="vs-card">
+      <h4><i class="fa-solid fa-brain" style="color:var(--orange);"></i> 文本模型</h4>
+      <ul>
+        <li><i class="fa-solid fa-star"></i> <strong>Qwen3-Next-80B-A3B-Instruct</strong> — 主力文本生成与处理</li>
+        <li><i class="fa-solid fa-star"></i> 摘要、打分、去重等任务分布式调用不同模型</li>
+        <li><i class="fa-solid fa-star"></i> 整体权衡速度、成本与效果</li>
+      </ul>
+    </div>
+    <div class="vs-card green">
+      <h4><i class="fa-solid fa-volume-high" style="color:var(--green);"></i> 语音模型 (TTS)</h4>
+      <ul>
+        <li><i class="fa-solid fa-check"></i> <strong>MiniMax speech-02 HD</strong> — 此前主力，Podcast Girl音色</li>
+        <li><i class="fa-solid fa-check"></i> <strong>speech-2.6-turbo</strong> — 因成本优化切换</li>
+        <li><i class="fa-solid fa-check"></i> 平台同时提供ElevenLabs等顶尖模型</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:16px;">
+    <div class="hl-box">
+      <i class="fa-solid fa-cloud"></i>
+      <p><strong>JMC Cloud 平台优势：</strong>全球仅<strong>六家</strong>NVIDIA Reference Platform Partner之一，模型推理速度极快。提供文本、语音、图像、视频等各类顶级模型<strong>一键调用</strong>，对开发者和内容创作者非常友好。</p>
+    </div>
+  </div>
+
+  <div class="an d6" style="text-align:center;margin-top:20px;">
+    <p style="color:var(--text3);font-size:14px;">
+      <i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:6px;"></i>
+      成本敏感场景 → Turbo模型 &nbsp;|&nbsp;
+      <i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:6px;"></i>
+      质量优先场景 → HD模型
+    </p>
+  </div>
+</div>
+</div>
+
+<!-- Slide 07: 多平台分发 -->
+<div class="slide" data-index="6">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-share-nodes"></i> 第四环节</div></div>
+  <div class="an d2"><h2 class="sec-title">多平台<span>分发策略</span></h2></div>
+  <div class="an d3"><p class="sec-desc">文字版 + 视频版双形态，覆盖6大主流平台，各平台按特性差异化运营</p></div>
+
+  <div class="an d4 platform-grid">
+    <div class="platform-card" style="border-top:3px solid var(--green);">
+      <i class="fa-brands fa-weixin"></i>
+      <h4>微信公众号</h4>
+      <p><span class="hl">优先渠道</span> · 文字版 · 受限HTML格式 · Markdown需转码 · <strong>有收益</strong></p>
+    </div>
+    <div class="platform-card" style="border-top:3px solid var(--coral);">
+      <i class="fa-brands fa-bilibili"></i>
+      <h4>哔哩哔哩</h4>
+      <p><span class="hl">优先渠道</span> · 视频版 · 简介仅2000字符 · <strong>有收益</strong></p>
+    </div>
+    <div class="platform-card" style="border-top:3px solid var(--amber);">
+      <i class="fa-brands fa-zhihu"></i>
+      <h4>知乎专栏</h4>
+      <p><span class="hl">阅读体验最佳</span> · 支持目录 · 原生Markdown · 便捷切换事件</p>
+    </div>
+    <div class="platform-card" style="border-top:3px solid var(--red);">
+      <i class="fa-brands fa-youtube"></i>
+      <h4>YouTube</h4>
+      <p><span class="hl">观看体验最佳</span> · 简介5000字符 · 外挂字幕 · 自动片段切分</p>
+    </div>
+    <div class="platform-card">
+      <i class="fa-solid fa-book-open"></i>
+      <h4>小红书</h4>
+      <p>文字版/视频版 · 社区种草属性 · 触达泛AI兴趣人群</p>
+    </div>
+    <div class="platform-card">
+      <i class="fa-solid fa-music"></i>
+      <h4>抖音</h4>
+      <p>视频版 · 短视频形态 · 拓宽受众覆盖面</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:22px;">
+    <div class="warn-box">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span><strong>平台适配痛点：</strong>公众号格式为受限HTML（不支持点击跳转），需通过<strong>第三方工具或自定义CSS代码</strong>将Markdown转换为公众号格式。哔哩哔哩简介仅2000字符，经常无法显示全部内容。</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 08: 视频制作技术栈 -->
+<div class="slide" data-index="7">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-clapperboard"></i> 技术深潜</div></div>
+  <div class="an d2"><h2 class="sec-title">视频制作<span>技术栈</span>全解</h2></div>
+  <div class="an d3"><p class="sec-desc">画面 = HTML网页截图 + 声音 = TTS语音合成 + 剪辑 = FFmpeg全自动化</p></div>
+
+  <div class="an d4" style="display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;gap:16px;align-items:stretch;">
+      <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;border-top:3px solid var(--orange);">
+        <h4 style="margin-bottom:10px;color:var(--amber);"><i class="fa-solid fa-image" style="color:var(--orange);margin-right:8px;"></i>画面生成</h4>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7;">HTML网页 → <strong>Selenium + Chrome DevTools Protocol</strong> 截图。未来若成本合适，可能切换为图像生成模型直接生成。</p>
+      </div>
+      <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;border-top:3px solid var(--amber);">
+        <h4 style="margin-bottom:10px;color:var(--amber);"><i class="fa-solid fa-waveform-lines" style="color:var(--amber);margin-right:8px;"></i>语音合成</h4>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7;">AI生成口播稿 → 按事件分段 → <strong>按标点拆分短句</strong> → 每短句一次TTS API请求</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:stretch;">
+      <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;border-top:3px solid var(--coral);">
+        <h4 style="margin-bottom:10px;color:var(--amber);"><i class="fa-solid fa-timeline" style="color:var(--coral);margin-right:8px;"></i>时间轴编排</h4>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7;">计算每个合成音频时长 → 确定整个视频时间轴 → 各事件区间显示对应画面 → 事件间插入过渡</p>
+      </div>
+      <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;border-top:3px solid var(--green);">
+        <h4 style="margin-bottom:10px;color:var(--amber);"><i class="fa-solid fa-clipboard-list" style="color:var(--green);margin-right:8px;"></i>字幕与合成</h4>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7;">口播稿 → <strong>SRT字幕</strong> → 过渡效果+音效+进度条 → <strong>FFmpeg</strong>合成最终视频</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:20px;">
+    <div class="success-box">
+      <i class="fa-solid fa-infinity"></i>
+      <span><strong>全流程自动化：</strong>有了时间轴，其他内容都一一确定——画面显示区间、字幕同步、过渡效果、进度条——统一通过FFmpeg一键合成。</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 09: 简易替代方案 -->
+<div class="slide" data-index="8">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-lightbulb"></i> 轻量方案</div></div>
+  <div class="an d2"><h2 class="sec-title">不想那么复杂？<span>简易替代方案</span></h2></div>
+  <div class="an d3"><p class="sec-desc">对于觉得上述流程过于复杂的创作者，可以利用现有工具的免费能力快速搭建</p></div>
+
+  <div class="an d4 vs-row">
+    <div class="vs-card">
+      <h4><i class="fa-solid fa-clock" style="color:var(--orange);"></i> 方案一：定时采集</h4>
+      <ul>
+        <li><i class="fa-solid fa-star"></i> 使用 <strong>Grok</strong> 或 <strong>智谱清言</strong></li>
+        <li><i class="fa-solid fa-star"></i> 设定获取24小时内AI新闻的<strong>定时任务</strong></li>
+        <li><i class="fa-solid fa-star"></i> AI在指定时间将信息<strong>投递到邮箱</strong></li>
+        <li><i class="fa-solid fa-star"></i> 完全免费，无需部署</li>
+      </ul>
+    </div>
+    <div class="vs-card green">
+      <h4><i class="fa-solid fa-video" style="color:var(--green);"></i> 方案二：一键生成视频</h4>
+      <ul>
+        <li><i class="fa-solid fa-check"></i> 使用 <strong>NotebookLM</strong> 视频概览功能</li>
+        <li><i class="fa-solid fa-check"></i> 根据采集的资讯<strong>一键生成视频</strong></li>
+        <li><i class="fa-solid fa-check"></i> 无需编写代码</li>
+        <li><i class="fa-solid fa-check"></i> 适合个人创作者快速起步</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:20px;">
+    <div class="hl-box">
+      <i class="fa-solid fa-arrow-trend-up"></i>
+      <p><strong>路线对比：</strong>轻量方案适合<span class="hl">个人创作者快速起步</span>，但灵活性和质量上限有限；完整方案适合追求<span class="hl">内容品质和规模化</span>的专业运营。两条路线可根据自身需求选择。</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 10: 未来规划 -->
+<div class="slide" data-index="9">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-rocket"></i> 展望未来</div></div>
+  <div class="an d2"><h2 class="sec-title">未来<span>发展规划</span></h2></div>
+  <div class="an d3"><p class="sec-desc">持续扩展内容形态和分发渠道，为观众提供更丰富的AI资讯服务</p></div>
+
+  <div class="an d4 card-grid-3">
+    <div class="dir-card">
+      <i class="fa-solid fa-calendar-week"></i>
+      <h4>周报 & 月报</h4>
+      <p>在每日早报基础上，增加周度和月度AI行业深度回顾</p>
+    </div>
+    <div class="dir-card">
+      <i class="fa-solid fa-rss"></i>
+      <h4>RSS 订阅</h4>
+      <p>提供RSS订阅源，让用户在自己的阅读器中获取早报</p>
+    </div>
+    <div class="dir-card">
+      <i class="fa-brands fa-github"></i>
+      <h4>GitHub 存档</h4>
+      <p>将早报原文上传至GitHub，方便检索和历史回溯</p>
+    </div>
+    <div class="dir-card">
+      <i class="fa-solid fa-file-lines"></i>
+      <h4>简要版资讯</h4>
+      <p>公众号新增正文更简要的版本，满足快速浏览需求</p>
+    </div>
+    <div class="dir-card">
+      <i class="fa-brands fa-blogger"></i>
+      <h4>博客版</h4>
+      <p>独立博客形态（仍在权衡中），提供更自由的排版</p>
+    </div>
+    <div class="dir-card">
+      <i class="fa-solid fa-image"></i>
+      <h4>AI画面生成</h4>
+      <p>未来成本合适时，切换为生图模型直接生成视频画面</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:24px;">
+    <div class="hl-box">
+      <i class="fa-solid fa-quote-left"></i>
+      <p style="font-style:italic;">"虽然从技术上项目可以全自动处理，市面上也有不少此类AI汇总，但<strong>我选择加入一点点人工</strong>——这种人工投入主要用于核查事件的真实性与准确性。"</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 11: 核心洞察总结 -->
+<div class="slide" data-index="10">
+<div class="slide-inner">
+  <div class="an d1"><div class="sec-label"><i class="fa-solid fa-gem"></i> 总结</div></div>
+  <div class="an d2"><h2 class="sec-title"><span>核心洞察</span>总结</h2></div>
+
+  <div class="an d3" style="display:flex;flex-direction:column;gap:16px;">
+    <div class="insight-card">
+      <div class="insight-num">洞察 01</div>
+      <h4>AI + 人工 > 纯AI</h4>
+      <p>在速度、成本和能力的三角约束下，AI负责<strong>效率和广度</strong>，人工负责<strong>准确性和质量把关</strong>。不必追求全自动化，在关键节点保留人工介入是保障内容可信度的核心策略。核查事件的真实性与准确性、修补AI幻觉、补充官方信息——这些"一点点人工"是品质的分水岭。</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">洞察 02</div>
+      <h4>信息源广度决定内容厚度</h4>
+      <p>RSS的结构化优势、X平台的实时性、社区的互动反馈——<strong>多渠道信息采集矩阵</strong>是早报资讯丰富的根基。不是依赖单一信息源，而是构建一张覆盖全球AI动态的信息雷达网。</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">洞察 03</div>
+      <h4>平台特性驱动分发策略</h4>
+      <p>同一内容在不同平台需要<strong>差异化适配</strong>——知乎用Markdown的目录优势、YouTube用5000字符简介+外挂字幕、公众号需HTML转码——理解每个平台的约束和优势，才能最大化传播效果。</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">洞察 04</div>
+      <h4>工具链整合是单人团队的核心竞争力</h4>
+      <p>RSS Hub + LLM + TTS API + Selenium截图 + FFmpeg合成——通过<strong>巧妙整合成熟工具链</strong>，一个人也能持续产出高质量的每日内容。关键在于"搭积木"而非"造轮子"。</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Slide 12: 日后奋斗方向 -->
+<div class="slide" data-index="11">
+<div class="slide-inner">
+  <div class="an d1"><div style="text-align:center;margin-bottom:30px;">
+    <div class="big-icon pulse-glow"><i class="fa-solid fa-compass"></i></div>
+    <h2 class="big-title">日后奋斗方向</h2>
+    <p style="font-size:18px;color:var(--text2);">从一档AI早报到终身事业的成长路径</p>
+  </div></div>
+
+  <div class="an d4 card-grid-3" style="margin-top:20px;">
+    <div class="dir-card" style="border-top:3px solid var(--orange);">
+      <i class="fa-solid fa-code"></i>
+      <h4>以技术入行打基础</h4>
+      <p>深耕AI工作流自动化——RSS解析、NLP处理、TTS合成、视频生成——<strong>以技术能力作为内容创作的护城河</strong>，持续优化效率和质量</p>
+    </div>
+    <div class="dir-card" style="border-top:3px solid var(--amber);">
+      <i class="fa-solid fa-wind"></i>
+      <h4>感知变化顺势而为</h4>
+      <p>AI行业日新月异——新模型、新平台、新范式层出不穷。<strong>保持敏锐，快速适应</strong>：模型切换、平台迁移、技术栈升级都要走在变化前面</p>
+    </div>
+    <div class="dir-card" style="border-top:3px solid var(--coral);">
+      <i class="fa-solid fa-fire"></i>
+      <h4>不躺平 持续拼</h4>
+      <p>从每日早报到周报月报，从文字版到视频版，从6个平台到更多渠道——<strong>不断拓展内容形态和覆盖面</strong>，以持续的投入和迭代建立长期价值</p>
+    </div>
+  </div>
+
+  <div class="an d5" style="margin-top:30px;">
+    <div style="background:linear-gradient(135deg,rgba(255,107,53,0.15),rgba(231,111,81,0.08));border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;">
+      <p style="font-size:22px;color:var(--text);font-weight:600;margin-bottom:12px;">
+        <i class="fa-solid fa-quote-left" style="color:var(--orange);margin-right:8px;"></i>
+        保持好奇心，拥抱AI工具，持续学习与分享
+        <i class="fa-solid fa-quote-right" style="color:var(--orange);margin-left:8px;"></i>
+      </p>
+      <p style="font-size:16px;color:var(--text2);">
+        无论你是内容创作者、开发者还是AI爱好者——<br>
+        <span style="color:var(--amber);font-weight:600;">以技术打底、感知风向、不躺平持续拼</span>——这就是AI时代的内容创作者成长之道。
+      </p>
+    </div>
+    <div style="text-align:center;margin-top:28px;">
+      <p style="font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--orange),var(--coral));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+        明天见 <i class="fa-solid fa-hand-sparkles"></i>
+      </p>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /container -->
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevSlide()">
+    <i class="fa-solid fa-chevron-left"></i> 上一页
+  </button>
+  <span style="color:var(--text3);font-size:14px;" id="navInfo">第 1 / 12 页</span>
+  <button class="nav-btn" id="nextBtn" onclick="nextSlide()">
+    下一页 <i class="fa-solid fa-chevron-right"></i>
+  </button>
+</div>
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var cur = 0;
+  var curPageEl = document.getElementById('curPage');
+  var totalPageEl = document.getElementById('totalPage');
+  var navInfo = document.getElementById('navInfo');
+  var progressBar = document.getElementById('progressBar');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  totalPageEl.textContent = String(total).padStart(2,'0');
+
+  function updateUI() {
+    curPageEl.textContent = String(cur + 1).padStart(2,'0');
+    navInfo.textContent = '第 ' + (cur + 1) + ' / ' + total + ' 页';
+    progressBar.style.width = ((cur + 1) / total * 100) + '%';
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === total - 1;
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+
+    // Clone nodes to reset CSS animations
+    slides[cur].querySelectorAll('.an, .anim-item').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+
+    // Trigger visible class after a tiny delay for fresh animations
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        slides[cur].querySelectorAll('.an, .anim-item').forEach(function(el) {
+          el.classList.add('visible');
+        });
+      });
+    });
+
+    updateUI();
+  }
+
+  window.nextSlide = function() { goTo(cur + 1); };
+  window.prevSlide = function() { goTo(cur - 1); };
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault(); goTo(cur + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goTo(cur - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goTo(total - 1);
+    }
+  });
+
+  // Wheel navigation
+  var wheelTimeout;
+  document.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (wheelTimeout) return;
+    wheelTimeout = setTimeout(function() { wheelTimeout = null; }, 800);
+    if (e.deltaY > 0) goTo(cur + 1);
+    else goTo(cur - 1);
+  }, { passive: false });
+
+  // Touch navigation
+  var touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goTo(cur + 1);
+      else goTo(cur - 1);
+    }
+  });
+
+  // Initial trigger for first slide
+  slides[0].querySelectorAll('.an, .anim-item').forEach(function(el) {
+    el.classList.add('visible');
+  });
+  updateUI();
+
+  // Animation reset fix: clone nodes on every active slide
+  document.querySelectorAll('.slide').forEach(function(s) {
+    s.querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+  });
+  slides[0].querySelectorAll('.an, .anim-item').forEach(function(el) {
+    el.classList.add('visible');
+  });
+})();
+</script>
+
+</body>
+</html>
