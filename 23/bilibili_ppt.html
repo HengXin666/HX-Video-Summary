@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简中互联网十大恶心交互设计盘点</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: #0F0E17;
+  color: #FFFFFE;
+}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --accent3: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --green: #2EC4B6;
+  --red: #E71D36;
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --light: #FFFFFE;
+}
+
+.slide-container {
+  width: 100%; height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 80px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+  overflow: hidden;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.anim-item {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.anim-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bg-grid {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+.particles {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: floatParticle linear infinite;
+  opacity: 0;
+}
+@keyframes floatParticle {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) scale(1); opacity: 0; }
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+/* Slide 1 - Title */
+.slide-1 {
+  background: radial-gradient(ellipse at 50% 30%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-1 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  top: -100px; right: -100px;
+}
+.slide-1 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: #7F5AF0;
+  bottom: -100px; left: -50px;
+  animation-delay: -4s;
+}
+.slide-1 .icon-danger-wrap {
+  position: relative;
+  margin-bottom: 28px;
+}
+.slide-1 .icon-danger {
+  font-size: 90px;
+  color: var(--accent);
+  animation: pulseIcon 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+}
+@keyframes pulseIcon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.slide-1 .icon-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 140px; height: 140px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  animation: ringPulse 2.5s ease-in-out infinite;
+  opacity: 0.3;
+}
+.slide-1 .icon-ring:nth-child(3) {
+  width: 180px; height: 180px;
+  animation-delay: 0.5s;
+  opacity: 0.15;
+}
+@keyframes ringPulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%,-50%) scale(1.2); opacity: 0; }
+}
+.slide-1 .title-main {
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--light);
+  line-height: 1.3;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+.slide-1 .title-highlight {
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+.slide-1 .title-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.slide-1 .subtitle {
+  font-size: 26px;
+  color: var(--gray);
+  margin-top: 12px;
+  font-weight: 400;
+}
+.slide-1 .tag-row {
+  display: flex;
+  gap: 18px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-1 .tag {
+  background: rgba(255,107,53,0.1);
+  color: var(--accent2);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 40px;
+  border: 1px solid rgba(255,107,53,0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.slide-1 .tag:hover {
+  background: rgba(255,107,53,0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255,107,53,0.2);
+}
+
+/* Slide 2 - Intro */
+.slide-2 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-2 .glow-orb-1 {
+  width: 400px; height: 400px;
+  background: var(--accent);
+  top: -80px; right: -80px;
+}
+.slide-2 .glow-orb-2 {
+  width: 350px; height: 350px;
+  background: var(--accent2);
+  bottom: -60px; left: -60px;
+  animation-delay: -3s;
+}
+.slide-2 .intro-icon {
+  font-size: 64px;
+  color: var(--accent);
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 25px var(--accent-glow));
+  animation: pulseIcon 3s ease-in-out infinite;
+}
+.slide-2 .intro-title {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 20px;
+}
+.slide-2 .intro-text {
+  font-size: 24px;
+  color: var(--gray);
+  line-height: 1.8;
+  max-width: 900px;
+  margin-bottom: 32px;
+}
+.slide-2 .intro-text b { color: var(--accent); font-weight: 900; }
+.slide-2 .intro-text em {
+  font-style: normal;
+  color: var(--red);
+  font-weight: 900;
+}
+.slide-2 .intro-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-2 .intro-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(255,107,53,0.2);
+  backdrop-filter: blur(10px);
+}
+.slide-2 .intro-card i { font-size: 32px; color: var(--accent2); }
+.slide-2 .intro-card span { font-size: 20px; font-weight: 700; color: var(--light); }
+
+/* Generic slide */
+.slide-gen {
+  background: radial-gradient(ellipse at 60% 40%, #1A1932 0%, #0F0E17 100%);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 36px;
+}
+.section-header .rank-badge {
+  font-size: 64px;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+  min-width: 80px;
+  text-align: center;
+}
+.section-header .rank-badge.top3 { color: var(--red); filter: drop-shadow(0 0 25px rgba(231,29,54,0.5)); }
+.section-header h2 {
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--light);
+  letter-spacing: 1px;
+}
+.section-header h2 .icon-wrap {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+/* Content grid for rank slides */
+.content-grid {
+  display: flex;
+  gap: 30px;
+  width: 100%;
+  max-width: 1100px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.info-card {
+  flex: 1;
+  min-width: 340px;
+  max-width: 520px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 20px;
+  padding: 32px 28px;
+  border-left: 5px solid var(--accent);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+.info-card.top3-card { border-left: 5px solid var(--red); }
+.info-card:hover { transform: translateY(-4px); }
+.info-card .card-icon {
+  font-size: 44px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 15px var(--accent-glow));
+}
+.info-card.top3-card .card-icon { filter: drop-shadow(0 0 20px rgba(231,29,54,0.5)); }
+.info-card .card-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 10px;
+}
+.info-card .card-apps {
+  font-size: 18px;
+  color: var(--accent2);
+  margin-bottom: 14px;
+  font-weight: 700;
+}
+.info-card.top3-card .card-apps { color: var(--red); }
+.info-card .card-desc {
+  font-size: 18px;
+  color: var(--gray);
+  line-height: 1.7;
+}
+.info-card .card-desc b { color: var(--accent); }
+.info-card.top3-card .card-desc b { color: var(--red); }
+
+.pain-points {
+  flex: 1;
+  min-width: 280px;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pain-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  padding: 16px 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s ease;
+}
+.pain-point:hover {
+  background: rgba(255,107,53,0.08);
+  transform: translateX(4px);
+}
+.pain-point.top3-pp:hover { background: rgba(231,29,54,0.08); }
+.pain-point i {
+  font-size: 22px;
+  color: var(--accent);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.pain-point.top3-pp i { color: var(--red); }
+.pain-point .pp-text {
+  font-size: 18px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+.pain-point .pp-text b { color: var(--accent); font-weight: 700; }
+.pain-point.top3-pp .pp-text b { color: var(--red); }
+
+/* Slide - Insight Summary */
+.slide-insight {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-insight .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0.08;
+}
+.slide-insight .insight-icon-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+.slide-insight .insight-icon {
+  font-size: 70px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 25px var(--accent-glow));
+}
+.slide-insight .insight-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 130px; height: 130px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  animation: shieldPulse 3s ease-in-out infinite;
+  opacity: 0.2;
+}
+.slide-insight .insight-ring:nth-child(2) { width: 170px; height: 170px; animation-delay: 1s; }
+.slide-insight .insight-ring:nth-child(3) { width: 210px; height: 210px; animation-delay: 2s; }
+@keyframes shieldPulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.2; }
+  50% { transform: translate(-50%,-50%) scale(1.15); opacity: 0; }
+}
+.slide-insight .insight-title {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 32px;
+}
+.slide-insight .insight-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  max-width: 1000px;
+}
+.slide-insight .insight-item {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid var(--accent);
+  backdrop-filter: blur(10px);
+  min-width: 280px;
+  max-width: 440px;
+  flex: 1;
+  transition: all 0.3s ease;
+}
+.slide-insight .insight-item:hover {
+  background: rgba(255,107,53,0.1);
+  transform: translateY(-3px);
+}
+.slide-insight .insight-item i {
+  font-size: 32px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.slide-insight .insight-item .ii-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--light);
+  text-align: left;
+}
+.slide-insight .insight-item .ii-sub {
+  font-size: 15px;
+  color: var(--gray);
+  font-weight: 400;
+  margin-top: 4px;
+  text-align: left;
+}
+
+/* Slide - Future Direction */
+.slide-future {
+  background: radial-gradient(ellipse at 50% 40%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-future .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  bottom: -100px; right: -100px;
+}
+.slide-future .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--green);
+  top: -80px; left: -80px;
+  animation-delay: -4s;
+}
+.slide-future .future-icon {
+  font-size: 72px;
+  color: var(--accent);
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+  animation: pulseIcon 3s ease-in-out infinite;
+}
+.slide-future .future-title {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 24px;
+}
+.slide-future .future-quote {
+  font-size: 26px;
+  color: var(--gray);
+  line-height: 1.8;
+  max-width: 850px;
+  margin-bottom: 30px;
+}
+.slide-future .future-quote b { color: var(--accent); font-weight: 900; }
+.slide-future .future-quote em {
+  font-style: normal;
+  color: var(--accent2);
+  font-weight: 700;
+}
+.slide-future .future-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 900px;
+}
+.slide-future .future-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 18px;
+  padding: 24px 30px;
+  text-align: center;
+  min-width: 180px;
+  flex: 1;
+  border: 1px solid rgba(255,107,53,0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.slide-future .future-card:hover {
+  background: rgba(255,107,53,0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255,107,53,0.15);
+}
+.slide-future .future-card i {
+  font-size: 40px;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.slide-future .future-card .fc-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 8px;
+}
+.slide-future .future-card .fc-desc {
+  font-size: 16px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+
+/* Bottom nav bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 100;
+  background: rgba(26,25,50,0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 50px;
+  padding: 12px 28px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: var(--gray);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+.bottom-nav button:hover { color: var(--light); background: rgba(255,107,53,0.15); }
+.bottom-nav button:active { transform: scale(0.95); }
+.bottom-nav .page-indicator {
+  font-size: 18px;
+  color: var(--gray);
+  font-weight: 700;
+  min-width: 80px;
+  text-align: center;
+}
+.bottom-nav .page-indicator span { color: var(--accent); font-size: 24px; }
+
+.slide-number {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.2);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* hint text */
+.keyboard-hint {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: rgba(255,255,255,0.12);
+  z-index: 99;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="slide-container" id="slideContainer">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide slide-1 active" data-index="0">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="particles" id="particles1"></div>
+    <span class="slide-number">01 / 14</span>
+
+    <div class="anim-item icon-danger-wrap">
+      <i class="fa-solid fa-skull icon-danger"></i>
+      <div class="icon-ring"></div>
+      <div class="icon-ring"></div>
+    </div>
+    <div class="anim-item">
+      <div class="title-main">简中互联网<span class="title-highlight">十大恶心交互设计</span></div>
+    </div>
+    <div class="anim-item">
+      <div class="subtitle">产品经理自作多情，用户深受其害</div>
+    </div>
+    <div class="anim-item tag-row">
+      <span class="tag"><i class="fa-solid fa-ban"></i>&nbsp; 非盈利驱动</span>
+      <span class="tag"><i class="fa-solid fa-face-frown"></i>&nbsp; 反直觉设计</span>
+      <span class="tag"><i class="fa-solid fa-fire"></i>&nbsp; 负优化</span>
+      <span class="tag"><i class="fa-solid fa-ranking-star"></i>&nbsp; TOP 10</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Intro -->
+  <div class="slide slide-2" data-index="1">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <span class="slide-number">02 / 14</span>
+
+    <div class="anim-item">
+      <i class="fa-solid fa-circle-question intro-icon"></i>
+    </div>
+    <div class="anim-item">
+      <div class="intro-title">评选标准</div>
+    </div>
+    <div class="anim-item">
+      <div class="intro-text">
+        这些设计<b>不以盈利为目的</b>——付费墙、开屏广告、摇一摇广告均不在此列。<br>
+        而是产品经理<b>自作多情</b>，以为能<span style="text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:4px;">提高用户体验</span>，<br>
+        结果却<em>结结实实地降低了使用体验</em>。
+      </div>
+    </div>
+    <div class="anim-item intro-cards">
+      <div class="intro-card">
+        <i class="fa-solid fa-brain"></i>
+        <span>产品经理自以为是的"创新"</span>
+      </div>
+      <div class="intro-card">
+        <i class="fa-solid fa-arrow-down-wide-short"></i>
+        <span>从第10名到第1名，恶心程度递增</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: #10 双击图片变点赞 -->
+  <div class="slide slide-gen" data-index="2">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent2);top:-60px;right:-60px;"></div>
+    <span class="slide-number">03 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge">#10</span>
+      <h2><i class="fa-solid fa-magnifying-glass-plus" style="color:var(--accent2);"></i> 双击图片变点赞</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-image card-icon" style="color:var(--accent2);"></i>
+        <div class="card-title">放大变点赞，交互逻辑割裂</div>
+        <div class="card-apps"><i class="fa-brands fa-readme"></i> 小红书</div>
+        <div class="card-desc">
+          在手机系统底层逻辑中，<b>双击图片 = 放大查看细节</b>，这是全平台的共识。但某些App强行将双击改为"点赞"。更割裂的是：同一App内，<b>帖子正文双击=点赞</b>，<b>评论区双击=放大</b>，交互逻辑自相矛盾。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-hand-pointer"></i>
+          <span class="pp-text">下意识双击想放大 → <b>变成点赞</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span class="pp-text">强迫症发作 → <b>手动取消点赞</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-puzzle-piece"></i>
+          <span class="pp-text">同一App内两套逻辑 → <b>体验割裂</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: #9 登录验证码死循环 -->
+  <div class="slide slide-gen" data-index="3">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent2);top:-60px;right:-60px;"></div>
+    <span class="slide-number">04 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge">#9</span>
+      <h2><i class="fa-solid fa-infinity" style="color:var(--accent2);"></i> 登录验证码死循环</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-mobile-screen-button card-icon" style="color:var(--accent2);"></i>
+        <div class="card-title">在反复横跳中崩溃</div>
+        <div class="card-apps"><i class="fa-solid fa-cloud"></i> 百度网盘桌面版</div>
+        <div class="card-desc">
+          输入手机号 → 点击发送验证码 → <b>几分钟收不到</b> → 重发 → <b>"操作过于频繁"</b> → 退出重进 → 旧码终于收到 → 输入 → <b>"验证码已过期"</b> → 再次发送 → <b>又提示频繁</b>……无限循环。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-clock"></i>
+          <span class="pp-text">收不到 → 重发 → <b>提示频繁</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-rotate"></i>
+          <span class="pp-text">退出重进 → 旧码到手 → <b>已过期</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span class="pp-text">再发送 → <b>又提示频繁</b> → 死循环</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: #8 强行扫码登录 -->
+  <div class="slide slide-gen" data-index="4">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent2);top:-60px;right:-60px;"></div>
+    <span class="slide-number">05 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge">#8</span>
+      <h2><i class="fa-solid fa-qrcode" style="color:var(--accent2);"></i> 强行扫码登录</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-lock card-icon" style="color:var(--accent2);"></i>
+        <div class="card-title">密码在手，非要扫码</div>
+        <div class="card-apps"><i class="fa-brands fa-weixin"></i> 微信视频号 · 小红书</div>
+        <div class="card-desc">
+          密码登录入口<b>藏在二级菜单</b>，视频号直接<b>锁死只能扫码</b>。好不容易找到密码登录，又以"<b>环境不安全</b>"为由强行让你扫码验证。Cookie有效期极短，隔几天又得重扫。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span class="pp-text">密码入口<b>藏进二级菜单</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span class="pp-text">找到密码登录 → <b>"环境不安全"</b>强行扫码</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-mobile-retro"></i>
+          <span class="pp-text">没装App? 下载 → 登录 → <b>触发死循环</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-cookie-bite"></i>
+          <span class="pp-text">Cookie几天过期 → <b>又要扫</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: #7 下拉刷新变二楼 -->
+  <div class="slide slide-gen" data-index="5">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent2);top:-60px;right:-60px;"></div>
+    <span class="slide-number">06 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge">#7</span>
+      <h2><i class="fa-solid fa-arrow-down" style="color:var(--accent2);"></i> 下拉刷新变进入"二楼"</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-hand-pointer card-icon" style="color:var(--accent2);"></i>
+        <div class="card-title">毁掉全人类的肌肉记忆</div>
+        <div class="card-apps"><i class="fa-solid fa-mobile-screen"></i> 众多国产App</div>
+        <div class="card-desc">
+          "<b>下拉刷新看新内容</b>"是全人类的肌肉记忆。但国内产品经理非要在这个黄金位置搞"惊喜"——手劲稍大或滑得稍深，屏幕就像裂开一样把你<b>吸进一个塞满广告、分会场或小程序的"二楼"</b>。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-brain"></i>
+          <span class="pp-text">下拉刷新 = <b>全人类共识</b>的肌肉记忆</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-burst"></i>
+          <span class="pp-text">手劲稍大 → <b>被吸入"二楼"</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-rectangle-ad"></i>
+          <span class="pp-text">二楼塞满<b>广告/分会场/小程序</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span class="pp-text">利用操作习惯<b>骗取入口点击率</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: #6 强行塞入AI聊天 -->
+  <div class="slide slide-gen" data-index="6">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent2);top:-60px;right:-60px;"></div>
+    <span class="slide-number">07 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge">#6</span>
+      <h2><i class="fa-solid fa-robot" style="color:var(--accent2);"></i> 强行塞入AI聊天板块</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-building-columns card-icon" style="color:var(--accent2);"></i>
+        <div class="card-title">给尸体加特效的"科技赋能"</div>
+        <div class="card-apps"><i class="fa-solid fa-tower-cell"></i> 中国电信 · 中国移动 · 各类银行App</div>
+        <div class="card-desc">
+          首页最显眼位置塞入<b>"中式恐怖"的3D伟人AI头像</b>，直达按钮被藏起来，非要你先跟AI尬聊。AI智商极低，只有官方指定的几种提问方式才能得到正确回复。<b>纯为PPT写"实现AI智能化转型"</b>。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-face-dizzy"></i>
+          <span class="pp-text">首页<b>3D伟人AI头像</b>占据黄金位置</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-magnifying-glass-minus"></i>
+          <span class="pp-text">直达按钮<b>被藏匿</b>，非逼你跟AI尬聊</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-comment-slash"></i>
+          <span class="pp-text">问正经事 → <b>"我还没学会"</b>或牛头不对马嘴</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-file-powerpoint"></i>
+          <span class="pp-text">目的：让PPT能写<b>"实现AI智能化转型"</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: #5 截图弹出分享弹窗 -->
+  <div class="slide slide-gen" data-index="7">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent3);top:-60px;right:-60px;"></div>
+    <span class="slide-number">08 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge" style="color:var(--accent3);">#5</span>
+      <h2><i class="fa-solid fa-camera" style="color:var(--accent3);"></i> 截图后弹出分享弹窗</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-window-restore card-icon" style="color:var(--accent3);"></i>
+        <div class="card-title">"预判了用户的预判"</div>
+        <div class="card-apps"><i class="fa-solid fa-cart-shopping"></i> 京东 · 淘宝 · 微博</div>
+        <div class="card-desc">
+          用户截图是为了<b>存到相册或发到想发的群</b>，不是要分享回App。结果每次截图都弹出巨大"<b>分享给好友/反馈问题</b>"窗口挡在屏幕正中。iPhone连续截图每张都弹——纯骚扰。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-scissors"></i>
+          <span class="pp-text">截图目的：<b>存相册/发群</b>，不是要分享</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-square"></i>
+          <span class="pp-text">啪！弹窗<b>挡在屏幕正中</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-brands fa-apple"></i>
+          <span class="pp-text">iPhone连续截图 → <b>每张都弹一次</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-xmark"></i>
+          <span class="pp-text">忍着恶心<b>手动点掉弹窗</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: #4 强行加入短视频 -->
+  <div class="slide slide-gen" data-index="8">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:350px;height:350px;background:var(--accent3);top:-60px;right:-60px;"></div>
+    <span class="slide-number">09 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge" style="color:var(--accent3);">#4</span>
+      <h2><i class="fa-solid fa-clapperboard" style="color:var(--accent3);"></i> 强行加入短视频功能</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card">
+        <i class="fa-solid fa-video card-icon" style="color:var(--accent3);"></i>
+        <div class="card-title">万物皆可短视频</div>
+        <div class="card-apps"><i class="fa-solid fa-utensils"></i> 外卖App · 网购App · 浏览器</div>
+        <div class="card-desc">
+          底栏最显眼处<b>硬塞短视频入口</b>。界面乱的像"大型传销现场"——满屏"<b>看视频领现金</b>"花花绿绿按钮。内容全是营销号搬运的陈旧段子，评论区全是<b>AI在刷"有意思""已转发"</b>。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point">
+          <i class="fa-solid fa-bars"></i>
+          <span class="pp-text">底栏<b>黄金位置</b>硬塞短视频入口</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-coins"></i>
+          <span class="pp-text">满屏<b>"看视频领现金""猜红包"</b></span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-robot"></i>
+          <span class="pp-text">评论区全是<b>AI在刷评论</b>，没有一个活人</span>
+        </div>
+        <div class="pain-point">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span class="pp-text">点进去 → 关红包弹窗 → <b>才能回到正常界面</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: #3 分享链接附带文案 -->
+  <div class="slide slide-gen" data-index="9">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:400px;height:400px;background:var(--red);top:-80px;right:-80px;opacity:0.1;"></div>
+    <span class="slide-number">10 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge top3">#3</span>
+      <h2><i class="fa-solid fa-link" style="color:var(--red);"></i> 分享链接附带文案绑架</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card top3-card">
+        <i class="fa-solid fa-copy card-icon" style="color:var(--red);"></i>
+        <div class="card-title">强制用户为你的KPI加班</div>
+        <div class="card-apps">小红书 · 抖音 · 京东 · 淘宝 · 闲鱼</div>
+        <div class="card-desc">
+          复制链接时剪切板被强行拼入<b>几十字废话文案</b>——"xxx邀请你一起看""快来跟我一起围观"。URL被藏在角落。恶习<b>已从移动端蔓延到网页版</b>。用户每次分享前得手动建文本文档充当"<b>人肉正则表达式</b>"来提取纯链接。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-paste"></i>
+          <span class="pp-text">只需URL → 剪切板被塞<b>几十字废话</b></span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-message"></i>
+          <span class="pp-text">"xxx邀请你一起看" → <b>尬到抠脚</b></span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-desktop"></i>
+          <span class="pp-text">恶习已<b>蔓延到网页版</b></span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-file-lines"></i>
+          <span class="pp-text">用户需新建文本 → <b>人肉提取纯链接</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: #2 打开App自动刷新 -->
+  <div class="slide slide-gen" data-index="10">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:400px;height:400px;background:var(--red);top:-80px;right:-80px;opacity:0.12;"></div>
+    <span class="slide-number">11 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge top3">#2</span>
+      <h2><i class="fa-solid fa-ghost" style="color:var(--red);"></i> 打开App立即刷新，想看的内容消失</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card top3-card">
+        <i class="fa-solid fa-eye-slash card-icon" style="color:var(--red);"></i>
+        <div class="card-title">赛博躲猫猫</div>
+        <div class="card-apps"><i class="fa-brands fa-readme"></i> 小红书等信息流App</div>
+        <div class="card-desc">
+          刚打开首页，视网膜捕捉到<b>极具吸引力的帖子</b>。标题封面还没看全，手指都来不及点下去，系统"啪"地<b>强制刷新</b>——帖子在眼皮底下<b>人间蒸发</b>。只能凭短时记忆去搜索栏模糊搜索，运气不好这辈子看不到了。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-eye"></i>
+          <span class="pp-text">刚看到吸引人的帖子 → <b>手指还没点</b></span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-bolt"></i>
+          <span class="pp-text">系统"啪"一下 → <b>强制刷新消失</b></span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span class="pp-text">被迫启动"<b>最强大脑</b>"模糊搜索</span>
+        </div>
+        <div class="pain-point top3-pp">
+          <i class="fa-solid fa-question"></i>
+          <span class="pp-text">找不到 = <b>这辈子与帖子无缘</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: #1 影子封禁 -->
+  <div class="slide slide-gen" data-index="11">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1" style="width:500px;height:500px;background:var(--red);top:-100px;right:-100px;opacity:0.15;"></div>
+    <div class="glow-orb glow-orb-2" style="width:400px;height:400px;background:var(--red);bottom:-80px;left:-80px;opacity:0.1;animation-delay:-3s;"></div>
+    <span class="slide-number">12 / 14</span>
+    <div class="anim-item section-header">
+      <span class="rank-badge top3" style="font-size:72px;">#1</span>
+      <h2><i class="fa-solid fa-ghost" style="color:var(--red);"></i> 影子封禁 Shadow Ban</h2>
+    </div>
+    <div class="anim-item content-grid">
+      <div class="info-card top3-card" style="border:2px solid rgba(231,29,54,0.4);">
+        <i class="fa-solid fa-skull-crossbones card-icon" style="color:var(--red);"></i>
+        <div class="card-title">最阴暗、最恶毒的机制，没有之一</div>
+        <div class="card-apps"><i class="fa-brands fa-readme"></i> 小红书</div>
+        <div class="card-desc">
+          私聊发微信号等外部联系方式：<b>发送方看到正常发出</b>，<b>接收方完全看不到，没有任何提示</b>。产品一边禁止外导流（电子貔貅只进不出），一边催分享到微信。不提示"审核中"却让你以为已发送——<b>把用户当猴耍</b>。
+        </div>
+      </div>
+      <div class="pain-points">
+        <div class="pain-point top3-pp" style="border:1px solid rgba(231,29,54,0.2);">
+          <i class="fa-solid fa-message"></i>
+          <span class="pp-text">你发送 → <b>看到"已发送"</b></span>
+        </div>
+        <div class="pain-point top3-pp" style="border:1px solid rgba(231,29,54,0.2);">
+          <i class="fa-solid fa-ban"></i>
+          <span class="pp-text">对方 → <b>聊天框什么都没有</b></span>
+        </div>
+        <div class="pain-point top3-pp" style="border:1px solid rgba(231,29,54,0.2);">
+          <i class="fa-solid fa-circle-info"></i>
+          <span class="pp-text">不给"审核中"提示 → <b>让你以为已发出</b></span>
+        </div>
+        <div class="pain-point top3-pp" style="border:1px solid rgba(231,29,54,0.2);">
+          <i class="fa-solid fa-dragon"></i>
+          <span class="pp-text"><b>电子貔貅</b>——只进不出，极致双标</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: 核心洞察总结 -->
+  <div class="slide slide-insight" data-index="12">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="particles" id="particles13"></div>
+    <span class="slide-number">13 / 14</span>
+
+    <div class="anim-item insight-icon-wrap">
+      <div class="insight-ring"></div>
+      <div class="insight-ring"></div>
+      <div class="insight-ring"></div>
+      <i class="fa-solid fa-lightbulb insight-icon"></i>
+    </div>
+    <div class="anim-item">
+      <div class="insight-title">核心洞察总结</div>
+    </div>
+    <div class="anim-item insight-grid">
+      <div class="insight-item">
+        <i class="fa-solid fa-hand"></i>
+        <div>
+          <div class="ii-text">用户直觉被系统性破坏</div>
+          <div class="ii-sub">双击放大、下拉刷新等全平台共识被产品经理任意践踏</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-lightbulb"></i>
+        <div>
+          <div class="ii-text">"为创新而创新"泛滥</div>
+          <div class="ii-sub">AI聊天、短视频的植入不为用户，只为年终PPT有内容可写</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-mask"></i>
+        <div>
+          <div class="ii-text">信息不对称是最大恶意</div>
+          <div class="ii-sub">影子封禁比明示审核恶劣百倍——不是技术问题，是价值观问题</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <div>
+          <div class="ii-text">跨设备体验被刻意割裂</div>
+          <div class="ii-sub">扫码登录、Cookie短时效把人为割裂作为日活增长手段</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-clock"></i>
+        <div>
+          <div class="ii-text">时间与注意力被当成可掠夺资源</div>
+          <div class="ii-sub">每一次多余弹窗、每一次强制打断，都在消耗用户的耐心</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: 日后奋斗方向 -->
+  <div class="slide slide-future" data-index="13">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="particles" id="particles14"></div>
+    <span class="slide-number">14 / 14</span>
+
+    <div class="anim-item">
+      <i class="fa-solid fa-seedling future-icon"></i>
+    </div>
+    <div class="anim-item">
+      <div class="future-title">日后奋斗方向</div>
+    </div>
+    <div class="anim-item">
+      <div class="future-quote">
+        好的交互设计应当<b>尊重用户的直觉与习惯</b>，减少而非增加操作摩擦。<br>
+        当产品经理把<b>KPI凌驾于用户体验之上</b>，把<em>"创新"当成年终总结的装饰词</em>，<br>
+        把用户当作可以被<b>任意打断和愚弄</b>的对象时——产出的只有恶心设计。<br>
+        <b>互联网产品的底线，是对用户的基本尊重。</b>
+      </div>
+    </div>
+    <div class="anim-item future-grid">
+      <div class="future-card">
+        <i class="fa-solid fa-code"></i>
+        <div class="fc-title">以技术入行打基础</div>
+        <div class="fc-desc">扎实的工程功底是做出好产品的前提</div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-wind"></i>
+        <div class="fc-title">感知变化顺势而为</div>
+        <div class="fc-desc">理解用户需求变迁，拒绝闭门造车</div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-heart"></i>
+        <div class="fc-title">不躺平持续拼</div>
+        <div class="fc-desc">把尊重用户放在KPI之上，做有温度的产品</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav" id="bottomNav">
+  <button id="btnPrev" title="上一页"><i class="fa-solid fa-chevron-left"></i></button>
+  <div class="page-indicator"><span id="pageCur">01</span> / <span id="pageTotal">14</span></div>
+  <button id="btnNext" title="下一页"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+<div class="keyboard-hint">← → 键盘翻页 · 滚轮翻页 · 点击左右区域翻页</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let current = 0;
+  let isAnimating = false;
+
+  // Generate particles
+  function createParticles(containerId, count) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 4 + 2;
+      const left = Math.random() * 100;
+      const duration = Math.random() * 8 + 8;
+      const delay = Math.random() * 10;
+      const hue = Math.random() > 0.5 ? '20' : '30';
+      p.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        left: ${left}%;
+        background: hsl(${hue}, 90%, 60%);
+        box-shadow: 0 0 ${size*2}px hsl(${hue}, 90%, 60%);
+        animation-duration: ${duration}s;
+        animation-delay: ${delay}s;
+      `;
+      container.appendChild(p);
+    }
+  }
+
+  createParticles('particles1', 25);
+  createParticles('particles13', 20);
+  createParticles('particles14', 18);
+
+  function updateProgress() {
+    document.getElementById('pageCur').textContent = String(current + 1).padStart(2, '0');
+    document.getElementById('pageTotal').textContent = String(totalSlides).padStart(2, '0');
+    document.querySelectorAll('.slide-number').forEach(function(el, idx) {
+      el.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+    });
+  }
+
+  function animateItems(slideEl) {
+    var items = slideEl.querySelectorAll('.anim-item');
+    items.forEach(function(item) { item.classList.remove('visible'); });
+    items.forEach(function(item, idx) {
+      setTimeout(function() {
+        item.classList.add('visible');
+      }, 200 + idx * 220);
+    });
+  }
+
+  function goTo(index) {
+    if (index === current || isAnimating || index < 0 || index >= totalSlides) return;
+    isAnimating = true;
+
+    // Clone nodes to reset CSS animations
+    slides[current].querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+
+    slides[current].classList.remove('active');
+    slides[current].querySelectorAll('.anim-item').forEach(function(item) { item.classList.remove('visible'); });
+
+    current = index;
+    slides[current].classList.add('active');
+    updateProgress();
+    animateItems(slides[current]);
+
+    setTimeout(function() { isAnimating = false; }, 900);
+  }
+
+  function next() { if (current < totalSlides - 1) goTo(current + 1); }
+  function prev() { if (current > 0) goTo(current - 1); }
+
+  // Keyboard
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault(); next();
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); prev();
+    }
+  });
+
+  // Mouse wheel
+  var wheelTimeout = false;
+  document.addEventListener('wheel', function(e) {
+    if (wheelTimeout) return;
+    wheelTimeout = true;
+    if (e.deltaY > 0) next(); else prev();
+    setTimeout(function() { wheelTimeout = false; }, 900);
+  }, { passive: true });
+
+  // Touch
+  var touchStartY = 0;
+  document.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; });
+  document.addEventListener('touchend', function(e) {
+    var diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) next(); else prev();
+    }
+  });
+
+  // Click sides
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('button')) return;
+    var x = e.clientX;
+    var w = window.innerWidth;
+    if (x > w * 0.75) next();
+    else if (x < w * 0.25) prev();
+  });
+
+  // Nav buttons
+  document.getElementById('btnPrev').addEventListener('click', function(e) { e.stopPropagation(); prev(); });
+  document.getElementById('btnNext').addEventListener('click', function(e) { e.stopPropagation(); next(); });
+
+  // Init
+  updateProgress();
+  animateItems(slides[0]);
+})();
+</script>
+
+<!-- Animation reset fix: clone nodes on each slide switch to force re-trigger -->
+<script>
+(function() {
+  var origGoTo = undefined;
+  // The fix is already built into goTo() above.
+  // This additional script ensures all animated elements are re-triggered.
+  document.querySelectorAll('.slide').forEach(function(s) {
+    s.querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+  });
+  // Re-init first slide animation
+  var firstSlide = document.querySelector('.slide.active');
+  if (firstSlide) {
+    var items = firstSlide.querySelectorAll('.anim-item');
+    items.forEach(function(item) { item.classList.remove('visible'); });
+    items.forEach(function(item, idx) {
+      setTimeout(function() {
+        item.classList.add('visible');
+      }, 200 + idx * 220);
+    });
+  }
+})();
+</script>
+</body>
+</html>
