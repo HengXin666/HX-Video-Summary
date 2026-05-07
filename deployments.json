@@ -1,11 +1,20 @@
 [
   {
+    "run_number": "",
+    "title": "B站视频",
+    "bilibili_url": "",
+    "timestamp": "2026-05-08 00:52:27",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt"
+  },
+  {
     "run_number": "22",
     "title": "轻松复刻！爆肝揭秘万粉 UP 主是如何炼成的，我的 AI 早报“生产线”大公开。",
     "bilibili_url": "https://www.bilibili.com/video/BV1B82DBdEdP",
     "timestamp": "2026-05-07 14:33:39",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i0.hdslb.com/bfs/archive/4d8d8ce4cb4d2ed39f27ffc5b391c96c4873bbcf.jpg"
   },
   {
     "run_number": "21",
@@ -13,7 +22,8 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1Hk4y1q7Rz/",
     "timestamp": "2026-05-06 17:06:07",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/37e64d0128bef2da268dddb86651d00c19bca8e2.jpg"
   },
   {
     "run_number": "20",
@@ -21,7 +31,17 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1Eeo5B1E4F",
     "timestamp": "2026-05-06 15:59:29",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i2.hdslb.com/bfs/archive/b8badfc3f421369639ba11ae4a719f43c8bdf4a6.jpg"
+  },
+  {
+    "run_number": "19",
+    "title": "中国为什么不花钱搞舆论，两重风险，步步维艰",
+    "bilibili_url": "https://www.bilibili.com/video/BV1NWRBBXEq8",
+    "timestamp": "2026-05-06 15:59:14",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/e86a2970b4f341e02fa40cb8a034329979d3ff23.jpg"
   },
   {
     "run_number": "18",
@@ -29,7 +49,8 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1Vb9hBVE4C/?vd_sou",
     "timestamp": "2026-05-06 15:34:50",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg"
   },
   {
     "run_number": "17",
@@ -37,7 +58,8 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1dpQTB3EXg",
     "timestamp": "2026-05-06 14:45:08",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/6246f048e9506d4e9e0a2b6a6fbf6cd4d0670318.jpg"
   },
   {
     "run_number": "15",
@@ -45,7 +67,8 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1Vb9hBVE4C/",
     "timestamp": "2026-05-05 23:24:21 +0800",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg"
   },
   {
     "run_number": "16",
@@ -53,6 +76,7 @@
     "bilibili_url": "https://www.bilibili.com/video/BV1kZD5BqEgd",
     "timestamp": "2026-05-05 23:24:21 +0800",
     "ppt_file": "bilibili_ppt.html",
-    "summary_file": "summary.txt"
+    "summary_file": "summary.txt",
+    "cover_url": "http://i1.hdslb.com/bfs/archive/a7e4506ff21160bd15fc0bdb42f8fd72d84cc9d5.jpg"
   }
 ]
