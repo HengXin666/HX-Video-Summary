@@ -100,7 +100,7 @@ jobs:
           import sys, json
           sys.path.insert(0, 'HX-Workflows/bilibili-api')
 
-          from token import BiliTokenManager
+          from bili_token import BiliTokenManager
           from api import BiliAPI
           from cover import download_cover, get_cover_url
           from comment import get_top_comments
