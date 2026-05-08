@@ -1,0 +1,422 @@
+name: B站视频总结 (HX Token版)
+
+# 个人使用 — 从 HX-Git-DB 获取 B站 OAuth Token，
+# 替代 Playwright 隐身浏览器方案，更快更稳定。
+
+on:
+  workflow_dispatch:
+    inputs:
+      bilibili_url:
+        description: 'B站视频链接'
+        required: true
+        type: string
+      email:
+        description: '接收PPT的QQ邮箱地址'
+        required: true
+        type: string
+        default: 'hxloli@qq.com'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    outputs:
+      video_title: ${{ steps.meta.outputs.video_title }}
+
+    steps:
+      - name: 检出 HX-Video-Summary
+        uses: actions/checkout@v4
+
+      - name: 检出 HX-Workflows（bilibili-api 模块）
+        uses: actions/checkout@v4
+        with:
+          repository: HengXin666/HX-Workflows
+          path: HX-Workflows
+
+      - name: 安装系统依赖 (ffmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装 uv
+        run: pip install uv
+
+      # ====== 缓存层 ======
+      - name: 缓存 uv 包缓存
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-cache-hx-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: uv-cache-hx-${{ runner.os }}-
+
+      - name: 缓存 Python venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-hx-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: venv-hx-${{ runner.os }}-
+
+      - name: 缓存 FunASR 模型
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/modelscope
+          key: modelscope-${{ runner.os }}-${{ hashFiles('py/transcribe.py') }}
+          restore-keys: modelscope-${{ runner.os }}-
+      # ====== 缓存层结束 ======
+
+      - name: 安装 Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: 安装 Python 项目依赖
+        run: uv sync
+
+      # ====== HX: 从 HX-Git-DB 获取 B站 Token + 下载 ======
+      - name: HX·获取 B站 OAuth Token 并下载视频/封面/评论
+        id: meta
+        env:
+          GITHUB_TOKEN: ${{ secrets.HX_DATA_PAT }}
+        run: |
+          cd HX-Workflows/bilibili-api
+          uv sync
+          cd "${{ github.workspace }}"
+
+          BV=$(echo "${{ inputs.bilibili_url }}" | grep -oP 'BV[a-zA-Z0-9]+')
+
+          uv run --project HX-Workflows/bilibili-api python -c "
+          import sys, json
+          sys.path.insert(0, 'HX-Workflows/bilibili-api')
+
+          from token import BiliTokenManager
+          from api import BiliAPI
+          from cover import download_cover, get_cover_url
+          from comment import get_top_comments
+
+          mgr = BiliTokenManager()
+          token = mgr.get_token()
+          print(f'✅ Token 获取成功: {token[\"uname\"]} (UID: {token[\"mid\"]})')
+
+          api = BiliAPI(mgr)
+          info = api.get_video_info('$BV')
+
+          aid = info['aid']
+          cid = info['pages'][0]['cid'] if info.get('pages') else info.get('cid', 0)
+          title = info['title']
+          print(f'🎬 {title} (aid={aid}, cid={cid})')
+
+          # 下载封面
+          cover_path = download_cover('$BV', token_mgr=mgr, output_dir='output')
+
+          # 获取 Top 10 评论
+          comments = get_top_comments('$BV', count=10, token_mgr=mgr)
+          with open('output/comments.json', 'w', encoding='utf-8') as f:
+              json.dump(comments, f, ensure_ascii=False, indent=2)
+          print(f'💬 获取了 {len(comments)} 条热门评论')
+
+          # 获取播放 URL
+          play = api.get_play_url(aid, cid, qn=80)
+          dash = play.get('dash', {})
+          videos = sorted(dash.get('video', []), key=lambda v: v.get('bandwidth', 0), reverse=True)
+          audios = sorted(dash.get('audio', []), key=lambda a: a.get('bandwidth', 0), reverse=True)
+
+          video_url = videos[0]['baseUrl'] if videos else videos[0].get('base_url', '')
+          audio_url = audios[0]['baseUrl'] if audios else audios[0].get('base_url', '')
+
+          # 写入文件供后续步骤使用
+          with open('output/video_url.txt', 'w') as f:
+              f.write(video_url)
+          with open('output/audio_url.txt', 'w') as f:
+              f.write(audio_url)
+          with open('output/video_title.txt', 'w', encoding='utf-8') as f:
+              f.write(title)
+          with open('output/video_meta.json', 'w', encoding='utf-8') as f:
+              json.dump({'title': title, 'aid': aid, 'cid': cid, 'bvid': '$BV',
+                         'cover_url': get_cover_url('$BV', token_mgr=mgr)},
+                        f, ensure_ascii=False, indent=2)
+
+          print(f'✅ 元数据就绪')
+          "
+
+          echo "video_title=$(cat output/video_title.txt)" >> $GITHUB_OUTPUT
+
+      - name: HX·下载视频流（DASH）
+        run: |
+          mkdir -p videos
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          VIDEO_URL=$(cat output/video_url.txt)
+          AUDIO_URL=$(cat output/audio_url.txt)
+
+          echo "下载视频流..."
+          curl -sSL -o videos/video.m4s \
+            -H "User-Agent: $UA" \
+            -H "Referer: https://www.bilibili.com/" \
+            "$VIDEO_URL"
+
+          echo "下载音频流..."
+          curl -sSL -o videos/audio.m4s \
+            -H "User-Agent: $UA" \
+            -H "Referer: https://www.bilibili.com/" \
+            "$AUDIO_URL"
+
+          ffmpeg -y -i videos/video.m4s -i videos/audio.m4s -c copy videos/bilibili_video.mp4
+          ls -lh videos/bilibili_video.mp4
+          echo "video_path=$(realpath videos/bilibili_video.mp4)" >> $GITHUB_ENV
+          echo "✅ 视频下载完成"
+      # ====== HX Token 部分结束 ======
+
+      - name: 语音转写
+        run: |
+          uv run python py/transcribe.py transcribe -i "${{ env.video_path }}" -o ./output -f
+
+      - name: 上传转写产物(字幕)
+        uses: actions/upload-artifact@v4
+        with:
+          name: 转写结果-字幕-${{ github.run_number }}
+          path: output/转写结果.txt
+          retention-days: 30
+
+      - name: 显示转写文本到 Workflow 摘要
+        run: |
+          echo "## 语音转写文本" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat output/转写结果.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: 显示封面和评论到 Workflow 摘要
+        run: |
+          echo "## 视频封面" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/*_cover.jpg ]; then
+            COVER=$(ls output/*_cover.jpg | head -1)
+            echo "<img src=\"data:image/jpeg;base64,$(base64 -w0 "$COVER")\" style=\"max-width:300px\">" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "## Top 10 热门评论" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          python3 -c "
+          import json
+          with open('output/comments.json', encoding='utf-8') as f:
+              comments = json.load(f)
+          for i, c in enumerate(comments, 1):
+              print(f\"{i}. [{c['like']}👍] **{c['uname']}**: {c['content'][:100]}\")
+          " >> $GITHUB_STEP_SUMMARY
+
+      - name: 配置Claude Code技能路径
+        run: |
+          if [ -d .codebuddy/skills/science-content-ppt ]; then
+            mkdir -p .claude/skills
+            cp -r .codebuddy/skills/science-content-ppt .claude/skills/
+          elif [ -d .claude/skills/science-content-ppt ]; then
+            echo "技能目录已存在, 跳过复制"
+          else
+            echo "错误: 技能目录不存在" && exit 1
+          fi
+
+      - name: AI总结 & 生成PPT
+        env:
+          ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_OPUS_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_SONNET_MODEL: deepseek-v4-pro[1m]
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: deepseek-v4-flash
+          CLAUDE_CODE_SUBAGENT_MODEL: deepseek-v4-flash
+          CLAUDE_CODE_EFFORT_LEVEL: max
+          CI: true
+          PYTHONUNBUFFERED: 1
+          NODE_OPTIONS: --no-warnings
+        run: |
+          cat > /tmp/claude_prompt.txt <<'CLAUDE_PROMPT'
+          你是视频内容总结PPT生成助手。请严格按以下流程完成任务:
+
+          ## 任务流程
+
+          ### 第1步: 阅读转写内容和元数据
+          先读取 output/转写结果.txt 中的视频转写内容。
+          再读取 output/comments.json 了解热门评论风向。
+          读取 output/video_meta.json 了解视频基本信息。
+          结合这些信息理解视频的核心主题和关键信息点。
+
+          ### 第2步: 截图辅助理解(如需要)
+          如果转写内容中有难以理解的模糊片段, 对已下载的视频截图辅助理解:
+          ```
+          uv run python py/transcribe.py screenshot -i videos/bilibili_video.mp4 -t <时间戳> -o ./output/screenshots
+          ```
+          然后读取截图, 结合画面理解内容。
+
+          ### 第3步: 总结内容
+          将视频内容总结为一篇结构化的科普文章, 包含:
+          - 核心主题概述
+          - 主要观点/知识点(分点论述)
+          - 关键案例或数据
+          - 结论与启示
+
+          ### 第4步: 写入纯文本总结
+          将第3步的总结内容写入 output/summary.txt, 纯文本格式, 用于邮件正文发送。
+
+          ### 第5步: 使用 science-content-ppt skill 生成PPT
+          使用 science-content-ppt skill 将总结的科普内容生成为完整的PPT演示网页。
+
+          必须遵守的规范:
+          - 输出文件: output/bilibili_ppt.html
+          - 图标库: Font Awesome 6.x (https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)
+          - 配色方案: 暖色系(橙 #FF6B35、琥珀 #F4A261、珊瑚 #E76F51), 深色背景 #0F0E17, 浅色文字 #FFFFFE
+          - 所有动画元素 class 使用 an 或 anim-item
+          - 必须在 </body> 前插入动画重置修复JS代码
+          - 代码行数1000行以上
+          - 必须包含"核心洞察总结"和"日后奋斗方向"两个收尾页面
+
+          ### 第6步: 验证输出
+          确认 output/bilibili_ppt.html 和 output/summary.txt 文件已正确生成。
+          CLAUDE_PROMPT
+
+          echo "========== AI 开始生成总结 & PPT =========="
+          claude -p --permission-mode bypassPermissions --verbose < /tmp/claude_prompt.txt 2>&1
+          EXIT_CODE=$?
+          echo "claude 退出码: $EXIT_CODE"
+
+          PPT_OK=false; SUMMARY_OK=false
+          [ -f output/bilibili_ppt.html ] && PPT_OK=true
+          [ -f output/summary.txt ] && SUMMARY_OK=true
+          echo "产物检查: bilibili_ppt.html=$PPT_OK summary.txt=$SUMMARY_OK"
+
+          MAX_RETRIES=2
+          RETRY=0
+          while [ $RETRY -lt $MAX_RETRIES ] && ! ($PPT_OK && $SUMMARY_OK); do
+            RETRY=$((RETRY+1))
+            echo "========== 产物不完整, 第 ${RETRY}/${MAX_RETRIES} 次重试 =========="
+            MISSING=""
+            [ ! -f output/bilibili_ppt.html ] && MISSING="output/bilibili_ppt.html"
+            [ ! -f output/summary.txt ] && MISSING="$MISSING output/summary.txt"
+            claude --continue -p "任务未完成！缺少文件: $MISSING。你必须立即使用 Write 工具写出缺失的文件，确保完整且符合规范。不要再做多余分析，直接写文件！" 2>&1
+            PPT_OK=false; SUMMARY_OK=false
+            [ -f output/bilibili_ppt.html ] && PPT_OK=true
+            [ -f output/summary.txt ] && SUMMARY_OK=true
+          done
+
+          if $PPT_OK && $SUMMARY_OK; then
+            echo "========== 产物检查通过 =========="
+          else
+            echo "错误: 未生成完整产物"
+            exit 1
+          fi
+
+      - name: 打包完整产物 (转写+总结+PPT+封面+评论)
+        if: success()
+        run: |
+          zip -j output/完整产物包.zip \
+            output/转写结果.txt output/summary.txt output/bilibili_ppt.html \
+            output/comments.json output/video_meta.json
+          if ls output/*_cover.jpg 1>/dev/null 2>&1; then
+            zip -j output/完整产物包.zip output/*_cover.jpg
+          fi
+          ls -lh output/完整产物包.zip
+
+      - name: 上传完整产物包
+        uses: actions/upload-artifact@v4
+        with:
+          name: 完整产物包-HX-${{ github.run_number }}
+          path: output/完整产物包.zip
+          retention-days: 30
+
+      - name: 上传产物给 deploy Job
+        uses: actions/upload-artifact@v4
+        with:
+          name: process-outputs-hx-${{ github.run_id }}
+          path: |
+            output/转写结果.txt
+            output/summary.txt
+            output/bilibili_ppt.html
+            output/video_title.txt
+          retention-days: 1
+
+  # ──── 部署 Job ────
+  deploy:
+    needs: process
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy-hx
+      cancel-in-progress: true
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 下载产物
+        uses: actions/download-artifact@v4
+        with:
+          name: process-outputs-hx-${{ github.run_id }}
+          path: output/
+
+      - name: 读取视频标题
+        id: meta
+        run: |
+          TITLE=$(cat output/video_title.txt 2>/dev/null || echo "${{ needs.process.outputs.video_title }}")
+          echo "video_title=$TITLE" >> $GITHUB_OUTPUT
+
+      - name: 准备子目录内容
+        run: |
+          mkdir -p pages
+          cp output/bilibili_ppt.html pages/
+          cp output/summary.txt pages/
+          TITLE="${{ steps.meta.outputs.video_title || 'B站视频' }}"
+          cat > pages/deployments.json <<RUNMETA
+          [{
+            "run_number": "hx-${{ github.run_number }}",
+            "title": "$TITLE",
+            "bilibili_url": "${{ inputs.bilibili_url }}",
+            "timestamp": "$(date -u +'%Y-%m-%d %H:%M:%S')",
+            "ppt_file": "bilibili_ppt.html",
+            "summary_file": "summary.txt"
+          }]
+          RUNMETA
+
+      - name: 部署PPT到 GitHub Pages (子目录)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages
+          destination_dir: hx-${{ github.run_number }}
+          keep_files: true
+          enable_jekyll: false
+
+      - name: 发送邮件
+        env:
+          QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
+          QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
+        run: |
+          PPT_URL="https://HengXin666.github.io/HX-Video-Summary/hx-${{ github.run_number }}/bilibili_ppt.html"
+          cp output/summary.txt /tmp/email_body.txt
+          echo "" >> /tmp/email_body.txt
+          echo "---" >> /tmp/email_body.txt
+          echo "PPT演示网页: $PPT_URL" >> /tmp/email_body.txt
+          echo "B站链接: ${{ inputs.bilibili_url }}" >> /tmp/email_body.txt
+          python py/send_email.py \
+            --sender "$QQ_EMAIL" \
+            --password "$QQ_SMTP_AUTH_CODE" \
+            --to "${{ inputs.email }}" \
+            --cc "$QQ_EMAIL" \
+            --subject "[B站视频总结·HX] ${{ steps.meta.outputs.video_title || 'B站视频' }}" \
+            --body "$(cat /tmp/email_body.txt)"
