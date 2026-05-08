@@ -456,7 +456,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hx-inl"
+name = "hx-video-summary"
 version = "0.2.0"
 source = { virtual = "." }
 dependencies = [

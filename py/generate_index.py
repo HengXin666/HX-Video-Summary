@@ -6,6 +6,7 @@
 - 部署数据持久化: deployments.json 随 Pages 一起部署, 下次运行时从 Pages URL 读取
 """
 
+import html
 import os
 import re
 import json
@@ -79,19 +80,21 @@ def add_current_deployment(deployments: list) -> list:
     run_number = os.environ.get("RUN_NUMBER", "")
     run_title = os.environ.get("RUN_TITLE", "B站视频")
     bilibili_url = os.environ.get("BILIBILI_URL", "")
-    cover_url = fetch_bilibili_cover(bilibili_url)
+    info = fetch_bilibili_info(bilibili_url)
 
     # 检查是否已存在(相同 run_number 跳过, 避免重复)
     for d in deployments:
         if d.get("run_number") == run_number:
-            # 仅更新可变字段, 保留原始时间戳
             d["title"] = run_title
             d["bilibili_url"] = bilibili_url
-            if cover_url:
-                d["cover_url"] = cover_url
+            if info["cover_url"]:
+                d["cover_url"] = info["cover_url"]
+            if info["owner_name"]:
+                d["owner_name"] = info["owner_name"]
+                d["owner_face"] = info["owner_face"]
+                d["owner_mid"] = info["owner_mid"]
             return deployments
 
-    # 新增
     entry = {
         "run_number": run_number,
         "title": run_title,
@@ -100,8 +103,12 @@ def add_current_deployment(deployments: list) -> list:
         "ppt_file": "bilibili_ppt.html",
         "summary_file": "summary.txt",
     }
-    if cover_url:
-        entry["cover_url"] = cover_url
+    if info["cover_url"]:
+        entry["cover_url"] = info["cover_url"]
+    if info["owner_name"]:
+        entry["owner_name"] = info["owner_name"]
+        entry["owner_face"] = info["owner_face"]
+        entry["owner_mid"] = info["owner_mid"]
     deployments.append(entry)
     return deployments
 
@@ -127,13 +134,14 @@ def extract_video_key(bilibili_url: str, title: str) -> str:
     return title
 
 
-def fetch_bilibili_cover(bilibili_url: str) -> str:
-    """从 B站 API 获取视频封面图 URL"""
+def fetch_bilibili_info(bilibili_url: str) -> dict:
+    """从 B站 API 获取视频信息(封面、UP主名称、UP主头像、UP主mid)"""
+    result = {"cover_url": "", "owner_name": "", "owner_face": "", "owner_mid": ""}
     if not bilibili_url:
-        return ""
+        return result
     m = re.search(r"BV[a-zA-Z0-9]+", bilibili_url)
     if not m:
-        return ""
+        return result
     bvid = m.group(0)
     try:
         api_url = f"https://api.bilibili.com/x/web-interface/view?bvid={bvid}"
@@ -142,11 +150,15 @@ def fetch_bilibili_cover(bilibili_url: str) -> str:
             "Referer": "https://www.bilibili.com/",
         })
         with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data.get("data", {}).get("pic", "")
+            data = json.loads(resp.read().decode("utf-8")).get("data", {})
+            result["cover_url"] = data.get("pic", "").replace("http://", "https://")
+            owner = data.get("owner", {})
+            result["owner_name"] = owner.get("name", "")
+            result["owner_face"] = owner.get("face", "").replace("http://", "https://")
+            result["owner_mid"] = str(owner.get("mid", ""))
     except Exception as e:
-        print(f"获取封面失败 {bvid}: {e}")
-        return ""
+        print(f"获取B站信息失败 {bvid}: {e}")
+    return result
 
 
 def group_deployments(deployments: list) -> list:
@@ -174,8 +186,16 @@ def render_card(d: dict, is_history: bool = False) -> str:
     title = d.get("title", "未知视频")
     bilibili_url = d.get("bilibili_url", "")
     cover_url = d.get("cover_url", "")
+    owner_name = d.get("owner_name", "")
+    owner_face = d.get("owner_face", "")
+    owner_mid = d.get("owner_mid", "")
     ppt_url = f"{run_num}/bilibili_ppt.html"
     summary_url = f"{run_num}/summary.txt"
+
+    title_esc = html.escape(title)
+    owner_name_esc = html.escape(owner_name) if owner_name else ""
+    # CSS.supports 用作 JS-safe 标识符
+    up_key = owner_name_esc.replace(" ", "_") if owner_name_esc else "_none_"
 
     bilibili_link = (
         f'<a href="{bilibili_url}" target="_blank" class="bilibili-link">'
@@ -188,21 +208,43 @@ def render_card(d: dict, is_history: bool = False) -> str:
     cover_html = ""
     if cover_url:
         cover_html = (
-            f'<div class="card-cover">'
-            f'<img src="{cover_url}" alt="{title}" loading="lazy" '
+            f'<a href="{bilibili_url or "#"}" target="_blank" class="card-cover" '
+            f'title="{title_esc}">'
+            f'<img src="{cover_url}" alt="{title_esc}" loading="lazy" '
             f'onerror="this.parentElement.style.display=\'none\'">'
+            f'</a>'
+        )
+
+    owner_html = ""
+    if owner_name:
+        space_url = f"https://space.bilibili.com/{owner_mid}" if owner_mid else ""
+        space_link = (
+            f'<a href="{space_url}" target="_blank" class="owner-space" '
+            f'title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a>'
+            if space_url
+            else ""
+        )
+        owner_html = (
+            f'<div class="card-owner">'
+            f'<img src="{owner_face}" alt="{owner_name_esc}" class="owner-avatar" '
+            f'onerror="this.style.display=\'none\'" loading="lazy" '
+            f'referrerpolicy="no-referrer">'
+            f'<button class="owner-name" onclick="filterByUp(\'{up_key}\')" '
+            f'title="按此UP主筛选">{owner_name_esc}</button>'
+            f'{space_link}'
             f'</div>'
         )
 
     return f"""
-          <div class="deploy-card{hist_cls}">
+          <div class="deploy-card{hist_cls}" data-up="{up_key}">
             {cover_html}
             <div class="card-body">
               <div class="card-header">
                 <span class="run-badge">#{run_num}</span>
                 <span class="timestamp">{ts}</span>
               </div>
-              <h3 class="video-title">{title}</h3>
+              <h3 class="video-title">{title_esc}</h3>
+              {owner_html}
               <div class="card-actions">
                 <a href="{ppt_url}" target="_blank" class="btn btn-primary">
                   <i class="fa-solid fa-tv"></i> 查看PPT
@@ -216,10 +258,55 @@ def render_card(d: dict, is_history: bool = False) -> str:
           </div>"""
 
 
+def extract_up_list(groups: list) -> list:
+    """从分组中提取唯一UP主列表，按视频数降序"""
+    ups = {}
+    for g in groups:
+        name = g["latest"].get("owner_name", "")
+        if not name:
+            name = "未知UP主"
+        name_esc = html.escape(name)
+        key = name_esc.replace(" ", "_")
+        if key not in ups:
+            ups[key] = {
+                "key": key,
+                "name": name,
+                "face": g["latest"].get("owner_face", ""),
+                "count": 1,
+            }
+        else:
+            ups[key]["count"] += 1
+    return sorted(ups.values(), key=lambda x: x["count"], reverse=True)
+
+
 def generate_html(groups: list) -> str:
     """生成索引页面 HTML（按视频分组，默认只展示最新，可展开历史）"""
     total_deployments = sum(1 + len(g["history"]) for g in groups)
     total_videos = len(groups)
+
+    # UP主列表（用于侧边栏筛选）
+    up_list = extract_up_list(groups)
+
+    # 生成侧边栏UP主筛选按钮
+    up_filter_items = f"""
+            <button class="up-filter active" data-up="all" onclick="filterByUp('all')" aria-pressed="true">
+              <i class="fa-solid fa-grid-2"></i>
+              <span class="up-name">全部</span>
+              <span class="up-count">{total_videos}</span>
+            </button>"""
+    for up in up_list:
+        face_html = (
+            f'<img src="{html.escape(up["face"])}" class="up-avatar-sm" '
+            f'onerror="this.style.display=\'none\'" loading="lazy" referrerpolicy="no-referrer">'
+            if up["face"]
+            else '<i class="fa-solid fa-user up-avatar-placeholder"></i>'
+        )
+        up_filter_items += f"""
+            <button class="up-filter" data-up="{up['key']}" onclick="filterByUp('{up['key']}')" aria-pressed="false">
+              {face_html}
+              <span class="up-name">{html.escape(up['name'])}</span>
+              <span class="up-count">{up['count']}</span>
+            </button>"""
 
     entries = ""
     for i, g in enumerate(groups):
@@ -247,10 +334,9 @@ def generate_html(groups: list) -> str:
         entries += """
         </div>"""
 
-    # 最新 run_number 用于 header stats
     latest_run = groups[0]["latest"]["run_number"] if groups else "-"
 
-    html = f"""<!DOCTYPE html>
+    page = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -258,7 +344,6 @@ def generate_html(groups: list) -> str:
   <title>HX Video Summary - 视频总结索引</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* ===== Reset & Base ===== */
     *, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
     body {{
@@ -270,7 +355,6 @@ def generate_html(groups: list) -> str:
       overflow-x: hidden;
     }}
 
-    /* ===== Background Decoration ===== */
     body::before {{
       content: "";
       position: fixed;
@@ -328,9 +412,7 @@ def generate_html(groups: list) -> str:
       border-radius: 40px;
     }}
 
-    .header .stat-item {{
-      text-align: center;
-    }}
+    .header .stat-item {{ text-align: center; }}
 
     .header .stat-num {{
       display: block;
@@ -344,13 +426,140 @@ def generate_html(groups: list) -> str:
       color: {COLORS["text_secondary"]};
     }}
 
-    /* ===== Container ===== */
-    .container {{
+    /* ===== Page Layout (Sidebar + Main) ===== */
+    .page-layout {{
       position: relative;
       z-index: 1;
-      max-width: 900px;
+      display: flex;
+      gap: 32px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px 80px;
+      align-items: flex-start;
+    }}
+
+    /* ===== Sidebar ===== */
+    .sidebar {{
+      position: sticky;
+      top: 20px;
+      width: 220px;
+      flex-shrink: 0;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      background: linear-gradient(135deg, #1a1929, #16151f);
+      border: 1px solid {COLORS["orange"]}22;
+      border-radius: 16px;
+      padding: 20px 16px;
+    }}
+
+    .sidebar::-webkit-scrollbar {{ width: 4px; }}
+    .sidebar::-webkit-scrollbar-thumb {{
+      background: {COLORS["orange"]}33;
+      border-radius: 2px;
+    }}
+
+    .sidebar-header {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid {COLORS["orange"]}22;
+    }}
+
+    .sidebar-header h3 {{
+      font-size: 1rem;
+      font-weight: 700;
+      color: {COLORS["text"]};
+    }}
+
+    .sidebar-header i {{
+      color: {COLORS["orange"]};
+      font-size: 0.9rem;
+    }}
+
+    .up-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }}
+
+    .up-filter {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: {COLORS["text_secondary"]};
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      text-align: left;
+    }}
+
+    .up-filter:hover {{
+      background: {COLORS["orange"]}11;
+      color: {COLORS["text"]};
+    }}
+
+    .up-filter.active {{
+      background: linear-gradient(135deg, {COLORS["orange"]}33, {COLORS["coral"]}22);
+      color: {COLORS["text"]};
+      font-weight: 600;
+      box-shadow: inset 2px 0 0 {COLORS["orange"]};
+    }}
+
+    .up-avatar-sm {{
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1.5px solid {COLORS["orange"]}33;
+    }}
+
+    .up-avatar-placeholder {{
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: {COLORS["orange"]}22;
+      color: {COLORS["text_secondary"]};
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }}
+
+    .up-name {{
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }}
+
+    .up-count {{
+      font-size: 0.75rem;
+      background: {COLORS["orange"]}22;
+      color: {COLORS["orange"]};
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }}
+
+    /* ===== Container (Main Content) ===== */
+    .container {{
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
     }}
 
     /* ===== Deploy Card ===== */
@@ -365,7 +574,7 @@ def generate_html(groups: list) -> str:
       display: flex;
       gap: 20px;
       padding: 20px 24px;
-      align-items: flex-start;
+      align-items: center;
     }}
 
     .deploy-card::before {{
@@ -384,13 +593,18 @@ def generate_html(groups: list) -> str:
       box-shadow: 0 8px 32px {COLORS["orange"]}22;
     }}
 
-    /* ===== Card Cover ===== */
+    /* hidden card (filtered out) */
+    .deploy-card.hidden {{
+      display: none;
+    }}
+
     .card-cover {{
       flex-shrink: 0;
       width: 180px;
       border-radius: 10px;
       overflow: hidden;
       aspect-ratio: 16/9;
+      align-self: center;
     }}
 
     .card-cover img {{
@@ -432,9 +646,54 @@ def generate_html(groups: list) -> str:
       font-size: 1.3rem;
       font-weight: 700;
       color: {COLORS["text"]};
-      margin-bottom: 18px;
+      margin-bottom: 12px;
       line-height: 1.5;
       padding-left: 2px;
+    }}
+
+    .card-owner {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }}
+
+    .owner-avatar {{
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid {COLORS["orange"]}44;
+      flex-shrink: 0;
+    }}
+
+    .owner-name {{
+      font-size: 0.85rem;
+      color: {COLORS["text_secondary"]};
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      transition: color 0.2s;
+    }}
+
+    .owner-name:hover {{
+      color: {COLORS["amber"]};
+      text-decoration: underline;
+    }}
+
+    .owner-space {{
+      font-size: 0.7rem;
+      color: {COLORS["text_secondary"]}77;
+      transition: color 0.2s;
+      display: inline-flex;
+      align-items: center;
+    }}
+
+    .owner-space:hover {{
+      color: {COLORS["orange"]};
     }}
 
     .card-actions {{
@@ -491,13 +750,8 @@ def generate_html(groups: list) -> str:
       transition: color 0.2s;
     }}
 
-    .bilibili-link:hover {{
-      color: {COLORS["orange"]};
-    }}
-
-    .bilibili-link .fa-bilibili {{
-      color: #00A1D6;
-    }}
+    .bilibili-link:hover {{ color: {COLORS["orange"]}; }}
+    .bilibili-link .fa-bilibili {{ color: #00A1D6; }}
 
     /* ===== Empty State ===== */
     .empty-state {{
@@ -513,6 +767,13 @@ def generate_html(groups: list) -> str:
       display: block;
     }}
 
+    .no-match {{
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: {COLORS["text_secondary"]};
+    }}
+
     /* ===== Footer ===== */
     .footer {{
       position: relative;
@@ -524,15 +785,12 @@ def generate_html(groups: list) -> str:
       border-top: 1px solid {COLORS["orange"]}11;
     }}
 
-    .footer a {{
-      color: {COLORS["orange"]};
-      text-decoration: none;
-    }}
+    .footer a {{ color: {COLORS["orange"]}; text-decoration: none; }}
 
     /* ===== Video Group & History ===== */
-    .video-group {{
-      margin-bottom: 24px;
-    }}
+    .video-group {{ margin-bottom: 24px; }}
+
+    .video-group.hidden-group {{ display: none; }}
 
     .video-group .deploy-card {{
       margin-bottom: 0;
@@ -549,9 +807,7 @@ def generate_html(groups: list) -> str:
       border-radius: 0 0 16px 16px;
     }}
 
-    .video-group .deploy-card.history-item:hover {{
-      opacity: 1;
-    }}
+    .video-group .deploy-card.history-item:hover {{ opacity: 1; }}
 
     .history-toggle {{
       display: flex;
@@ -582,22 +838,14 @@ def generate_html(groups: list) -> str:
       transition: transform 0.3s ease;
     }}
 
-    .history-toggle[aria-expanded="true"] .toggle-icon {{
-      transform: rotate(180deg);
-    }}
-
-    .history-list {{
-      overflow: hidden;
-    }}
+    .history-toggle[aria-expanded="true"] .toggle-icon {{ transform: rotate(180deg); }}
+    .history-list {{ overflow: hidden; }}
 
     .history-list .deploy-card::before {{
       background: linear-gradient(180deg, {COLORS["text_secondary"]}44, {COLORS["orange"]}44);
     }}
 
-    /* solo card (no history) gets full border-radius */
-    .video-group:not(:has(.history-toggle)) .deploy-card {{
-      border-radius: 16px;
-    }}
+    .video-group:not(:has(.history-toggle)) .deploy-card {{ border-radius: 16px; }}
 
     /* ===== Animation ===== */
     .an {{
@@ -607,13 +855,43 @@ def generate_html(groups: list) -> str:
     }}
 
     @keyframes fadeInUp {{
-      to {{
-        opacity: 1;
-        transform: translateY(0);
-      }}
+      to {{ opacity: 1; transform: translateY(0); }}
     }}
 
     /* ===== Responsive ===== */
+    @media (max-width: 900px) {{
+      .page-layout {{
+        flex-direction: column;
+        padding: 0 16px 60px;
+      }}
+
+      .sidebar {{
+        position: relative;
+        top: 0;
+        width: 100%;
+        max-height: none;
+        padding: 14px 12px;
+      }}
+
+      .up-list {{
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+      }}
+
+      .up-filter {{
+        width: auto;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+      }}
+
+      .up-filter .up-count {{ display: none; }}
+      .up-filter .up-avatar-sm {{ width: 22px; height: 22px; }}
+      .up-filter.active {{ box-shadow: inset 0 -2px 0 {COLORS["orange"]}; }}
+      .sidebar-header {{ margin-bottom: 10px; padding-bottom: 8px; }}
+    }}
+
     @media (max-width: 640px) {{
       .header h1 {{ font-size: 2rem; }}
       .deploy-card {{ padding: 16px; flex-direction: column; }}
@@ -626,7 +904,6 @@ def generate_html(groups: list) -> str:
 <body>
   <div class="bg-grid"></div>
 
-  <!-- Header -->
   <header class="header">
     <h1><i class="fa-solid fa-film"></i> HX Video Summary</h1>
     <p class="subtitle">B站视频智能总结 & PPT 生成记录</p>
@@ -646,17 +923,31 @@ def generate_html(groups: list) -> str:
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="container">
-    {entries if entries else '''
-    <div class="empty-state">
-      <i class="fa-solid fa-inbox"></i>
-      <p>暂无部署记录, 请先运行工作流生成视频总结</p>
-    </div>
-    '''}
-  </main>
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-user-group"></i>
+        <h3>UP主</h3>
+      </div>
+      <nav class="up-list">
+        {up_filter_items}
+      </nav>
+    </aside>
 
-  <!-- Footer -->
+    <main class="container">
+      {entries if entries else '''
+      <div class="empty-state">
+        <i class="fa-solid fa-inbox"></i>
+        <p>暂无部署记录, 请先运行工作流生成视频总结</p>
+      </div>
+      '''}
+      <div class="no-match" id="no-match">
+        <i class="fa-solid fa-magnifying-glass" style="display:block;font-size:3rem;color:{COLORS["orange"]}44;margin-bottom:16px"></i>
+        <p>该UP主暂无视频总结</p>
+      </div>
+    </main>
+  </div>
+
   <footer class="footer">
     <p>
       Powered by <a href="https://github.com/HengXin666/HX-Video-Summary" target="_blank">HX-Video-Summary</a>
@@ -665,7 +956,7 @@ def generate_html(groups: list) -> str:
       &nbsp;自动部署于 GitHub Pages
     </p>
     <p style="margin-top:8px;font-size:0.8rem;color:{COLORS["text_secondary"]}77">
-      索引页面自动生成 · 同一视频仅展示最新 · 点击展开历史
+      索引页面自动生成 · 同一视频仅展示最新 · 点击展开历史 · 按UP主筛选
     </p>
   </footer>
 
@@ -683,10 +974,66 @@ def generate_html(groups: list) -> str:
         btn.style.borderRadius = "0";
       }}
     }}
+
+    function filterByUp(key) {{
+      const groups = document.querySelectorAll('.video-group');
+      const filters = document.querySelectorAll('.up-filter');
+      const noMatch = document.getElementById('no-match');
+      let visible = 0;
+
+      // Update filter buttons
+      filters.forEach(function(f) {{
+        if (f.getAttribute('data-up') === key) {{
+          f.classList.add('active');
+          f.setAttribute('aria-pressed', 'true');
+        }} else {{
+          f.classList.remove('active');
+          f.setAttribute('aria-pressed', 'false');
+        }}
+      }});
+
+      // Show/hide video groups
+      groups.forEach(function(g) {{
+        const card = g.querySelector('.deploy-card');
+        if (!card) return;
+        const up = card.getAttribute('data-up');
+        if (key === 'all' || up === key) {{
+          g.classList.remove('hidden-group');
+          visible++;
+        }} else {{
+          g.classList.add('hidden-group');
+        }}
+      }});
+
+      // Show/hide no-match message
+      if (noMatch) {{
+        noMatch.style.display = (visible === 0) ? 'block' : 'none';
+      }}
+
+      // Update URL hash
+      if (key === 'all') {{
+        history.replaceState(null, '', window.location.pathname);
+      }} else {{
+        history.replaceState(null, '', '#' + key);
+      }}
+    }}
+
+    // Init: restore filter from URL hash
+    (function() {{
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {{
+        const btn = document.querySelector('.up-filter[data-up="' + hash + '"]');
+        if (btn) {{
+          filterByUp(hash);
+          // Scroll sidebar active into view
+          btn.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+        }}
+      }}
+    }})();
   </script>
 </body>
 </html>"""
-    return html
+    return page
 
 
 def main():
@@ -703,13 +1050,24 @@ def main():
     # 添加当前部署
     deployments = add_current_deployment(deployments)
 
-    # 回填缺失的封面
+    # 回填缺失的封面和UP主信息, 并修复 http→https
     for d in deployments:
-        if not d.get("cover_url") and d.get("bilibili_url"):
-            cover = fetch_bilibili_cover(d["bilibili_url"])
-            if cover:
-                d["cover_url"] = cover
-                print(f"回填封面: #{d.get('run_number')} -> {cover}")
+        # 修复已存在的 http 封面为 https
+        if d.get("cover_url", "").startswith("http://"):
+            d["cover_url"] = d["cover_url"].replace("http://", "https://")
+        if d.get("owner_face", "").startswith("http://"):
+            d["owner_face"] = d["owner_face"].replace("http://", "https://")
+        # 回填缺失字段
+        if d.get("bilibili_url") and (not d.get("cover_url") or not d.get("owner_name")):
+            info = fetch_bilibili_info(d["bilibili_url"])
+            if info["cover_url"] and not d.get("cover_url"):
+                d["cover_url"] = info["cover_url"]
+                print(f"回填封面: #{d.get('run_number')} -> {info['cover_url']}")
+            if info["owner_name"] and not d.get("owner_name"):
+                d["owner_name"] = info["owner_name"]
+                d["owner_face"] = info["owner_face"]
+                d["owner_mid"] = info["owner_mid"]
+                print(f"回填UP主: #{d.get('run_number')} -> {info['owner_name']}")
 
     # 按时间戳倒序排列(最新的在最上面)
     deployments.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
