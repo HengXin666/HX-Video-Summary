@@ -1,12 +1,27 @@
 [
   {
+    "run_number": "25",
+    "title": "【OpenCode】小彭老师skills+提示词配置分享",
+    "bilibili_url": "https://www.bilibili.com/video/BV16WfwBDE4y",
+    "timestamp": "2026-05-08 14:19:10",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "https://i0.hdslb.com/bfs/archive/cbf6e4fc72d80930ee29e9772992365744ebaebb.jpg",
+    "owner_name": "双笙子佯谬",
+    "owner_face": "https://i0.hdslb.com/bfs/face/a0971237900a4beb3b6b0c5444b8f41f659e988c.jpg",
+    "owner_mid": "263032155"
+  },
+  {
     "run_number": "24",
     "title": "Skill触发不稳定，CLAUDE.md劝不听？Hooks了解一下🪝【Claude Code】",
     "bilibili_url": "https://www.bilibili.com/video/BV1qS9oB9EFT/",
     "timestamp": "2026-05-08 13:43:43",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i0.hdslb.com/bfs/archive/756aed24d3a2200ad99836f8c6911608f6546447.jpg"
+    "cover_url": "https://i0.hdslb.com/bfs/archive/756aed24d3a2200ad99836f8c6911608f6546447.jpg",
+    "owner_name": "双笙子佯谬",
+    "owner_face": "https://i0.hdslb.com/bfs/face/a0971237900a4beb3b6b0c5444b8f41f659e988c.jpg",
+    "owner_mid": "263032155"
   },
   {
     "run_number": "23",
@@ -15,7 +30,10 @@
     "timestamp": "2026-05-07 17:34:26",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/c1aa1ac6d9bff990bfb70e3c2a5f1a276531d718.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/c1aa1ac6d9bff990bfb70e3c2a5f1a276531d718.jpg",
+    "owner_name": "科技老男孩",
+    "owner_face": "https://i0.hdslb.com/bfs/face/bd767bdc31b18fc13c5e677adb4db8a893297512.jpg",
+    "owner_mid": "1278118266"
   },
   {
     "run_number": "22",
@@ -24,7 +42,10 @@
     "timestamp": "2026-05-07 14:33:39",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i0.hdslb.com/bfs/archive/4d8d8ce4cb4d2ed39f27ffc5b391c96c4873bbcf.jpg"
+    "cover_url": "https://i0.hdslb.com/bfs/archive/4d8d8ce4cb4d2ed39f27ffc5b391c96c4873bbcf.jpg",
+    "owner_name": "橘鸦Juya",
+    "owner_face": "https://i0.hdslb.com/bfs/face/afa12816f678f482a7333289d82437208b8d8cbf.jpg",
+    "owner_mid": "285286947"
   },
   {
     "run_number": "21",
@@ -33,7 +54,10 @@
     "timestamp": "2026-05-06 17:06:07",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/37e64d0128bef2da268dddb86651d00c19bca8e2.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/37e64d0128bef2da268dddb86651d00c19bca8e2.jpg",
+    "owner_name": "老奇好好奇",
+    "owner_face": "https://i1.hdslb.com/bfs/face/9f3e54f6d9a436f0e5aea34fb25477b17068ff63.jpg",
+    "owner_mid": "35894872"
   },
   {
     "run_number": "20",
@@ -42,7 +66,10 @@
     "timestamp": "2026-05-06 15:59:29",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i2.hdslb.com/bfs/archive/b8badfc3f421369639ba11ae4a719f43c8bdf4a6.jpg"
+    "cover_url": "https://i2.hdslb.com/bfs/archive/b8badfc3f421369639ba11ae4a719f43c8bdf4a6.jpg",
+    "owner_name": "大象放映室",
+    "owner_face": "https://i0.hdslb.com/bfs/face/9d3229d6157767ebe386f37f33d075e348bea07d.jpg",
+    "owner_mid": "49246269"
   },
   {
     "run_number": "19",
@@ -51,7 +78,10 @@
     "timestamp": "2026-05-06 15:59:14",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/e86a2970b4f341e02fa40cb8a034329979d3ff23.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/e86a2970b4f341e02fa40cb8a034329979d3ff23.jpg",
+    "owner_name": "老王聊天",
+    "owner_face": "https://i1.hdslb.com/bfs/face/9afaea7dfbadc068070a04e9d46b5df50842ce41.jpg",
+    "owner_mid": "1612081513"
   },
   {
     "run_number": "18",
@@ -60,7 +90,10 @@
     "timestamp": "2026-05-06 15:34:50",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg",
+    "owner_name": "歌白说Geslook",
+    "owner_face": "https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg",
+    "owner_mid": "315846984"
   },
   {
     "run_number": "17",
@@ -69,7 +102,10 @@
     "timestamp": "2026-05-06 14:45:08",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/6246f048e9506d4e9e0a2b6a6fbf6cd4d0670318.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/6246f048e9506d4e9e0a2b6a6fbf6cd4d0670318.jpg",
+    "owner_name": "小白debug",
+    "owner_face": "https://i0.hdslb.com/bfs/face/ab6cf5698ed3db1997f84d515d39250ae56b450c.jpg",
+    "owner_mid": "302188068"
   },
   {
     "run_number": "15",
@@ -78,7 +114,10 @@
     "timestamp": "2026-05-05 23:24:21 +0800",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg",
+    "owner_name": "歌白说Geslook",
+    "owner_face": "https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg",
+    "owner_mid": "315846984"
   },
   {
     "run_number": "16",
@@ -87,6 +126,9 @@
     "timestamp": "2026-05-05 23:24:21 +0800",
     "ppt_file": "bilibili_ppt.html",
     "summary_file": "summary.txt",
-    "cover_url": "http://i1.hdslb.com/bfs/archive/a7e4506ff21160bd15fc0bdb42f8fd72d84cc9d5.jpg"
+    "cover_url": "https://i1.hdslb.com/bfs/archive/a7e4506ff21160bd15fc0bdb42f8fd72d84cc9d5.jpg",
+    "owner_name": "大吃一顿鲸",
+    "owner_face": "https://i1.hdslb.com/bfs/face/40a8c40ed4846d427f936abea4107416069e1a04.jpg",
+    "owner_mid": "43099096"
   }
 ]
