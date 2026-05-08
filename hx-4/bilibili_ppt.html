@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harness 实践：让 AI Agent 全自动制作知识讲解视频</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --coral: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --teal: #2EC4B6;
+  --red: #E71D36;
+  --purple: #7F5AF0;
+}
+
+/* Slides */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:50px 70px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+
+.anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Deco */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.1),transparent)}
+
+/* Grid bg */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.05) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.5}
+
+/* Particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Typography */
+.t-hero{font-size:4.8rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:3.8rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:3rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2.2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.7rem;font-weight:400;line-height:1.6;text-align:center}
+.t-sm{font-size:1.25rem;font-weight:400;line-height:1.55;text-align:center}
+
+/* Colors */
+.c-accent{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-teal{color:#2EC4B6}.c-red{color:#E71D36}.c-purple{color:#7F5AF0}
+.c-gray{color:#A7A9BE}.c-white{color:#fff}
+
+/* BG highlights */
+.bg-accent{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-teal{background:rgba(46,196,182,.15);padding:5px 18px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.15);padding:5px 18px;border-radius:10px}
+
+.ul-accent{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-coral{text-decoration:underline;text-decoration-color:#E76F51;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-amber{text-decoration:underline;text-decoration-color:#F4A261;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:18px auto}
+
+/* BG layers */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 80% 20%,#1A1932 0%,#0F0E17 100%)}
+
+/* Two column */
+.two-col{display:flex;gap:32px;width:92%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;background:rgba(26,25,50,.3);border-radius:0 20px 20px 0;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+
+/* Flow steps */
+.flow{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.12);padding:10px 18px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.flow-arrow{color:#FF6B35;font-size:1.3rem}
+.flow-step:hover{transform:scale(1.05);transition:transform .3s}
+
+/* Pulse */
+.pulse{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+
+/* VS */
+.vs-wrap{display:flex;gap:36px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:32px 24px;border-radius:18px;text-align:center;position:relative;overflow:hidden}
+.vs-left{background:transparent;border:none}
+.vs-right{background:transparent;border:none}
+.vs-mid{font-size:2.5rem;font-weight:900;color:#FF6B35;display:flex;flex-direction:column;align-items:center;gap:8px}
+
+/* Concept word - gradient text */
+.concept-word{font-size:5.5rem;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.final-word{font-size:4rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#FF6B35,#E76F51,#F4A261);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:8px}
+
+/* Shape grid */
+.shape-grid{display:flex;gap:20px;margin:14px 0;justify-content:center;flex-wrap:wrap}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-weight:900;color:#fff;transition:transform .3s;cursor:default}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:90px;height:90px;font-size:1.7rem}
+.sh-md{width:110px;height:110px;font-size:1.8rem}
+.sh-lg{width:130px;height:130px;font-size:2rem}
+.sp{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.so{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sv{background:linear-gradient(135deg,#7F5AF0,#9B5DE5)}
+.st{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* Mini grid */
+.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:88%;max-width:1060px}
+.mini-card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 14px;text-align:center;border:2px solid rgba(255,107,53,.15);box-shadow:0 4px 16px rgba(255,107,53,.08);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s}
+.mini-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.2)}
+
+/* Icon badge */
+.icon-badge{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.ib-accent{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.1));color:#FF6B35}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(244,162,97,.1));color:#F4A261}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.2),rgba(231,111,81,.1));color:#E76F51}
+.ib-teal{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.1));color:#2EC4B6}
+.ib-purple{background:linear-gradient(135deg,rgba(127,90,240,.2),rgba(127,90,240,.1));color:#7F5AF0}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.2),rgba(231,29,54,.1));color:#E71D36}
+
+.icon-row{display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap}
+
+/* Progress bar */
+.progress-bar{width:100%;height:8px;background:rgba(255,107,53,.12);border-radius:4px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease}
+.pf-accent{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#E9C46A,#F4A261)}
+.pf-teal{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+.pf-purple{background:linear-gradient(90deg,#9B5DE5,#7F5AF0)}
+
+/* VS detail items */
+.vs-detail{display:flex;flex-direction:column;gap:8px;margin-top:12px;width:100%}
+.vs-item{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;padding:6px 10px;border-radius:8px}
+.vs-item-bad{background:rgba(231,29,54,.1);color:#E71D36}
+.vs-item-good{background:rgba(46,196,182,.1);color:#2EC4B6}
+
+/* Tag pill */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.95rem;font-weight:700}
+.tag-accent{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-teal{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+.tag-purple{background:rgba(127,90,240,.15);color:#7F5AF0}
+
+/* Slide indicator */
+.slide-indicator{position:fixed;bottom:20px;right:30px;z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.25);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* Page badge */
+.page-badge{position:absolute;top:20px;left:30px;font-size:.85rem;color:rgba(255,107,53,.5);font-weight:700;letter-spacing:2px}
+
+/* Glowing ring */
+.glow-ring{width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* Shine */
+.shine{position:relative;overflow:hidden}
+
+/* nav hint */
+.nav-hint{position:fixed;bottom:28px;left:30px;z-index:100;font-size:.85rem;color:rgba(167,169,190,.5);display:flex;align-items:center;gap:6px}
+
+/* Grid-2 for content */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;width:90%;max-width:1100px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;width:90%;max-width:1100px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:90%;max-width:1100px}
+
+/* Card */
+.card{background:rgba(26,25,50,.4);border-radius:16px;padding:26px 22px;text-align:center;border:2px solid rgba(255,107,53,.1);display:flex;flex-direction:column;align-items:center;gap:10px;transition:transform .3s}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,107,53,.25)}
+.card-accent{border-left:4px solid #FF6B35}
+.card-amber{border-left:4px solid #F4A261}
+.card-coral{border-left:4px solid #E76F51}
+.card-teal{border-left:4px solid #2EC4B6}
+.card-purple{border-left:4px solid #7F5AF0}
+
+/* Phase arrow connector */
+.phase-flow{display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap}
+.phase-box{background:rgba(26,25,50,.6);border:2px solid rgba(255,107,53,.2);border-radius:14px;padding:18px 22px;text-align:center;min-width:140px}
+.phase-icon{font-size:2.2rem;color:#FF6B35;margin-bottom:6px}
+.phase-arrow{font-size:1.6rem;color:#F4A261;margin:0 4px}
+
+/* Diamond highlight */
+.hl-box{display:inline-block;background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:12px 24px;margin:6px}
+
+/* Subtitle box */
+.sub-box{background:rgba(255,107,53,.08);border-radius:12px;padding:14px 28px;margin-top:10px}
+
+/* Number badge */
+.num-badge{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51);color:#fff;font-weight:900;font-size:1.3rem;flex-shrink:0}
+
+/* conn-line */
+.conn-line{stroke-dasharray:8 4;animation:dash-move 1.5s linear infinite}
+@keyframes dash-move{to{stroke-dashoffset:-24}}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ====== Slide 0: 封面 ====== -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p0"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <i class="fas fa-robot" style="font-size:3.5rem;color:#FF6B35"></i>
+    <i class="fas fa-video" style="font-size:2.8rem;color:#F4A261;margin-left:16px"></i>
+    <i class="fas fa-code" style="font-size:2.8rem;color:#E76F51;margin-left:16px"></i>
+  </div>
+  <div class="anim-item t-hero c-white">Harness <span class="c-accent">实践</span></div>
+  <div class="anim-item t-big c-gray" style="margin-top:8px">让 AI Agent 全自动制作知识讲解视频</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-body c-gray" style="margin-top:8px">从一篇文章到一个精美视频的完整工作流解析</div>
+  <div class="anim-item icon-row" style="margin-top:12px">
+    <span class="tag tag-accent"><i class="fas fa-crown"></i> 驾驭工程</span>
+    <span class="tag tag-amber"><i class="fas fa-layer-group"></i> 四阶段流水线</span>
+    <span class="tag tag-teal"><i class="fas fa-robot"></i> 多Agent协作</span>
+  </div>
+</div>
+
+<!-- ====== Slide 1: 为什么选择网页 ====== -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-130px;left:-130px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:12px">不是 AI 视频模型，不是 NotebookLM</div>
+  <div class="anim-item t-big c-white" style="margin-bottom:16px">为什么选择 <span class="c-accent bold ul-accent">网页</span>？</div>
+
+  <div class="anim-item two-col" style="margin-bottom:10px">
+    <div class="col-card" style="border-left:5px solid #E71D36">
+      <i class="fas fa-robot" style="font-size:2.8rem;color:#E71D36"></i>
+      <div class="t-mid c-red bold">AI 视频模型</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 字体配色不可控</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 每帧停几秒不可控</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 精确数字无法保证</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 抽卡式生成、成本高</div>
+      </div>
+    </div>
+    <div class="col-card" style="border-left:5px solid #2EC4B6">
+      <i class="fas fa-globe" style="font-size:2.8rem;color:#2EC4B6"></i>
+      <div class="t-mid c-teal bold">Web Coding</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 字体配色精确控制</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 每步停几秒改代码</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 数字精确定位展示</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 稳定可控、成本更低</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:8px">
+    答案就两个字 —— <span class="bg-accent c-accent bold" style="font-size:2.4rem">可 控</span>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:6px">
+    网页改几行代码就能直接搞定一切，远比视频模型"抽卡"稳定
+  </div>
+  <div class="anim-item" style="margin-top:10px;display:flex;gap:12px">
+    <span class="tag tag-accent"><i class="fas fa-font"></i> 字体精确</span>
+    <span class="tag tag-amber"><i class="fas fa-palette"></i> 配色可控</span>
+    <span class="tag tag-coral"><i class="fas fa-clock"></i> 时间精确</span>
+    <span class="tag tag-teal"><i class="fas fa-dollar-sign"></i> 成本更低</span>
+  </div>
+</div>
+
+<!-- ====== Slide 2: 四阶段流水线总览 ====== -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:600px;height:600px;top:50%;left:50%;margin-top:-300px;margin-left:-300px;opacity:.4"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px">从文章到视频</div>
+  <div class="anim-item t-big c-accent bold" style="margin-bottom:20px">四阶段流水线</div>
+
+  <div class="anim-item phase-flow" style="margin-bottom:6px">
+    <div class="phase-box">
+      <div class="phase-icon"><i class="fas fa-pen-fancy"></i></div>
+      <div class="t-sm bold c-white">阶段一</div>
+      <div class="t-sm c-accent">内容编写</div>
+      <div class="t-sm c-gray" style="font-size:.95rem">口播稿 + 开发计划</div>
+    </div>
+    <div class="phase-arrow"><i class="fas fa-chevron-right"></i></div>
+    <div class="phase-box">
+      <div class="phase-icon"><i class="fas fa-code"></i></div>
+      <div class="t-sm bold c-white">阶段二</div>
+      <div class="t-sm c-amber">章节开发</div>
+      <div class="t-sm c-gray" style="font-size:.95rem">逐章验收 + 并行开发</div>
+    </div>
+    <div class="phase-arrow"><i class="fas fa-chevron-right"></i></div>
+    <div class="phase-box">
+      <div class="phase-icon"><i class="fas fa-volume-up"></i></div>
+      <div class="t-sm bold c-white">阶段三</div>
+      <div class="t-sm c-coral">音频合成</div>
+      <div class="t-sm c-gray" style="font-size:.95rem">TTS 批量合成</div>
+    </div>
+    <div class="phase-arrow"><i class="fas fa-chevron-right"></i></div>
+    <div class="phase-box">
+      <div class="phase-icon"><i class="fas fa-record-vinyl"></i></div>
+      <div class="t-sm bold c-white">阶段四</div>
+      <div class="t-sm c-teal">录屏输出</div>
+      <div class="t-sm c-gray" style="font-size:.95rem">画音天然对齐</div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body" style="margin-top:12px">
+    中间卡了 <span class="bg-accent c-accent bold" style="font-size:2rem">2 个人工检查节点</span>
+  </div>
+  <div class="anim-item" style="display:flex;gap:40px;margin-top:10px;align-items:center">
+    <div class="hl-box">
+      <i class="fas fa-stop-circle c-accent" style="font-size:1.4rem"></i>
+      <span class="t-sm c-white"> 检查点①：确认稿子与计划</span>
+    </div>
+    <i class="fas fa-long-arrow-alt-right c-amber" style="font-size:1.5rem"></i>
+    <div class="hl-box">
+      <i class="fas fa-stop-circle c-coral" style="font-size:1.4rem"></i>
+      <span class="t-sm c-white"> 检查点②：第一章验收</span>
+    </div>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:10px">
+    第一章通过验收后，成为后续所有章节的基准参考
+  </div>
+</div>
+
+<!-- ====== Slide 3: 阶段一 & 阶段二详解 ====== -->
+<div class="slide bg-4" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:350px;height:350px;top:-100px;right:-80px"></div>
+
+  <div class="anim-item t-mid c-accent bold" style="margin-bottom:16px">阶段一 & 阶段二 · 详解</div>
+
+  <div class="anim-item two-col">
+    <div class="col-card card-accent" style="border-left:5px solid #FF6B35">
+      <i class="fas fa-file-alt" style="font-size:2.4rem;color:#FF6B35"></i>
+      <div class="t-mid c-white">阶段一：内容编写</div>
+      <div class="t-sm c-gray" style="text-align:left;line-height:1.8">
+        <span class="c-accent bold">口播稿</span> — 书面化 → 口语化<br>
+        · 短句、第二人称、"聊天感"<br>
+        · "该工具旨在提供高效解决方案"<br>
+        &nbsp;&nbsp;→ "这个工具就是帮你做得更快"<br><br>
+        <span class="c-amber bold">开发计划</span> — 每步画面对应什么内容<br>
+        · 几个步骤组成一个章节<br>
+        · 每个章节聚焦一个话题
+      </div>
+    </div>
+    <div class="col-card card-amber" style="border-left:5px solid #F4A261">
+      <i class="fas fa-laptop-code" style="font-size:2.4rem;color:#F4A261"></i>
+      <div class="t-mid c-white">阶段二：章节开发</div>
+      <div class="t-sm c-gray" style="text-align:left;line-height:1.8">
+        <span class="c-amber bold">第一章先行</span><br>
+        · 独立开发 → 人工验收<br>
+        · 确认视觉气质、节奏、信息密度<br>
+        · 成为后续章节的 <span class="c-accent bold">基准</span><br><br>
+        <span class="c-coral bold">后续章节</span><br>
+        · 顺序开发 / 多Agent并行<br>
+        · 每章逐项自检才能交付
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item t-sm c-gray" style="margin-top:6px">
+    关键原则：开发不是一次性全部完成的 — 第一章验收过关才能继续
+  </div>
+</div>
+
+<!-- ====== Slide 4: 阶段三 & 阶段四详解 ====== -->
+<div class="slide bg-5" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:400px;height:400px;bottom:-120px;right:-120px"></div>
+
+  <div class="anim-item t-mid c-coral bold" style="margin-bottom:16px">阶段三 & 阶段四 · 详解</div>
+
+  <div class="anim-item two-col">
+    <div class="col-card card-coral" style="border-left:5px solid #E76F51">
+      <i class="fas fa-microphone-alt" style="font-size:2.4rem;color:#E76F51"></i>
+      <div class="t-mid c-white">阶段三：音频合成</div>
+      <div class="t-sm c-gray" style="text-align:left;line-height:1.8">
+        · 从口播稿提取 <span class="c-coral bold">音频合成清单</span><br>
+        · 调用 MiniMax TTS 能力<br>
+        · 逐条合成 → 自动跳过已完成项<br>
+        · 中断可续传，不用重来<br>
+        · 每天 9000 字免费额度<br>
+        · 可选：用自己的声音录制
+      </div>
+    </div>
+    <div class="col-card card-teal" style="border-left:5px solid #2EC4B6">
+      <i class="fas fa-desktop" style="font-size:2.4rem;color:#2EC4B6"></i>
+      <div class="t-mid c-white">阶段四：录屏输出</div>
+      <div class="t-sm c-gray" style="text-align:left;line-height:1.8">
+        · 网页打开 → 音频自动播放<br>
+        · 直接录屏 → 成品视频<br>
+        · <span class="c-teal bold">画音天然对齐</span><br><br>
+        <span class="c-gray">三种播放模式：</span><br>
+        · 手动模式 — 自由切换步骤<br>
+        · 音频模式 — 每步自动播音频<br>
+        · 自动模式 — 全自动播放
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item t-sm c-gray" style="margin-top:6px">
+    最终产出：音频和画面天然对齐的成品视频，无需后期对齐
+  </div>
+  <div class="anim-item" style="display:flex;gap:16px;margin-top:10px">
+    <span class="tag tag-teal"><i class="fas fa-check-circle"></i> 中断可续传</span>
+    <span class="tag tag-accent"><i class="fas fa-check-circle"></i> 已生成自动跳过</span>
+    <span class="tag tag-amber"><i class="fas fa-check-circle"></i> 文件名与步骤一一对应</span>
+  </div>
+</div>
+
+<!-- ====== Slide 5: Harness 六大维度 ====== -->
+<div class="slide bg-1" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.5"></div>
+
+  <div class="anim-item t-mid c-accent bold" style="margin-bottom:10px">Skill 背后的设计哲学</div>
+  <div class="anim-item t-big c-white" style="margin-bottom:14px">Harness <span class="c-amber">六大维度</span></div>
+
+  <div class="anim-item grid-3" style="margin-bottom:8px">
+    <div class="card card-accent">
+      <div class="icon-badge ib-accent"><i class="fas fa-sitemap" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">执行与编排</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">四阶段流水线<br>关键节点强制暂停</div>
+    </div>
+    <div class="card card-amber">
+      <div class="icon-badge ib-amber"><i class="fas fa-book-open" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">上下文管理</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">信息按阶段拆分<br>每阶段只读所需文档</div>
+    </div>
+    <div class="card card-coral">
+      <div class="icon-badge ib-coral"><i class="fas fa-memory" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">状态与记忆</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">开发计划固化决策<br>关键状态写文件持久化</div>
+    </div>
+  </div>
+
+  <div class="anim-item grid-3">
+    <div class="card card-teal">
+      <div class="icon-badge ib-teal"><i class="fas fa-tools" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">工具系统</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">多Agent物理隔离<br>独立文件夹+CSS前缀<br>全局主题变量兜底</div>
+    </div>
+    <div class="card card-purple">
+      <div class="icon-badge ib-purple"><i class="fas fa-shield-alt" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">约束与恢复</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">反馈修复最小切片<br>定位层面 → 只改该层<br>不重做整章</div>
+    </div>
+    <div class="card" style="border-left:4px solid #E71D36">
+      <div class="icon-badge ib-red"><i class="fas fa-clipboard-check" style="font-size:1.5rem"></i></div>
+      <div class="t-sm bold c-white">评估与观测</div>
+      <div class="t-sm c-gray" style="font-size:.9rem">硬性自检规则<br>逐项核查禁止目测<br>独立Reviewer Agent</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Slide 6: 关键设计原则 ====== -->
+<div class="slide bg-2" id="s6">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;top:-180px;right:-180px"></div>
+
+  <div class="anim-item t-mid c-amber bold" style="margin-bottom:14px">三大关键设计原则</div>
+
+  <div class="anim-item" style="display:flex;gap:30px;width:90%;max-width:1100px">
+    <!-- 原则1 -->
+    <div class="card card-accent" style="flex:1">
+      <div class="num-badge">1</div>
+      <div class="t-sm bold c-white" style="font-size:1.3rem">反馈修复 · 最小切片</div>
+      <i class="fas fa-cut c-accent" style="font-size:2rem;margin:6px 0"></i>
+      <div class="t-sm c-gray" style="font-size:.95rem;line-height:1.6;text-align:left">
+        用户说"节奏太快" → 不是重做整章<br>
+        先定位层面：<br>
+        <span class="c-accent">▸</span> 节奏 / 视觉 / 内容 / 代码<br>
+        <span class="c-accent">▸</span> 只改最小切片<br>
+        不把已做对的部分也改掉
+      </div>
+    </div>
+    <!-- 原则2 -->
+    <div class="card card-amber" style="flex:1">
+      <div class="num-badge" style="background:linear-gradient(135deg,#F4A261,#E9C46A)">2</div>
+      <div class="t-sm bold c-white" style="font-size:1.3rem">多Agent · 严格隔离</div>
+      <i class="fas fa-border-all c-amber" style="font-size:2rem;margin:6px 0"></i>
+      <div class="t-sm c-gray" style="font-size:.95rem;line-height:1.6;text-align:left">
+        每个Agent独立开发不冲突：<br>
+        <span class="c-amber">▸</span> 独立文件夹（物理隔离）<br>
+        <span class="c-amber">▸</span> 独立CSS前缀（命名隔离）<br>
+        <span class="c-amber">▸</span> 全局主题变量兜底统一
+      </div>
+    </div>
+    <!-- 原则3 -->
+    <div class="card card-teal" style="flex:1">
+      <div class="num-badge" style="background:linear-gradient(135deg,#2EC4B6,#06D6A0)">3</div>
+      <div class="t-sm bold c-white" style="font-size:1.3rem">硬性自检 · 禁止目测</div>
+      <i class="fas fa-search-plus c-teal" style="font-size:2rem;margin:6px 0"></i>
+      <div class="t-sm c-gray" style="font-size:.95rem;line-height:1.6;text-align:left">
+        解决"自评失真"问题：<br>
+        <span class="c-teal">▸</span> 逐项核对检查清单<br>
+        <span class="c-teal">▸</span> 开独立Reviewer Agent<br>
+        <span class="c-teal">▸</span> 禁止目测一遍就放行
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:14px">
+    写代码的 Agent 自己评价 → 大概率"还不错" → <span class="c-red bold">必须引入独立质检</span>
+  </div>
+</div>
+
+<!-- ====== Slide 7: 多Agent协作模式对比 ====== -->
+<div class="slide bg-6" id="s7">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:450px;height:450px;bottom:-150px;left:-150px"></div>
+
+  <div class="anim-item t-mid c-accent bold" style="margin-bottom:12px">多 Agent 协作的两种模式</div>
+
+  <div class="anim-item vs-wrap">
+    <div class="vs-box vs-left" style="border:2px solid rgba(255,107,53,.15);border-radius:18px">
+      <i class="fas fa-code-branch" style="font-size:2.8rem;color:#FF6B35"></i>
+      <div class="t-mid c-accent bold">Subagent</div>
+      <div class="t-sm c-gray" style="margin-top:6px;line-height:1.6">
+        像 <span class="c-accent bold">子进程</span><br>
+        各自独立上下文<br>
+        完成后交回结果<br>
+        互不可见、不讨论<br><br>
+        <span class="c-teal bold">适合：</span>并行开发多章节<br>
+        <span class="c-teal bold">优势：</span>省 Token、易调度
+      </div>
+      <div class="tag tag-accent" style="margin-top:8px">
+        <i class="fas fa-check"></i> 结果导向型任务
+      </div>
+    </div>
+    <div class="vs-mid">
+      <div>VS</div>
+      <div class="line" style="width:40px;margin:8px auto"></div>
+    </div>
+    <div class="vs-box vs-right" style="border:2px solid rgba(244,162,97,.15);border-radius:18px">
+      <i class="fas fa-users" style="font-size:2.8rem;color:#F4A261"></i>
+      <div class="t-mid c-amber bold">Agent Teams</div>
+      <div class="t-sm c-gray" style="margin-top:6px;line-height:1.6">
+        像 <span class="c-amber bold">项目小组</span><br>
+        组长 + 多个组员<br>
+        互相发消息<br>
+        共享任务列表<br><br>
+        <span class="c-teal bold">适合：</span>质检来回反馈<br>
+        <span class="c-red bold">代价：</span>Token 开销更高
+      </div>
+      <div class="tag tag-amber" style="margin-top:8px">
+        <i class="fas fa-sync-alt"></i> 需要来回反馈的任务
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item t-sm c-gray" style="margin-top:10px">
+    Subagent = 三人分别去三个城市办事后回来汇报 ｜ Agent Teams = 三人进同一间会议室边讨论边改
+  </div>
+</div>
+
+<!-- ====== Slide 8: 实战工具链 ====== -->
+<div class="slide bg-4" id="s8">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-200px"></div>
+
+  <div class="anim-item t-mid c-accent bold" style="margin-bottom:10px">实战工具链</div>
+  <div class="anim-item t-big c-white" style="margin-bottom:16px">四个核心工具</div>
+
+  <div class="anim-item grid-4" style="margin-bottom:10px">
+    <div class="card card-accent">
+      <i class="fas fa-terminal" style="font-size:2.4rem;color:#FF6B35"></i>
+      <div class="t-sm bold c-white">Claude Code</div>
+      <div class="t-sm c-gray" style="font-size:.85rem;line-height:1.5">
+        核心执行 Agent<br>
+        也支持 Cursor、Codex<br>
+        等支持 Skill 的工具
+      </div>
+      <div class="tag tag-accent"><i class="fas fa-brain"></i> 核心引擎</div>
+    </div>
+    <div class="card card-amber">
+      <i class="fas fa-cloud" style="font-size:2.4rem;color:#F4A261"></i>
+      <div class="t-sm bold c-white">MiniMax</div>
+      <div class="t-sm c-gray" style="font-size:.85rem;line-height:1.5">
+        Token Plan<br>
+        推理 + 生成能力<br>
+        多模态套餐<br>
+        天9000字TTS额度
+      </div>
+      <div class="tag tag-amber"><i class="fas fa-microchip"></i> 推理引擎</div>
+    </div>
+    <div class="card card-coral">
+      <i class="fas fa-exchange-alt" style="font-size:2.4rem;color:#E76F51"></i>
+      <div class="t-sm bold c-white">CC Switch</div>
+      <div class="t-sm c-gray" style="font-size:.85rem;line-height:1.5">
+        桌面配置工具<br>
+        Claude Code 切换<br>
+        任意自定义模型<br>
+        国产模型适配器
+      </div>
+      <div class="tag" style="background:rgba(231,111,81,.15);color:#E76F51"><i class="fas fa-plug"></i> 模型桥接</div>
+    </div>
+    <div class="card card-teal">
+      <i class="fas fa-th" style="font-size:2.4rem;color:#2EC4B6"></i>
+      <div class="t-sm bold c-white">Tmux</div>
+      <div class="t-sm c-gray" style="font-size:.85rem;line-height:1.5">
+        终端管理器<br>
+        Agent Teams 可视化<br>
+        多窗格同时监视<br>
+        官方推荐方式
+      </div>
+      <div class="tag tag-teal"><i class="fas fa-eye"></i> 可视化监控</div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:16px">
+    <i class="fas fa-lightbulb c-amber"></i>
+    国内使用 Claude Code 的推荐方案：搭配 <span class="bg-amber c-amber bold">MiniMax + CC Switch</span>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:8px">
+    <i class="fas fa-info-circle c-accent"></i> MiniMax Plus 极速版：速度快、量大管够、性价比高，日常 Tool Use 开发完全够用
+  </div>
+  <div class="anim-item" style="display:flex;gap:14px;margin-top:10px">
+    <span class="tag tag-accent"><i class="fas fa-image"></i> 图片生成</span>
+    <span class="tag tag-amber"><i class="fas fa-microphone"></i> 语音合成</span>
+    <span class="tag tag-teal"><i class="fas fa-video"></i> 视频理解</span>
+  </div>
+</div>
+
+<!-- ====== Slide 9: 三种开发模式 ====== -->
+<div class="slide bg-5" id="s9">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-100px;left:-100px"></div>
+
+  <div class="anim-item t-mid c-accent bold" style="margin-bottom:14px">章节开发的三种模式</div>
+
+  <div class="anim-item" style="display:flex;gap:24px;width:92%;max-width:1100px">
+    <div class="card card-accent" style="flex:1">
+      <i class="fas fa-hand-paper" style="font-size:2.2rem;color:#FF6B35"></i>
+      <div class="t-sm bold c-white" style="font-size:1.2rem">模式一：逐章确认</div>
+      <div class="t-sm c-gray" style="font-size:.92rem;line-height:1.7;text-align:left">
+        <span class="c-accent">▸</span> 每章开发完 → 停下<br>
+        <span class="c-accent">▸</span> 人工验收 → 再继续<br>
+        <span class="c-accent">▸</span> 最稳妥，最适合初稿<br>
+      </div>
+      <div class="tag tag-accent" style="margin-top:8px"><i class="fas fa-shield-alt"></i> 最安全</div>
+    </div>
+    <div class="card card-amber" style="flex:1">
+      <i class="fas fa-forward" style="font-size:2.2rem;color:#F4A261"></i>
+      <div class="t-sm bold c-white" style="font-size:1.2rem">模式二：顺序推进</div>
+      <div class="t-sm c-gray" style="font-size:.92rem;line-height:1.7;text-align:left">
+        <span class="c-amber">▸</span> 第一章验收通过<br>
+        <span class="c-amber">▸</span> 后续章节顺序完成<br>
+        <span class="c-amber">▸</span> 基准已定，不再逐章停<br>
+      </div>
+      <div class="tag tag-amber" style="margin-top:8px"><i class="fas fa-balance-scale"></i> 效率平衡</div>
+    </div>
+    <div class="card card-coral" style="flex:1">
+      <i class="fas fa-rocket" style="font-size:2.2rem;color:#E76F51"></i>
+      <div class="t-sm bold c-white" style="font-size:1.2rem">模式三：并行开发</div>
+      <div class="t-sm c-gray" style="font-size:.92rem;line-height:1.7;text-align:left">
+        <span class="c-coral">▸</span> 第一章验收通过<br>
+        <span class="c-coral">▸</span> 后续多Agent并行写<br>
+        <span class="c-coral">▸</span> 最多同时3个Agent<br>
+      </div>
+      <div class="tag" style="background:rgba(231,111,81,.15);color:#E76F51;margin-top:8px"><i class="fas fa-bolt"></i> 最高效率</div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:16px">
+    <i class="fas fa-exclamation-triangle c-amber"></i>
+    经验：最多同时并行 <span class="c-accent bold" style="font-size:2rem">3 个</span> Agent 比较合适
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:8px">
+    必须选能力较强的模型，否则多Agent调度容易出错
+  </div>
+  <div class="anim-item" style="display:flex;gap:16px;margin-top:14px">
+    <div class="hl-box"><i class="fas fa-lightbulb c-accent"></i> <span class="t-sm c-white">第一章定调：字体、间距、动效节奏全在第一章确定</span></div>
+    <div class="hl-box"><i class="fas fa-lightbulb c-amber"></i> <span class="t-sm c-white">后续章节继承第一章的视觉基调和代码规范</span></div>
+  </div>
+</div>
+
+<!-- ====== Slide 10: 核心洞察总结 ====== -->
+<div class="slide bg-1" id="s10">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p10"></div>
+  <div class="deco deco-orange" style="width:800px;height:800px;top:50%;left:50%;margin-top:-400px;margin-left:-400px;opacity:.4"></div>
+
+  <div class="anim-item t-mid c-gray italic" style="margin-bottom:8px">表面 vs 本质</div>
+  <div class="anim-item glow-text" style="margin-bottom:10px">核心洞察总结</div>
+
+  <div class="anim-item" style="display:flex;gap:28px;width:90%;max-width:1100px;margin-top:10px">
+    <!-- 表面 -->
+    <div class="card" style="flex:1;border:2px solid rgba(167,169,190,.15)">
+      <i class="fas fa-eye" style="font-size:2rem;color:#A7A9BE"></i>
+      <div class="t-sm bold c-gray" style="font-size:1.2rem">表面上看</div>
+      <div class="t-sm c-gray" style="font-size:1rem;line-height:1.7;text-align:left">
+        一套"文章变视频"的工具流程<br>
+        把技术文章丢进去，产出视频
+      </div>
+    </div>
+    <!-- 箭头 -->
+    <div style="display:flex;align-items:center">
+      <i class="fas fa-long-arrow-alt-right c-accent" style="font-size:2.5rem"></i>
+    </div>
+    <!-- 本质 -->
+    <div class="card card-accent" style="flex:1.3;border:2px solid rgba(255,107,53,.3)">
+      <i class="fas fa-cogs" style="font-size:2rem;color:#FF6B35"></i>
+      <div class="t-sm bold c-accent" style="font-size:1.2rem">本质上</div>
+      <div class="t-sm c-white" style="font-size:1rem;line-height:1.7;text-align:left">
+        一次 <span class="c-accent bold">Harness（驾驭工程）的具体实践</span><br>
+        把模型能力、工具能力和人的判断<br>
+        组织成一条 <span class="c-amber bold">稳定可控的生产流程</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item line"></div>
+
+  <div class="anim-item grid-3" style="margin-top:10px">
+    <div class="card card-accent">
+      <i class="fas fa-project-diagram" style="font-size:1.8rem;color:#FF6B35"></i>
+      <div class="t-sm bold c-white">有流程</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">四阶段 + 两个检查点</div>
+    </div>
+    <div class="card card-amber">
+      <i class="fas fa-clipboard-list" style="font-size:1.8rem;color:#F4A261"></i>
+      <div class="t-sm bold c-white">有状态</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">开发计划固化关键决策</div>
+    </div>
+    <div class="card card-teal">
+      <i class="fas fa-sync-alt" style="font-size:1.8rem;color:#2EC4B6"></i>
+      <div class="t-sm bold c-white">有恢复</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">最小切片修复 + 断点续传</div>
+    </div>
+  </div>
+
+  <div class="anim-item t-body c-white" style="margin-top:16px">
+    模型本身不缺能力，缺的是 <span class="bg-accent c-accent bold" style="font-size:2rem">驾驭能力的过程</span>
+  </div>
+
+  <div class="anim-item" style="display:flex;gap:20px;margin-top:14px;width:88%;max-width:1000px">
+    <div class="hl-box" style="flex:1;text-align:center">
+      <i class="fas fa-brain c-accent" style="font-size:1.6rem"></i>
+      <div class="t-sm c-white bold">模型能力</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">写代码、生成内容</div>
+    </div>
+    <i class="fas fa-plus c-gray" style="align-self:center"></i>
+    <div class="hl-box" style="flex:1;text-align:center">
+      <i class="fas fa-tools c-amber" style="font-size:1.6rem"></i>
+      <div class="t-sm c-white bold">工具能力</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">TTS、文件读写</div>
+    </div>
+    <i class="fas fa-plus c-gray" style="align-self:center"></i>
+    <div class="hl-box" style="flex:1;text-align:center">
+      <i class="fas fa-user-check c-coral" style="font-size:1.6rem"></i>
+      <div class="t-sm c-white bold">人的判断</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">检查点把关</div>
+    </div>
+    <i class="fas fa-equals c-gray" style="align-self:center"></i>
+    <div class="hl-box" style="flex:1;text-align:center;background:rgba(255,107,53,.18);border-color:rgba(255,107,53,.3)">
+      <i class="fas fa-star c-accent" style="font-size:1.6rem"></i>
+      <div class="t-sm c-accent bold">稳定可控</div>
+      <div class="t-sm c-gray" style="font-size:.85rem">的生产流程</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Slide 11: 日后奋斗方向 ====== -->
+<div class="slide bg-2" id="s11">
+  <div class="grid-bg"></div>
+  <div class="particles" id="p11"></div>
+  <div class="deco deco-amber" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.35"></div>
+
+  <div class="anim-item t-mid c-gray italic" style="margin-bottom:6px">面向未来</div>
+  <div class="anim-item final-word">日后奋斗方向</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item" style="display:flex;gap:20px;width:92%;max-width:1100px;margin-top:10px">
+    <div class="card card-accent" style="flex:1">
+      <i class="fas fa-puzzle-piece" style="font-size:2rem;color:#FF6B35"></i>
+      <div class="t-sm bold c-white" style="font-size:1.1rem">Skill 生态扩展</div>
+      <div class="t-sm c-gray" style="font-size:.9rem;line-height:1.6;text-align:left">
+        更多垂直领域的 Skill<br>
+        不只是视频制作<br>
+        报告生成、数据分析、<br>
+        代码审查、文档自动化
+      </div>
+    </div>
+    <div class="card card-amber" style="flex:1">
+      <i class="fas fa-robot" style="font-size:2rem;color:#F4A261"></i>
+      <div class="t-sm bold c-white" style="font-size:1.1rem">Agent 能力提升</div>
+      <div class="t-sm c-gray" style="font-size:.9rem;line-height:1.6;text-align:left">
+        更强模型支撑<br>
+        更精准的质检能力<br>
+        减少人工干预频次<br>
+        提升端到端自动化率
+      </div>
+    </div>
+    <div class="card card-coral" style="flex:1">
+      <i class="fas fa-industry" style="font-size:2rem;color:#E76F51"></i>
+      <div class="t-sm bold c-white" style="font-size:1.1rem">工业化落地</div>
+      <div class="t-sm c-gray" style="font-size:.9rem;line-height:1.6;text-align:left">
+        从个人工具到团队协作<br>
+        标准化 Skill 分发机制<br>
+        CI/CD 集成自动化生产<br>
+        企业级内容流水线
+      </div>
+    </div>
+    <div class="card card-teal" style="flex:1">
+      <i class="fas fa-graduation-cap" style="font-size:2rem;color:#2EC4B6"></i>
+      <div class="t-sm bold c-white" style="font-size:1.1rem">方法论沉淀</div>
+      <div class="t-sm c-gray" style="font-size:.9rem;line-height:1.6;text-align:left">
+        Harness 最佳实践总结<br>
+        失败模式知识库<br>
+        可复用的检查清单<br>
+        社区共建经验共享
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="display:flex;align-items:center;gap:40px;margin-top:16px">
+    <div class="glow-ring"><i class="fas fa-seedling" style="font-size:2rem;color:#FF6B35"></i></div>
+    <div class="t-body c-white">
+      做 <span class="c-accent bold">Harness</span> 不一定要从零开发 Agent<br>
+      用一个 <span class="c-amber bold">Skill</span> 约束 Agent 把垂直工作做好<br>
+      <span class="c-coral bold">也是在实践 Harness</span>
+    </div>
+    <div class="glow-ring" style="animation-delay:.5s"><i class="fas fa-star" style="font-size:2rem;color:#F4A261"></i></div>
+  </div>
+
+  <div class="anim-item t-body c-gray" style="margin-top:20px">
+    <i class="fas fa-quote-left c-accent"></i>
+    把一次复杂的内容生产任务拆成有流程、有状态、有检查点、有自检、有恢复机制的工程系统
+    <i class="fas fa-quote-right c-accent"></i>
+  </div>
+  <div class="anim-item t-sm c-accent" style="margin-top:10px">
+    <i class="fas fa-heart"></i> 这就是 Harness 最核心的价值 <i class="fas fa-heart"></i>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:8px">
+    视频教程完整演示：从一封邮件发出后的 600 毫秒 → 13 个章节、100+ 细粒度步骤、完整视觉演示
+  </div>
+</div>
+
+<!-- End of all slides -->
+
+<!--
+  Harness Practice: Let AI Agent Automatically Create Knowledge Explanation Videos
+  Generated as a PPT-style single-page carousel presentation
+  Font Awesome 6.4.0 | Warm color scheme (Orange #FF6B35, Amber #F4A261, Coral #E76F51)
+  Dark background #0F0E17 | Light text #FFFFFE
+  Animation classes: anim-item (with .show trigger via CSS transition)
+  Includes animation reset fix (DOM node cloning) for cross-slide animation re-trigger
+-->
+
+</div><!-- /slide-container -->
+
+<!-- Navigation -->
+<div class="nav-hint">
+  <i class="fas fa-keyboard"></i> 键盘 ← → 或空格翻页
+  <span style="margin-left:12px"><i class="fas fa-mouse"></i> 滚轮翻页</span>
+  <span style="margin-left:12px"><i class="fas fa-mobile-alt"></i> 左右滑动</span>
+</div>
+<div class="slide-indicator" id="dots"></div>
+
+<script>
+(function(){
+
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+// Build dots
+const dotsContainer = document.getElementById('dots');
+for (let i = 0; i < total; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  if (i === 0) d.classList.add('active');
+  dotsContainer.appendChild(d);
+}
+
+function animateProgressBars(slide) {
+  slide.querySelectorAll('.progress-fill').forEach(bar => {
+    const w = bar.dataset.width || '0%';
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = w; }, 600);
+  });
+}
+
+// Animation reset: clone nodes to force CSS animation re-trigger
+function resetAnimations(slide) {
+  slide.querySelectorAll('.anim-item, .an').forEach(function(item) {
+    var clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+}
+
+function go(n) {
+  if (n < 0 || n >= total || n === cur) return;
+
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.anim-item').forEach(e => e.classList.remove('show'));
+
+  cur = n;
+
+  resetAnimations(slides[cur]);
+
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.anim-item').forEach((e, i) => {
+    setTimeout(() => e.classList.add('show'), 200 + i * 260);
+  });
+  animateProgressBars(slides[cur]);
+
+  // Update dots
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === cur);
+  });
+}
+
+// Initial slide animation
+slides[0].querySelectorAll('.anim-item').forEach((e, i) => {
+  setTimeout(() => e.classList.add('show'), 400 + i * 300);
+});
+setTimeout(() => animateProgressBars(slides[0]), 800);
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+    e.preventDefault(); go(cur + 1);
+  } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+    e.preventDefault(); go(cur - 1);
+  } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+  else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+});
+
+// Touch
+let tx = 0, ty = 0;
+document.addEventListener('touchstart', e => {
+  tx = e.changedTouches[0].screenX;
+  ty = e.changedTouches[0].screenY;
+});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - tx;
+  const dy = e.changedTouches[0].screenY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    dx < 0 ? go(cur + 1) : go(cur - 1);
+  }
+});
+
+// Wheel
+let wc = false;
+document.addEventListener('wheel', e => {
+  if (wc) return;
+  wc = true;
+  setTimeout(() => wc = false, 800);
+  e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+});
+
+// Floating particles
+function createParticles(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const colors = [
+    'rgba(255,107,53,.35)',
+    'rgba(244,162,97,.3)',
+    'rgba(231,111,81,.25)',
+    'rgba(46,196,182,.25)'
+  ];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 8 + 4;
+    p.style.cssText = [
+      'width:' + size + 'px',
+      'height:' + size + 'px',
+      'left:' + Math.random() * 100 + '%',
+      'background:' + colors[Math.floor(Math.random() * colors.length)],
+      'animation-duration:' + (Math.random() * 6 + 6) + 's',
+      'animation-delay:' + (Math.random() * 6) + 's'
+    ].join(';');
+    container.appendChild(p);
+  }
+}
+createParticles('p0');
+createParticles('p10');
+createParticles('p11');
+
+})();
+</script>
+
+</body>
+</html>
