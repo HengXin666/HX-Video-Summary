@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Hooks 深度解析</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --coral: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --teal: #2EC4B6;
+  --red: #E71D36;
+  --purple: #7F5AF0;
+}
+
+/* Slide container */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:44px 70px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Deco elements */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-pink{background:radial-gradient(circle,rgba(255,107,53,.18),transparent)}
+.deco-peach{background:radial-gradient(circle,rgba(244,162,97,.14),transparent)}
+.deco-lav{background:radial-gradient(circle,rgba(127,90,240,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.12),transparent)}
+
+/* Floating particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Grid background */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.6}
+
+/* Typography */
+.t-hero{font-size:5rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:4rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:3rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.6rem;font-weight:400;line-height:1.65;text-align:center}
+.t-sm{font-size:1.2rem;font-weight:400;line-height:1.5;text-align:center}
+.t-sub{font-size:1.45rem;font-weight:600;line-height:1.5;text-align:center}
+
+/* Colors */
+.c-accent{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-red{color:#E71D36}.c-teal{color:#2EC4B6}.c-purple{color:#7F5AF0}
+.c-gray{color:#A7A9BE}.c-white{color:#FFFFFE}.c-dark{color:#FFFFFE}
+
+/* BG highlights */
+.bg-accent{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-teal{background:rgba(46,196,182,.15);padding:5px 18px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.12);padding:5px 18px;border-radius:10px}
+
+.ul-accent{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-red{text-decoration:underline;text-decoration-color:#E71D36;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:18px auto}
+
+/* Layouts */
+.two-col{display:flex;gap:32px;width:92%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;border-radius:0 20px 20px 0;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+
+/* Flow steps */
+.flow{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.15);padding:8px 16px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;position:relative;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35;font-size:1.3rem}
+
+/* Pulse */
+.pulse{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+
+/* VS */
+.vs-wrap{display:flex;gap:36px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:32px 24px;border-radius:18px;text-align:center;position:relative;overflow:hidden}
+.vs-left{background:rgba(231,29,54,.04);border:1px solid rgba(231,29,54,.15)}
+.vs-right{background:rgba(46,196,182,.04);border:1px solid rgba(46,196,182,.15)}
+.vs-mid{font-size:3rem;font-weight:900;color:#FF6B35}
+
+/* Gradient text */
+.concept-word{font-size:5.5rem;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.final-word{font-size:4rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#E71D36,#FF6B35,#F4A261);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:8px}
+
+/* Shape grid */
+.shape-grid{display:flex;gap:20px;margin:14px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-weight:900;color:#fff;transition:transform .3s}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:90px;height:90px;font-size:1.7rem}
+.sh-lg{width:120px;height:120px;font-size:1.9rem}
+.sc-accent{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.sc-amber{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sc-purple{background:linear-gradient(135deg,#7F5AF0,#9B5DE5)}
+.sc-teal{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* Mini grid */
+.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:88%;max-width:1060px}
+.mini-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:88%;max-width:900px}
+.mini-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:88%;max-width:1100px}
+.mini-card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 14px;text-align:center;border:2px solid rgba(255,107,53,.15);box-shadow:0 4px 16px rgba(255,107,53,.08);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.mini-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.2)}
+
+/* Icon badge */
+.icon-badge{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;font-size:1.8rem}
+.ib-accent{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.08));color:#FF6B35}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(244,162,97,.08));color:#F4A261}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.2),rgba(231,111,81,.08));color:#E76F51}
+.ib-teal{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.08));color:#2EC4B6}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.2),rgba(231,29,54,.08));color:#E71D36}
+.ib-purple{background:linear-gradient(135deg,rgba(127,90,240,.2),rgba(127,90,240,.08));color:#7F5AF0}
+
+/* Progress bar */
+.progress-bar{width:100%;height:8px;background:rgba(255,107,53,.15);border-radius:4px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease}
+.pf-accent{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#E9C46A,#F4A261)}
+.pf-teal{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+.pf-red{background:linear-gradient(90deg,#E71D36,#FF6B35)}
+.pf-purple{background:linear-gradient(90deg,#9B5DE5,#7F5AF0)}
+
+/* VS detail items */
+.vs-detail{display:flex;flex-direction:column;gap:8px;margin-top:12px;width:100%}
+.vs-item{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;padding:6px 10px;border-radius:8px}
+.vs-item-bad{background:rgba(231,29,54,.1);color:#E71D36}
+.vs-item-good{background:rgba(46,196,182,.1);color:#2EC4B6}
+
+/* Tag pill */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-accent{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-teal{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+.tag-purple{background:rgba(127,90,240,.15);color:#7F5AF0}
+
+/* Glow ring */
+.glow-ring{width:130px;height:130px;border-radius:50%;border:4px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* ============================================
+   Keyframe Animation Definitions
+   Used throughout the presentation for
+   continuous background motion effects
+   ============================================ */
+
+/* Conn line animation */
+.conn-line{stroke-dasharray:6 4;animation:dash-move 1.5s linear infinite}
+@keyframes dash-move{to{stroke-dashoffset:-20}}
+
+/* Gradient border */
+.gradient-border{position:relative;border-radius:20px;padding:3px}
+.gradient-border::before{content:'';position:absolute;inset:0;border-radius:20px;padding:3px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51,#2EC4B6);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:border-rotate 4s linear infinite}
+@keyframes border-rotate{0%{background:linear-gradient(0deg,#FF6B35,#F4A261,#E76F51,#2EC4B6)}25%{background:linear-gradient(90deg,#FF6B35,#F4A261,#E76F51,#2EC4B6)}50%{background:linear-gradient(180deg,#FF6B35,#F4A261,#E76F51,#2EC4B6)}75%{background:linear-gradient(270deg,#FF6B35,#F4A261,#E76F51,#2EC4B6)}100%{background:linear-gradient(360deg,#FF6B35,#F4A261,#E76F51,#2EC4B6)}}
+
+/* Page badge */
+.page-badge{position:absolute;top:20px;left:30px;font-size:.85rem;color:rgba(255,107,53,.45);font-weight:700;letter-spacing:2px;z-index:10}
+.source-badge{position:absolute;top:20px;right:30px;font-size:.75rem;color:rgba(167,169,190,.35);font-weight:600;z-index:10}
+
+/* Slide number indicator */
+.slide-indicator{position:fixed;bottom:20px;right:30px;z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.25);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* ============================================
+   Background Gradients
+   Each slide uses a different radial gradient
+   position for visual variety
+   ============================================ */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 30% 60%,#1A1932 0%,#0F0E17 100%)}
+.bg-7{background:radial-gradient(ellipse at 70% 40%,#1A1932 0%,#0F0E17 100%)}
+
+/* warn-box / success-box */
+.warn-box{padding:14px 22px;border-radius:12px;background:rgba(231,29,54,.06);border-left:4px solid #E71D36;margin:8px 0;text-align:left;max-width:800px}
+.success-box{padding:14px 22px;border-radius:12px;background:rgba(46,196,182,.06);border-left:4px solid #2EC4B6;margin:8px 0;text-align:left;max-width:800px}
+.icon-text{display:flex;align-items:center;gap:8px;margin:4px 0}
+
+/* Info list */
+.info-list{text-align:left;max-width:800px;width:90%}
+.info-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,107,53,.1)}
+.info-item:last-child{border-bottom:none}
+
+/* Tier card */
+.tier-row{display:flex;gap:20px;width:90%;max-width:1100px;flex-wrap:wrap;justify-content:center}
+.tier-card{flex:1;min-width:220px;max-width:260px;background:rgba(26,25,50,.5);border-radius:16px;padding:24px 16px;text-align:center;border:2px solid rgba(255,107,53,.1);display:flex;flex-direction:column;align-items:center;gap:10px;transition:transform .3s,box-shadow .3s}
+.tier-card:hover{transform:translateY(-6px);box-shadow:0 12px 36px rgba(255,107,53,.2)}
+.tier-card .tier-icon{font-size:2.5rem;margin-bottom:4px}
+.tier-card .tier-title{font-size:1.3rem;font-weight:800}
+.tier-card .tier-desc{font-size:.95rem;color:#A7A9BE;line-height:1.4}
+
+/* Arrow pulse */
+.arrow-pulse{animation:arrow-bounce 1.2s ease-in-out infinite}
+@keyframes arrow-bounce{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+
+/* shimmer */
+.shimmer{position:relative;overflow:hidden}
+.shimmer::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);animation:shim 2.5s infinite}
+@keyframes shim{100%{left:100%}}
+
+/* flow right animation for arrows */
+.flow-right-anim{animation:flowRight 1.8s ease-in-out infinite}
+@keyframes flowRight{0%,100%{transform:translateX(0);opacity:.6}50%{transform:translateX(8px);opacity:1}}
+
+/* floating up/down */
+.float-up{animation:floatUp 3s ease-in-out infinite}
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* glow expand */
+.glow-expand{animation:glowExpand 2.5s ease-in-out infinite}
+@keyframes glowExpand{0%,100%{box-shadow:0 0 8px rgba(255,107,53,.2)}50%{box-shadow:0 0 24px rgba(255,107,53,.5)}}
+
+/* rotate slow */
+.rotate-slow{animation:rotateSlow 20s linear infinite}
+@keyframes rotateSlow{to{transform:rotate(360deg)}}
+
+/* scale in */
+.scale-in{animation:scaleIn .6s cubic-bezier(.25,.46,.45,.94) forwards}
+@keyframes scaleIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* step numbers */
+.step-num{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;color:#fff;flex-shrink:0}
+
+/* final section styles */
+.final-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;width:88%;max-width:1050px;margin-top:10px}
+.final-card{background:rgba(26,25,50,.4);border-radius:16px;padding:24px 16px;text-align:center;border:1px solid rgba(255,107,53,.12);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s}
+.final-card:hover{transform:translateY(-4px)}
+.final-card .fc-icon{font-size:2.2rem;margin-bottom:4px}
+.final-card .fc-num{font-size:2rem;font-weight:900;color:#FF6B35}
+.final-card .fc-title{font-size:1.1rem;font-weight:700;line-height:1.3}
+.final-card .fc-desc{font-size:.88rem;color:#A7A9BE;line-height:1.35}
+
+.future-list{text-align:left;max-width:800px;width:88%}
+.future-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-radius:12px;margin:6px 0;background:rgba(26,25,50,.3);transition:transform .3s,background .3s}
+.future-item:hover{transform:translateX(6px);background:rgba(255,107,53,.06)}
+.future-item .fi-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:#fff;flex-shrink:0}
+.future-item .fi-content{flex:1}
+.future-item .fi-title{font-size:1.15rem;font-weight:700;margin-bottom:2px}
+.future-item .fi-desc{font-size:.92rem;color:#A7A9BE;line-height:1.35}
+
+/* Icon text row for inline icon usage */
+.icon-row{display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap;margin:8px 0}
+
+/* Divider with icon */
+.divider-icon{display:flex;align-items:center;gap:14px;margin:10px 0}
+.divider-icon::before,.divider-icon::after{content:'';flex:1;height:2px;background:linear-gradient(90deg,transparent,rgba(255,107,53,.2),transparent)}
+
+/* Highlight card for special emphasis */
+.highlight-card{background:rgba(26,25,50,.3);border-radius:14px;padding:16px 20px;border:1px solid rgba(255,107,53,.1);margin:8px 0;max-width:800px;text-align:left}
+
+/* Center diagram layout */
+.center-diagram{display:flex;align-items:center;justify-content:center;gap:0;margin:10px 0}
+
+/* Badge counter */
+.badge-counter{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#E76F51);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:900;color:#fff;flex-shrink:0}
+
+/* responsive */
+@media(max-width:768px){
+  .slide{padding:30px 20px}
+  .t-hero{font-size:2.8rem}.t-huge{font-size:2.4rem}.t-big{font-size:1.8rem}
+  .t-mid{font-size:1.4rem}.t-body{font-size:1.15rem}.t-sub{font-size:1.05rem}
+  .two-col{flex-direction:column}.vs-wrap{flex-direction:column}
+  .mini-grid{grid-template-columns:repeat(2,1fr)}
+  .mini-grid-3{grid-template-columns:repeat(2,1fr)}
+  .final-grid{grid-template-columns:1fr}.tier-row{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ============ Slide 0: 封面 ============ -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles0"></div>
+  <div class="deco deco-pink" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-peach" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+  <div class="page-badge">01 / 07</div>
+
+  <div class="anim-item" style="margin-bottom:6px">
+    <div style="font-size:.9rem;color:#A7A9BE;letter-spacing:4px;opacity:.6">来源视频</div>
+    <div style="font-size:.85rem;color:rgba(255,107,53,.5);margin-top:2px">
+      Skill触发不稳定，CLAUDE.md劝不听？Hooks了解一下&nbsp;<span style="opacity:.4">🪝</span>
+    </div>
+    <div style="font-size:.75rem;color:rgba(167,169,190,.25);margin-top:1px">Claude Code 科普系列</div>
+  </div>
+  <div class="anim-item" style="margin-bottom:18px">
+    <svg width="200" height="110" viewBox="0 0 200 110">
+      <defs>
+        <linearGradient id="g0" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FF6B35"/>
+          <stop offset="100%" style="stop-color:#E76F51"/>
+        </linearGradient>
+      </defs>
+      <!-- Hook shape -->
+      <path d="M60,20 Q60,60 60,80 Q60,100 90,100 Q110,100 110,85 Q110,70 100,65 Q90,60 85,70 Q80,80 90,90" fill="none" stroke="url(#g0)" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="60" cy="20" r="8" fill="none" stroke="#F4A261" stroke-width="3"/>
+      <!-- Code bracket -->
+      <text x="130" y="50" font-size="30" font-weight="900" fill="rgba(255,107,53,.6)" font-family="monospace">&lt;/&gt;</text>
+      <text x="125" y="85" font-size="14" font-weight="700" fill="#A7A9BE">Hook</text>
+      <!-- Small shield -->
+      <rect x="18" y="36" width="24" height="28" rx="4" fill="rgba(46,196,182,.15)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="30" y="55" text-anchor="middle" font-size="12" fill="#2EC4B6">&#10003;</text>
+    </svg>
+  </div>
+  <div class="anim-item t-hero c-dark">Claude Code <span class="c-accent bold">Hooks</span></div>
+  <div class="anim-item t-mid c-dark" style="margin-top:8px">深 度 解 析</div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-sub c-gray">为什么CLAUDE.md规则靠不住，Hooks如何成为AI编程的安全网</div>
+  <div class="anim-item" style="margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+    <span class="tag tag-accent"><i class="fas fa-shield-halved"></i>&nbsp;安全网</span>
+    <span class="tag tag-amber"><i class="fas fa-bolt"></i>&nbsp;按需注入</span>
+    <span class="tag tag-teal"><i class="fas fa-code"></i>&nbsp;Claude Code</span>
+    <span class="tag tag-purple"><i class="fas fa-robot"></i>&nbsp;AI编程</span>
+  </div>
+</div>
+
+<!-- ============ Slide 1: 核心问题 ============ -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-pink" style="width:400px;height:400px;top:-130px;left:-130px"></div>
+  <div class="page-badge">02 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold" style="margin-bottom:14px">CLAUDE.md 规则</div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:8px">为什么总被 AI "忘记"？</div>
+  <div class="anim-item line" style="margin-bottom:10px"></div>
+
+  <div class="anim-item mini-grid-3" style="margin-bottom:16px">
+    <!-- Problem 1 -->
+    <div class="mini-card shimmer">
+      <div class="icon-badge ib-red"><i class="fas fa-brain"></i></div>
+      <div style="font-size:1.2rem;font-weight:800">指令<span class="c-red">上限</span>效应</div>
+      <div style="font-size:.95rem;color:#A7A9BE;line-height:1.4">
+        大模型仅能兼顾约<span class="c-accent bold">100条</span>指令。<br>
+        复杂代码任务占<span class="c-red bold">80条</span>，<br>
+        仅剩<span class="c-amber bold">20条</span>给全局规则。
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-red" data-width="78%"></div></div>
+      <div class="tag tag-red"><i class="fas fa-exclamation-triangle"></i>&nbsp;选择性遗忘</div>
+    </div>
+    <!-- Problem 2 -->
+    <div class="mini-card shimmer">
+      <div class="icon-badge ib-amber"><i class="fas fa-map-pin"></i></div>
+      <div style="font-size:1.2rem;font-weight:800">位置<span class="c-amber">局部性</span></div>
+      <div style="font-size:.95rem;color:#A7A9BE;line-height:1.4">
+        CLAUDE.md 在上下文<span class="c-accent bold">最前端</span>，<br>
+        对话在<span class="c-amber bold">最后面</span>。<br>
+        越靠前越被"垃圾信息化"。
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="88%"></div></div>
+      <div class="tag tag-amber"><i class="fas fa-clock"></i>&nbsp;距离衰减</div>
+    </div>
+    <!-- Problem 3 -->
+    <div class="mini-card shimmer">
+      <div class="icon-badge ib-coral"><i class="fas fa-circle-exclamation"></i></div>
+      <div style="font-size:1.2rem;font-weight:800">规则<span class="c-coral">膨胀</span>循环</div>
+      <div style="font-size:.95rem;color:#A7A9BE;line-height:1.4">
+        规则越多 → AI越难兼顾 →<br>
+        越想加更多规则 →<br>
+        <span class="c-red bold">智商下降</span>+规则冲突。
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-accent" data-width="68%"></div></div>
+      <div class="tag tag-accent"><i class="fas fa-arrows-spin"></i>&nbsp;恶性循环</div>
+    </div>
+  </div>
+
+  <!-- Context distance visualization -->
+  <div class="anim-item" style="margin:10px 0">
+    <svg width="540" height="80" viewBox="0 0 540 80">
+      <defs>
+        <marker id="arrowFade" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+          <polygon points="0 0,7 2.5,0 5" fill="#A7A9BE"/>
+        </marker>
+      </defs>
+      <!-- Memory slot at far left -->
+      <rect x="15" y="18" width="90" height="44" rx="8" fill="rgba(231,29,54,.08)" stroke="#E71D36" stroke-width="1.5"/>
+      <text x="60" y="36" text-anchor="middle" fill="#E71D36" font-size="11" font-weight="700">CLAUDE.md</text>
+      <text x="60" y="52" text-anchor="middle" fill="#E71D36" font-size="9">规则文件</text>
+      <!-- Middle tons of chat -->
+      <rect x="120" y="18" width="240" height="44" rx="8" fill="rgba(167,169,190,.03)" stroke="#A7A9BE" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="240" y="42" text-anchor="middle" fill="#A7A9BE" font-size="11">...大量对话 · Skill · 代码生成...</text>
+      <line x1="108" y1="40" x2="117" y2="40" stroke="#A7A9BE" stroke-width="1.5" marker-end="url(#arrowFade)"/>
+      <!-- Current instruction -->
+      <rect x="375" y="18" width="90" height="44" rx="8" fill="rgba(46,196,182,.08)" stroke="#2EC4B6" stroke-width="2"/>
+      <text x="420" y="36" text-anchor="middle" fill="#2EC4B6" font-size="11" font-weight="700">当前操作</text>
+      <text x="420" y="52" text-anchor="middle" fill="#2EC4B6" font-size="9">bash执行</text>
+      <line x1="363" y1="40" x2="372" y2="40" stroke="#A7A9BE" stroke-width="1.5" marker-end="url(#arrowFade)"/>
+      <!-- Distance label -->
+      <text x="230" y="74" text-anchor="middle" fill="#E71D36" font-size="10" opacity=".7">← 距离太远，早已被遗忘 →</text>
+    </svg>
+  </div>
+
+  <div class="anim-item warn-box">
+    <div class="icon-text" style="font-size:1.1rem;font-weight:700;color:#E71D36">
+      <i class="fas fa-lightbulb"></i> 关键洞察
+    </div>
+    <div style="font-size:1rem;color:#A7A9BE;margin-top:4px">
+      上下文已到<span class="c-accent">百万级tokens</span>，把规则放在最前面 ≈ 把安全须知放在1000页说明书的第一页——<span class="c-amber bold">等用时早就忘了</span>
+    </div>
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-top:6px;opacity:.5">
+    人类写文章尚且遵循"就近原则"，大模型亦然——越靠近当前位置的内容越受关注
+  </div>
+</div>
+
+<!-- ============ Slide 2: Hook机制原理 ============ -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-lav" style="width:500px;height:500px;bottom:-150px;right:-150px"></div>
+  <div class="page-badge">03 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold">Hook 机制原理</div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:4px">"按需注入"的智能安全网</div>
+  <div class="anim-item line"></div>
+
+  <!-- Context visualization SVG -->
+  <div class="anim-item" style="margin:8px 0">
+    <svg width="560" height="120" viewBox="0 0 560 120">
+      <defs>
+        <linearGradient id="gcOld" x1="0%" y1="0%" x2="0%"><stop offset="0%" style="stop-color:#E71D36;stop-opacity:.2"/><stop offset="100%" style="stop-color:#E71D36;stop-opacity:.04"/></linearGradient>
+        <linearGradient id="gcNew" x1="0%" y1="0%" x2="0%"><stop offset="0%" style="stop-color:#2EC4B6;stop-opacity:.25"/><stop offset="100%" style="stop-color:#2EC4B6;stop-opacity:.06"/></linearGradient>
+      </defs>
+      <!-- Context bar - old rule position -->
+      <rect x="10" y="10" width="80" height="100" rx="8" fill="url(#gcOld)" stroke="#E71D36" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="50" y="48" text-anchor="middle" fill="#E71D36" font-size="11" font-weight="700">系统规则</text>
+      <text x="50" y="64" text-anchor="middle" fill="#E71D36" font-size="11" font-weight="700">CLAUDE.md</text>
+      <text x="50" y="80" text-anchor="middle" fill="#E71D36" font-size="10">Memory</text>
+      <text x="50" y="98" text-anchor="middle" fill="#E71D36" font-size="9" opacity=".7">太远了!</text>
+      <!-- Arrow from old context to middle -->
+      <line x1="95" y1="60" x2="135" y2="60" stroke="#E71D36" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <!-- Chat history -->
+      <rect x="140" y="10" width="180" height="100" rx="8" fill="rgba(167,169,190,.04)" stroke="#A7A9BE" stroke-width="1"/>
+      <text x="230" y="42" text-anchor="middle" fill="#A7A9BE" font-size="11">...大量聊天记录...</text>
+      <text x="230" y="58" text-anchor="middle" fill="#A7A9BE" font-size="11">代码生成 · 讨论 · Skill调用</text>
+      <text x="230" y="74" text-anchor="middle" fill="#A7A9BE" font-size="10" opacity=".6">几K tokens</text>
+      <!-- Current instruction -->
+      <rect x="335" y="10" width="100" height="100" rx="8" fill="url(#gcNew)" stroke="#2EC4B6" stroke-width="2"/>
+      <text x="385" y="42" text-anchor="middle" fill="#2EC4B6" font-size="12" font-weight="700">当前指令</text>
+      <text x="385" y="60" text-anchor="middle" fill="#2EC4B6" font-size="11">正在执行</text>
+      <text x="385" y="78" text-anchor="middle" fill="#2EC4B6" font-size="10">bash操作</text>
+      <!-- Hook injection arrow -->
+      <line x1="340" y1="60" x2="315" y2="60" stroke="#FF6B35" stroke-width="2.5" marker-end="url(#arrowHook)"/>
+      <defs><marker id="arrowHook" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto"><polygon points="8 0,0 3,8 6" fill="#FF6B35"/></marker></defs>
+      <!-- Hook label -->
+      <rect x="445" y="32" width="105" height="56" rx="10" fill="rgba(255,107,53,.1)" stroke="#FF6B35" stroke-width="2"/>
+      <text x="498" y="54" text-anchor="middle" fill="#FF6B35" font-size="13" font-weight="900">HOOK</text>
+      <text x="498" y="72" text-anchor="middle" fill="#F4A261" font-size="10" font-weight="700">注入到此!</text>
+    </svg>
+  </div>
+
+  <!-- 注入时机对比示意图 -->
+  <div class="anim-item" style="margin:8px 0">
+    <svg width="580" height="70" viewBox="0 0 580 70">
+      <defs>
+        <linearGradient id="ginj" x1="0%" x2="100%">
+          <stop offset="0%" style="stop-color:#E71D36;stop-opacity:.15"/>
+          <stop offset="100%" style="stop-color:#2EC4B6;stop-opacity:.2"/>
+        </linearGradient>
+      </defs>
+      <!-- Timeline -->
+      <line x1="40" y1="45" x2="540" y2="45" stroke="#A7A9BE" stroke-width="2" opacity=".3"/>
+      <!-- Rule point -->
+      <circle cx="60" cy="45" r="16" fill="rgba(231,29,54,.15)" stroke="#E71D36" stroke-width="2"/>
+      <text x="60" y="41" text-anchor="middle" fill="#E71D36" font-size="10" font-weight="700">规则</text>
+      <text x="60" y="53" text-anchor="middle" fill="#E71D36" font-size="8">注入</text>
+      <text x="60" y="68" text-anchor="middle" fill="#A7A9BE" font-size="9">上下文开始</text>
+      <!-- Long gap -->
+      <line x1="76" y1="45" x2="470" y2="45" stroke="#A7A9BE" stroke-width="1" stroke-dasharray="8 5" opacity=".4"/>
+      <!-- Hook point -->
+      <circle cx="485" cy="45" r="16" fill="rgba(255,107,53,.15)" stroke="#FF6B35" stroke-width="2.5"/>
+      <text x="485" y="41" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">Hook</text>
+      <text x="485" y="53" text-anchor="middle" fill="#FF6B35" font-size="8">注入</text>
+      <text x="485" y="68" text-anchor="middle" fill="#FF6B35" font-size="9">执行时刻!</text>
+      <!-- Labels -->
+      <rect x="100" y="10" width="160" height="22" rx="6" fill="rgba(231,29,54,.06)"/>
+      <text x="180" y="25" text-anchor="middle" fill="#E71D36" font-size="10">← 遗忘区间（几K~几十K tokens）→</text>
+      <rect x="350" y="10" width="150" height="22" rx="6" fill="rgba(46,196,182,.06)"/>
+      <text x="425" y="25" text-anchor="middle" fill="#2EC4B6" font-size="10">✓ 精准介入点</text>
+    </svg>
+  </div>
+
+  <!-- Comparison: Hook vs Skill vs Rule -->
+  <div class="anim-item vs-wrap" style="max-width:1150px">
+    <div class="vs-box vs-left shine">
+      <i class="fas fa-file-lines" style="font-size:2.5rem;color:#E71D36;margin-bottom:8px"></i>
+      <div class="c-red bold" style="font-size:1.6rem">CLAUDE.md 规则</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 常驻上下文最前端</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 一直占用token</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 距离远容易被忘</div>
+        <div class="vs-item vs-item-bad"><i class="fas fa-times"></i> 规则膨胀相互冲突</div>
+      </div>
+    </div>
+    <div class="vs-mid">VS</div>
+    <div class="vs-box vs-right shine">
+      <i class="fas fa-code-branch" style="font-size:2.5rem;color:#2EC4B6;margin-bottom:8px"></i>
+      <div class="c-teal bold" style="font-size:1.6rem">Hook 钩子</div>
+      <div class="vs-detail">
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 执行时即时注入</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 按需加载不占token</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 最新位置高关注度</div>
+        <div class="vs-item vs-item-good"><i class="fas fa-check"></i> 触发即提醒精准干预</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item success-box" style="margin-top:12px">
+    <div class="icon-text" style="font-size:1rem;font-weight:700;color:#2EC4B6">
+      <i class="fas fa-key"></i> 本质
+    </div>
+    <div style="font-size:.95rem;color:#A7A9BE;margin-top:4px">
+      Hook = <span class="c-accent bold">在执行点附近重新注入规则</span>，利用位置局部性让AI在犯错瞬间被提醒："我刚才是不是做错了？"
+    </div>
+  </div>
+
+  <!-- Hook vs Skill 补充说明 -->
+  <div class="anim-item" style="margin-top:8px;max-width:850px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:.9rem;color:#A7A9BE">
+      <div style="background:rgba(46,196,182,.05);border-radius:10px;padding:14px 16px;border:1px solid rgba(46,196,182,.12)">
+        <span class="c-teal bold" style="font-size:1rem"><i class="fas fa-lightbulb"></i> Skill</span>
+        <div style="margin-top:4px">AI主动感知需求，<span class="c-teal">自己决定调用</span>。像工具箱——需要时才打开使用，用完了就释放。</div>
+      </div>
+      <div style="background:rgba(255,107,53,.05);border-radius:10px;padding:14px 16px;border:1px solid rgba(255,107,53,.12)">
+        <span class="c-accent bold" style="font-size:1rem"><i class="fas fa-code-branch"></i> Hook</span>
+        <div style="margin-top:4px">AI<span class="c-accent">不知道其存在</span>，直到行为触发才会看到提醒。像安全网——平时隐形，犯错瞬间兜住。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Slide 3: 四种层级体系 ============ -->
+<div class="slide bg-4" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-peach" style="width:450px;height:450px;top:50%;left:50%;margin-top:-225px;margin-left:-225px;opacity:.5"></div>
+  <div class="page-badge">04 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold">Hook 四层级体系</div>
+  <div class="anim-item t-sub c-gray" style="margin-bottom:12px">不同风险等级，不同拦截策略</div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item tier-row" style="margin-bottom:10px">
+    <!-- Tier 1: 阻断 -->
+    <div class="tier-card" style="border-top:4px solid #E71D36">
+      <div class="tier-icon c-red"><i class="fas fa-hand"></i></div>
+      <div class="tier-title c-red">事前阻断型</div>
+      <div class="tag tag-red" style="margin:4px 0"><i class="fas fa-shield-halved"></i>&nbsp;破坏性操作</div>
+      <div class="tier-desc">
+        拦截<span class="c-red bold">rm删除</span>、敏感bash等。<br>
+        含<span class="c-teal bold">bypass</span>标记可绕过。<br>
+        不能完全堵死——逼急了AI会绕路。
+      </div>
+    </div>
+    <!-- Tier 2: 提醒 -->
+    <div class="tier-card" style="border-top:4px solid #F4A261">
+      <div class="tier-icon c-amber"><i class="fas fa-bell"></i></div>
+      <div class="tier-title c-amber">事后提醒型</div>
+      <div class="tag tag-amber" style="margin:4px 0"><i class="fas fa-paint-brush"></i>&nbsp;风格约束</div>
+      <div class="tier-desc">
+        建议<span class="c-accent bold">uv run python</span>等。<br>
+        不阻断执行，追加友好提示。<br>
+        适合非破坏性体验优化。
+      </div>
+    </div>
+    <!-- Tier 3: Submit -->
+    <div class="tier-card" style="border-top:4px solid #7F5AF0">
+      <div class="tier-icon c-purple"><i class="fas fa-paper-plane"></i></div>
+      <div class="tier-title c-purple">User Submit</div>
+      <div class="tag tag-purple" style="margin:4px 0"><i class="fas fa-eye"></i>&nbsp;环境感知</div>
+      <div class="tier-desc">
+        注入<span class="c-purple bold">git状态</span>、时间等。<br>
+        对用户透明，AI可见。<br>
+        让AI始终感知项目上下文。
+      </div>
+    </div>
+    <!-- Tier 4: Stop -->
+    <div class="tier-card" style="border-top:4px solid #2EC4B6">
+      <div class="tier-icon c-teal"><i class="fas fa-stop"></i></div>
+      <div class="tier-title c-teal">Stop Hook</div>
+      <div class="tag tag-teal" style="margin:4px 0"><i class="fas fa-compress"></i>&nbsp;回复精简</div>
+      <div class="tier-desc">
+        AI回复过长时触发<span class="c-teal bold">TLDR</span>。<br>
+        配合Skill实现质量审查。<br>
+        防无限循环需双兜底机制。
+      </div>
+    </div>
+  </div>
+
+  <!-- Design philosophy -->
+  <div class="anim-item warn-box" style="max-width:1000px">
+    <div class="icon-text" style="font-size:1.05rem;font-weight:700;color:#F4A261">
+      <i class="fas fa-scale-balanced"></i> 设计哲学：不可判定问题
+    </div>
+    <div style="font-size:.92rem;color:#A7A9BE;margin-top:4px;line-height:1.5">
+      Bash命令安全性检测本质上是<span class="c-accent bold">不可判定问题</span>（类似停机问题）。无法穷举所有危险命令变体（<code>rm</code>、<code>sudo rm</code>、base64编码执行、脚本文件间接调用...）。
+      与其<span class="c-red">机械封堵</span>逼AI绕路，不如<span class="c-teal bold">提醒+自觉</span>，给它退路它反而遵守规则。
+    </div>
+  </div>
+  <!-- Bypass mechanism explanation -->
+  <div class="anim-item success-box" style="max-width:1000px;margin-top:8px">
+    <div class="icon-text" style="font-size:1rem;font-weight:700;color:#2EC4B6">
+      <i class="fas fa-unlock-keyhole"></i> Bypass 绕过机制
+    </div>
+    <div style="font-size:.9rem;color:#A7A9BE;margin-top:4px;line-height:1.5">
+      在bash命令末尾添加 <code style="color:#FF6B35"># bypass</code> 注释即可绕过拦截。Hook检测到bypass标记后，理解为"AI已经确认风险，坚持执行"——类似于手机管家的<span class="c-amber">"我已知悉，继续访问"</span>。
+    </div>
+  </div>
+</div>
+
+<!-- ============ Slide 4: Hook + Skill 协同 ============ -->
+<div class="slide bg-5" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:400px;height:400px;top:-160px;right:-120px"></div>
+  <div class="page-badge">05 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold">Hook × Skill</div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:4px">协同效应：从被动提醒到主动引导</div>
+  <div class="anim-item line"></div>
+
+  <!-- Hook + Skill 工作流 SVG -->
+  <div class="anim-item" style="margin:8px 0">
+    <svg width="600" height="130" viewBox="0 0 600 130">
+      <defs>
+        <marker id="arRed" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#E71D36"/></marker>
+        <marker id="arOrange" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#FF6B35"/></marker>
+        <marker id="arGreen" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#2EC4B6"/></marker>
+      </defs>
+      <!-- Without Hook: Bad path -->
+      <rect x="10" y="8" width="100" height="34" rx="8" fill="rgba(231,29,54,.08)" stroke="#E71D36" stroke-width="1.5"/>
+      <text x="60" y="30" text-anchor="middle" fill="#E71D36" font-size="11" font-weight="700">AI裸写代码</text>
+      <line x1="112" y1="25" x2="135" y2="25" stroke="#E71D36" stroke-width="1.5" marker-end="url(#arRed)"/>
+      <rect x="140" y="8" width="100" height="34" rx="8" fill="rgba(231,29,54,.06)" stroke="#E71D36" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <text x="190" y="30" text-anchor="middle" fill="#E71D36" font-size="11">低质量输出</text>
+      <text x="190" y="56" text-anchor="middle" fill="#A7A9BE" font-size="9">← 无Hook路径（常态）</text>
+      <!-- Divider -->
+      <line x1="10" y1="68" x2="590" y2="68" stroke="#A7A9BE" stroke-width="1" opacity=".15"/>
+      <!-- With Hook: Good path -->
+      <rect x="10" y="80" width="100" height="34" rx="8" fill="rgba(255,107,53,.06)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="60" y="102" text-anchor="middle" fill="#FF6B35" font-size="11" font-weight="700">AI裸写代码</text>
+      <line x1="112" y1="97" x2="140" y2="97" stroke="#FF6B35" stroke-width="2" marker-end="url(#arOrange)"/>
+      <rect x="145" y="80" width="100" height="34" rx="8" fill="rgba(255,107,53,.1)" stroke="#FF6B35" stroke-width="2"/>
+      <text x="195" y="102" text-anchor="middle" fill="#FF6B35" font-size="11" font-weight="700">Hook拦截!</text>
+      <line x1="247" y1="97" x2="275" y2="97" stroke="#FF6B35" stroke-width="2" marker-end="url(#arOrange)"/>
+      <rect x="280" y="80" width="100" height="34" rx="8" fill="rgba(127,90,240,.08)" stroke="#7F5AF0" stroke-width="1.5"/>
+      <text x="330" y="102" text-anchor="middle" fill="#7F5AF0" font-size="11" font-weight="700">提醒加载Skill</text>
+      <line x1="382" y1="97" x2="410" y2="97" stroke="#7F5AF0" stroke-width="1.5" marker-end="url(#arGreen)"/>
+      <rect x="415" y="80" width="100" height="34" rx="8" fill="rgba(46,196,182,.08)" stroke="#2EC4B6" stroke-width="2"/>
+      <text x="465" y="102" text-anchor="middle" fill="#2EC4B6" font-size="11" font-weight="700">Skill规范输出</text>
+      <line x1="517" y1="97" x2="540" y2="97" stroke="#2EC4B6" stroke-width="1.5" marker-end="url(#arGreen)"/>
+      <rect x="545" y="80" width="40" height="34" rx="8" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="2"/>
+      <text x="565" y="102" text-anchor="middle" fill="#2EC4B6" font-size="12">✓</text>
+      <text x="565" y="128" text-anchor="middle" fill="#A7A9BE" font-size="9">高质量</text>
+    </svg>
+  </div>
+
+  <!-- Hook+Skill 组合表格 -->
+  <div class="anim-item mini-grid-2" style="margin:14px 0">
+    <div class="mini-card shimmer">
+      <div class="icon-badge ib-amber"><i class="fas fa-file-code"></i></div>
+      <div style="font-size:1.15rem;font-weight:800">Write Hook <span class="c-amber">+</span> <span class="c-teal">设计Skill</span></div>
+      <div style="font-size:.92rem;color:#A7A9BE;line-height:1.4">
+        检测到写HTML/CSS时自动提醒加载设计规范，避免"AI拉屎审美"
+      </div>
+      <div class="tag tag-amber"><i class="fas fa-star"></i>&nbsp;前端质量保障</div>
+    </div>
+    <div class="mini-card shimmer">
+      <div class="icon-badge ib-teal"><i class="fas fa-comment-dots"></i></div>
+      <div style="font-size:1.15rem;font-weight:800">Stop Hook <span class="c-teal">+</span> <span class="c-purple">TLDR Skill</span></div>
+      <div style="font-size:.92rem;color:#A7A9BE;line-height:1.4">
+        AI回复过长时自动触发精简，配合自定义TLDR规则生成针对性总结
+      </div>
+      <div class="tag tag-teal"><i class="fas fa-bolt"></i>&nbsp;信息效率提升</div>
+    </div>
+  </div>
+
+  <!-- Key insight box -->
+  <div class="anim-item success-box" style="max-width:850px">
+    <div class="icon-text" style="font-size:1.05rem;font-weight:700;color:#2EC4B6">
+      <i class="fas fa-lightbulb"></i> 核心技巧
+    </div>
+    <div style="font-size:.95rem;color:#A7A9BE;margin-top:4px;line-height:1.5">
+      Skill是AI<span class="c-accent">主动调用</span>（需要时才加载），Hook是<span class="c-amber">被动触发</span>（行为触发后才看到提醒）。
+      将两者结合：<span class="c-teal bold">Hook劫持操作 → 注入提醒 → AI调用Skill → 规范执行</span>，实现全自动质量控制闭环。
+    </div>
+  </div>
+
+  <!-- 更多Hook+Skill组合 -->
+  <div class="anim-item" style="margin-top:8px;max-width:900px">
+    <div style="font-size:.9rem;color:#A7A9BE;text-align:left;line-height:1.6">
+      <div class="icon-text" style="margin:4px 0"><i class="fas fa-check-circle c-teal"></i> <span><span class="c-amber bold">Submit Hook</span> + <span class="c-purple">代码审查Skill</span> — 每次提交前自动注入代码检查提示</span></div>
+      <div class="icon-text" style="margin:4px 0"><i class="fas fa-check-circle c-teal"></i> <span><span class="c-accent bold">Bash Hook</span> + <span class="c-red">安全检查Skill</span> — 执行shell命令前强制走安全评审</span></div>
+      <div class="icon-text" style="margin:4px 0"><i class="fas fa-check-circle c-teal"></i> <span><span class="c-purple bold">Edit Hook</span> + <span class="c-teal">格式化Skill</span> — 每次写文件时自动提醒代码风格规范</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Slide 5: 核心洞察总结 ============ -->
+<div class="slide bg-6" id="s5">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles5"></div>
+  <div class="deco deco-pink" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.45"></div>
+  <div class="page-badge">06 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold">核心洞察总结</div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:4px">Claude Code Hooks 的五大核心要义</div>
+  <div class="anim-item t-body c-gray" style="font-size:1rem;margin-bottom:4px;opacity:.7">
+    Hook不是"又一堆规则"，而是一种从根本上改变AI行为约束方式的架构设计
+  </div>
+  <div class="anim-item highlight-card" style="margin-bottom:6px">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div class="badge-counter">!</div>
+      <div style="font-size:.92rem;color:#A7A9BE;line-height:1.5">
+        传统的CLAUDE.md规则是<span class="c-red">"静态文档"</span>——写在开头，等着被遗忘。
+        Hook是<span class="c-teal bold">"动态守护"</span>——在需要时出现，精准提醒。
+        这不是多了一种约束方式，而是一种<span class="c-accent bold">范式的转变</span>。
+      </div>
+    </div>
+  </div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item final-grid">
+    <div class="final-card">
+      <div class="fc-icon c-accent"><i class="fas fa-scissors"></i></div>
+      <div class="fc-num">01</div>
+      <div class="fc-title">规则文件应<span class="c-accent">精简</span></div>
+      <div class="fc-desc">每条规则都需审视"是否有必要常驻上下文"，避免膨胀导致失效</div>
+    </div>
+    <div class="final-card">
+      <div class="fc-icon c-amber"><i class="fas fa-arrow-right-arrow-left"></i></div>
+      <div class="fc-num">02</div>
+      <div class="fc-title">关键约束<span class="c-amber">迁移</span>到Hook</div>
+      <div class="fc-desc">安全约束从CLAUDE.md移到Hook，减少常驻上下文占用token</div>
+    </div>
+    <div class="final-card">
+      <div class="fc-icon c-teal"><i class="fas fa-door-open"></i></div>
+      <div class="fc-num">03</div>
+      <div class="fc-title">留<span class="c-teal">退路</span>比堵死更有效</div>
+      <div class="fc-desc">AI被提醒后自觉纠正，而非想方设法绕过机械封堵</div>
+    </div>
+    <div class="final-card">
+      <div class="fc-icon c-coral"><i class="fas fa-layer-group"></i></div>
+      <div class="fc-num">04</div>
+      <div class="fc-title">不同风险用<span class="c-coral">不同层级</span></div>
+      <div class="fc-desc">破坏性操作→阻断Hook，风格约束→提醒Hook，分级管控</div>
+    </div>
+    <div class="final-card">
+      <div class="fc-icon c-purple"><i class="fas fa-puzzle-piece"></i></div>
+      <div class="fc-num">05</div>
+      <div class="fc-title">Hook + Skill = <span class="c-purple">自动化闭环</span></div>
+      <div class="fc-desc">组合实现强大的工作流约束，让AI既高效又安全可控</div>
+    </div>
+    <div class="final-card" style="grid-column:1/-1;max-width:400px;justify-self:center">
+      <div class="fc-icon c-accent pulse"><i class="fas fa-gem"></i></div>
+      <div class="fc-title" style="font-size:1.2rem">Hooks 的本质</div>
+      <div class="fc-desc" style="font-size:1rem">
+        在<span class="c-accent bold">执行点</span>注入提醒，利用<span class="c-amber bold">位置局部性</span>提升规则遵循率<br>
+        → 不是堵，而是<span class="c-teal bold">引</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context architecture recap -->
+  <div class="anim-item" style="margin-top:8px;max-width:850px">
+    <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap">
+      <div style="background:rgba(231,29,54,.08);border-radius:8px;padding:6px 14px;font-size:.82rem;color:#E71D36"><i class="fas fa-file-lines"></i>&nbsp; CLAUDE.md → 精简保留核心</div>
+      <span class="c-accent"><i class="fas fa-arrow-right"></i></span>
+      <div style="background:rgba(255,107,53,.08);border-radius:8px;padding:6px 14px;font-size:.82rem;color:#FF6B35"><i class="fas fa-code-branch"></i>&nbsp; Hook → 安全/阻断类约束</div>
+      <span class="c-accent"><i class="fas fa-arrow-right"></i></span>
+      <div style="background:rgba(46,196,182,.08);border-radius:8px;padding:6px 14px;font-size:.82rem;color:#2EC4B6"><i class="fas fa-lightbulb"></i>&nbsp; Skill → 主动按需加载</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Slide 6: 日后奋斗方向 ============ -->
+<div class="slide bg-7" id="s6">
+  <div class="grid-bg"></div>
+  <div class="deco deco-peach" style="width:500px;height:500px;bottom:-200px;left:-180px"></div>
+  <div class="page-badge">07 / 07</div>
+
+  <div class="anim-item t-huge c-accent bold">日后奋斗方向</div>
+  <div class="anim-item t-sub c-gray" style="margin-bottom:6px">持续优化 Hook 体系，让 AI 编程更安全高效</div>
+  <div class="anim-item t-body c-gray" style="font-size:.95rem;margin-bottom:6px;opacity:.7">
+    Hooks不仅是技术工具，更是一种"安全性思维"的落地——把约束从静态文档变成动态守护
+  </div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item future-list">
+    <div class="future-item">
+      <div class="fi-num">1</div>
+      <div class="fi-content">
+        <div class="fi-title"><i class="fas fa-magnifying-glass c-accent"></i>&nbsp; 规则审查与迁移</div>
+        <div class="fi-desc">逐一审视现有 CLAUDE.md 中的规则，将适合的内容迁移到 Hook 体系，减少常驻上下文占用，提升 AI 指令遵循率</div>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="fi-num">2</div>
+      <div class="fi-content">
+        <div class="fi-title"><i class="fas fa-sliders c-amber"></i>&nbsp; 精细化触发条件设计</div>
+        <div class="fi-desc">设计更精准的 Hook 匹配规则，减少误触发，让每一个拦截都恰到好处，避免过度打扰影响工作效率</div>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="fi-num">3</div>
+      <div class="fi-content">
+        <div class="fi-title"><i class="fas fa-rocket c-teal"></i>&nbsp; 探索更多 Stop Hook 应用</div>
+        <div class="fi-desc">自动质量审查、敏感信息检测、代码风格检查、安全漏洞扫描——Stop Hook 的潜力远不止 TLDR</div>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="fi-num">4</div>
+      <div class="fi-content">
+        <div class="fi-title"><i class="fas fa-users c-purple"></i>&nbsp; 建立团队共享模板库</div>
+        <div class="fi-desc">将经过验证的 Hook 配置模板化，降低团队成员的配置门槛，让新人也能快速获得最佳实践的 Hook 保护</div>
+      </div>
+    </div>
+    <div class="future-item">
+      <div class="fi-num">5</div>
+      <div class="fi-content">
+        <div class="fi-title"><i class="fas fa-sync c-accent"></i>&nbsp; 持续跟进 Hook 机制演进</div>
+        <div class="fi-desc">密切关注 Claude Code Hook 机制的更新迭代，利用新能力持续优化开发体验，始终站在 AI 编程工具的最前沿</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 奋斗三原则可视化 -->
+  <div class="anim-item" style="margin-top:16px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;flex-wrap:wrap;justify-content:center">
+      <div style="background:rgba(255,107,53,.1);border-radius:12px;padding:10px 20px;border:2px solid rgba(255,107,53,.2)">
+        <i class="fas fa-code c-accent"></i>&nbsp;
+        <span class="c-accent bold" style="font-size:1.05rem">以技术入行打基础</span>
+      </div>
+      <span class="c-accent bold" style="font-size:1.3rem">·</span>
+      <div style="background:rgba(244,162,97,.1);border-radius:12px;padding:10px 20px;border:2px solid rgba(244,162,97,.2)">
+        <i class="fas fa-eye c-amber"></i>&nbsp;
+        <span class="c-amber bold" style="font-size:1.05rem">感知变化顺势为</span>
+      </div>
+      <span class="c-accent bold" style="font-size:1.3rem">·</span>
+      <div style="background:rgba(46,196,182,.1);border-radius:12px;padding:10px 20px;border:2px solid rgba(46,196,182,.2)">
+        <i class="fas fa-arrow-up c-teal"></i>&nbsp;
+        <span class="c-teal bold" style="font-size:1.05rem">不躺平持续拼</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:8px;max-width:700px">
+    <div style="font-size:.9rem;color:#A7A9BE;text-align:center;line-height:1.6;opacity:.8">
+      Hook 是 AI 编程时代的基础设施——掌握它，就是掌握了<span class="c-accent">与 AI 高效协作</span>的主动权。
+      从写好第一个 Bash Hook 开始，逐步构建你的<span class="c-amber bold">自动化安全网络</span>。
+    </div>
+  </div>
+
+  <div class="anim-item final-word" style="margin-top:10px;font-size:3rem">驾驭 AI，而非被 AI 驾驭</div>
+
+  <div class="anim-item" style="margin-top:10px">
+    <div class="glow-ring" style="width:100px;height:100px">
+      <i class="fas fa-code-branch c-accent" style="font-size:2rem"></i>
+    </div>
+  </div>
+</div>
+
+</div><!-- end slide-container -->
+
+<!-- Navigation dots -->
+<div class="slide-indicator" id="navDots"></div>
+
+<script>
+// Navigation dots
+(function(){
+  const dotsContainer=document.getElementById('navDots');
+  const total=document.querySelectorAll('.slide').length;
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' active':'');
+    d.addEventListener('click',()=>go(i));
+    dotsContainer.appendChild(d);
+  }
+  window.updateDots=function(n){
+    document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));
+  };
+})();
+
+const slides=document.querySelectorAll('.slide'), total=slides.length;
+let cur=0;
+
+function animateProgressBars(slide){
+  slide.querySelectorAll('.progress-fill').forEach(bar=>{
+    const w=bar.dataset.width||'0%';
+    bar.style.width='0%';
+    setTimeout(()=>{bar.style.width=w},400);
+  });
+}
+
+function go(n){
+  if(n<0||n>=total||n===cur)return;
+
+  // Animation reset: clone nodes to force CSS animation restart
+  slides[cur].querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item){
+    var clone=item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.anim-item').forEach(e=>e.classList.remove('show'));
+  cur=n;
+  updateDots(cur);
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.anim-item').forEach((e,i)=>{
+    e.classList.remove('show');
+    setTimeout(()=>e.classList.add('show'),120+i*240);
+  });
+  animateProgressBars(slides[cur]);
+}
+
+// Initial
+slides[0].querySelectorAll('.anim-item').forEach((e,i)=>setTimeout(()=>e.classList.add('show'),300+i*280));
+setTimeout(()=>animateProgressBars(slides[0]),600);
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home'){e.preventDefault();go(0)}
+  else if(e.key==='End'){e.preventDefault();go(total-1)}
+});
+
+// Touch
+let tx=0,ty=0;
+document.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX;ty=e.changedTouches[0].screenY});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].screenX-tx,dy=e.changedTouches[0].screenY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){dx<0?go(cur+1):go(cur-1)}
+});
+
+// Wheel
+let wc=false;
+document.addEventListener('wheel',e=>{
+  if(wc)return;wc=true;setTimeout(()=>wc=false,800);
+  e.deltaY>0?go(cur+1):go(cur-1);
+});
+
+// Particles
+function createParticles(containerId){
+  const container=document.getElementById(containerId);
+  if(!container)return;
+  const colors=['rgba(255,107,53,.35)','rgba(244,162,97,.3)','rgba(231,111,81,.25)','rgba(46,196,182,.25)','rgba(127,90,240,.2)'];
+  for(let i=0;i<15;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*8+4;
+    p.style.cssText=`
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*7+5}s;
+      animation-delay:${Math.random()*6}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles('particles0');
+createParticles('particles5');
+
+// Animation reset fix: clone nodes on each slide switch to force CSS animation restart
+(function() {
+  var origGo = go;
+  go = function(n) {
+    if(n<0||n>=total||n===cur)return;
+    document.querySelectorAll('.slide.active .anim-item, .slide.active .an, .slide.active [style*="animation"]').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+    return origGo(n);
+  };
+})();
+</script>
+
+</body>
+</html>
