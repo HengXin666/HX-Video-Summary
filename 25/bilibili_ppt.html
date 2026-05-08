@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Code 深度评测 — 开源AI编程助手的自由与安全之道</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+
+        :root {
+            --bg-deep: #0F0E17;
+            --bg-card: #1A1828;
+            --bg-card2: #252336;
+            --orange: #FF6B35;
+            --amber: #F4A261;
+            --coral: #E76F51;
+            --text: #FFFFFE;
+            --text2: #A7A9BE;
+            --text3: #6B6B85;
+            --glow-o: rgba(255,107,53,0.4);
+            --glow-c: rgba(231,111,81,0.35);
+            --green: #2EC4B6;
+            --red: #E71D36;
+        }
+
+        body {
+            font-family: 'Noto Sans SC','Microsoft YaHei',sans-serif;
+            background: var(--bg-deep);
+            color: var(--text);
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+            user-select: none;
+        }
+
+        /* Page indicator */
+        .page-indicator {
+            position: fixed; top: 28px; left: 40px;
+            font-size: 18px; color: var(--text3);
+            z-index: 999; font-weight: 700;
+            letter-spacing: 2px;
+        }
+        .page-indicator span { color: var(--orange); font-size: 28px; }
+
+        /* Bottom nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            display: flex; align-items: center; justify-content: center;
+            gap: 24px; padding: 16px 0;
+            background: linear-gradient(0deg, rgba(15,14,23,0.95), transparent);
+            z-index: 998; pointer-events: none;
+        }
+        .bottom-nav button {
+            pointer-events: auto;
+            background: rgba(255,107,53,0.12);
+            border: 2px solid rgba(255,107,53,0.25);
+            color: var(--orange);
+            font-size: 20px; padding: 10px 28px;
+            border-radius: 30px; cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        .bottom-nav button:hover {
+            background: var(--orange); color: #fff;
+            box-shadow: 0 4px 20px var(--glow-o);
+        }
+        .bottom-nav .page-dots { display: flex; gap: 8px; pointer-events: auto; }
+        .bottom-nav .page-dots .dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: rgba(255,107,53,0.2);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .bottom-nav .page-dots .dot.active {
+            background: var(--orange);
+            box-shadow: 0 0 10px var(--glow-o);
+            width: 28px; border-radius: 5px;
+        }
+
+        /* Slides */
+        .slides-wrapper { width: 100vw; height: 100vh; position: relative; }
+        .slide {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 60px 80px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease;
+            overflow: hidden;
+            background: radial-gradient(ellipse at 50% 30%, var(--bg-card) 0%, var(--bg-deep) 100%);
+        }
+        .slide.active { opacity: 1; pointer-events: auto; }
+
+        /* Animation */
+        .slide .anim-item {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.7s cubic-bezier(.23,1,.32,1), transform 0.7s cubic-bezier(.23,1,.32,1);
+        }
+        .slide.active .anim-item.show {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* Decorations */
+        .deco-circle {
+            position: absolute; border-radius: 50%;
+            opacity: 0.08; pointer-events: none; filter: blur(60px);
+        }
+
+        /* Particles */
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        .particle {
+            position: absolute; border-radius: 50%; opacity: 0;
+            animation: floatParticle 8s ease-in-out infinite;
+        }
+        @keyframes floatParticle {
+            0%,100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            50% { transform: translateY(-50px) rotate(180deg); opacity: 0.3; }
+            90% { opacity: 0.5; }
+        }
+
+        /* Grid bg */
+        .grid-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(255,107,53,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(231,111,81,0.02) 1px, transparent 1px);
+            background-size: 60px 60px; pointer-events: none;
+        }
+
+        /* Keyframes */
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 var(--glow-o); } 50% { box-shadow: 0 0 30px 10px rgba(255,107,53,0.2); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes rotateScale { 0%{transform:rotate(0deg) scale(1);} 50%{transform:rotate(180deg) scale(1.1);} 100%{transform:rotate(360deg) scale(1);} }
+        @keyframes shimmer { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+        @keyframes ripple { 0%{transform:scale(1);opacity:0.4;} 100%{transform:scale(2.5);opacity:0;} }
+        @keyframes bounceIn { 0%{transform:scale(0.3);opacity:0;} 50%{transform:scale(1.05);} 70%{transform:scale(0.9);} 100%{transform:scale(1);opacity:1;} }
+        @keyframes pulseArrow { 0%,100%{transform:translateX(0);opacity:0.7;} 50%{transform:translateX(8px);opacity:1;} }
+        @keyframes slideInLeft { from{transform:translateX(-80px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+        @keyframes slideInRight { from{transform:translateX(80px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+        @keyframes scaleIn { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+        @keyframes spinSlow { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+        @keyframes borderGlow { 0%,100%{border-color:rgba(255,107,53,0.2);} 50%{border-color:rgba(255,107,53,0.6);} }
+        @keyframes dashMove { to{stroke-dashoffset:-100;} }
+        @keyframes countUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+        @keyframes glowPulse { 0%,100%{box-shadow:0 0 10px rgba(255,107,53,0.2);} 50%{box-shadow:0 0 40px rgba(255,107,53,0.5);} }
+        @keyframes driftGlow { 0%{transform:translateX(0) scale(1);opacity:0.15;} 50%{transform:translateX(30px) scale(1.2);opacity:0.3;} 100%{transform:translateX(0) scale(1);opacity:0.15;} }
+        @keyframes iconPulse { 0%,100%{transform:scale(1);filter:drop-shadow(0 0 8px var(--glow-o));} 50%{transform:scale(1.15);filter:drop-shadow(0 0 20px var(--glow-o));} }
+
+        /* Glow orb decorations */
+        .glow-orb { position:absolute;border-radius:50%;pointer-events:none;filter:blur(80px); }
+        .glow-orb.orb-orange { background:var(--orange);animation:driftGlow 8s ease-in-out infinite; }
+        .glow-orb.orb-coral { background:var(--coral);animation:driftGlow 10s ease-in-out infinite 2s; }
+        .glow-orb.orb-amber { background:var(--amber);animation:driftGlow 9s ease-in-out infinite 4s; }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, var(--orange), var(--coral), var(--amber), var(--orange));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+
+        /* ---- SLIDE 1: Title ---- */
+        .s1 .deco-1 { width:400px;height:400px;background:var(--orange);top:-100px;right:-80px;opacity:0.12;animation:rotateScale 20s linear infinite; }
+        .s1 .deco-2 { width:280px;height:280px;background:var(--coral);bottom:-60px;left:-60px;opacity:0.12;animation:rotateScale 15s linear infinite reverse; }
+        .s1 .deco-3 { width:150px;height:150px;background:var(--amber);top:30%;left:10%;opacity:0.08;animation:float 6s ease-in-out infinite; }
+        .s1 .icon-wrap { position:relative;margin-bottom:32px; }
+        .s1 .icon-wrap .ripple-ring { position:absolute;top:50%;left:50%;width:120px;height:120px;margin:-60px 0 0 -60px;border:3px solid rgba(255,107,53,0.3);border-radius:50%;animation:ripple 2.5s ease-out infinite; }
+        .s1 .icon-wrap .ripple-ring:nth-child(2){animation-delay:0.8s;}
+        .s1 .icon-wrap .ripple-ring:nth-child(3){animation-delay:1.6s;}
+        .s1 .icon-main { font-size:80px;color:var(--orange);position:relative;z-index:2;filter:drop-shadow(0 6px 20px var(--glow-o));animation:float 4s ease-in-out infinite; }
+        .s1 h1 { font-size:58px;font-weight:900;text-align:center;line-height:1.35;text-shadow:0 2px 10px rgba(0,0,0,0.3); }
+        .s1 h1 .hl { color:var(--orange);text-decoration:underline;text-decoration-color:var(--coral);text-underline-offset:10px;text-decoration-thickness:4px; }
+        .s1 .subtitle { margin-top:24px;font-size:26px;color:var(--text2);font-style:italic;display:flex;align-items:center;gap:12px; }
+        .s1 .subtitle::before,.s1 .subtitle::after { content:'';display:block;width:50px;height:2px;background:linear-gradient(90deg,transparent,var(--orange)); }
+        .s1 .subtitle::after { background:linear-gradient(90deg,var(--orange),transparent); }
+
+        /* ---- SLIDE 2: Overview VS ---- */
+        .s2 .deco-1 { width:400px;height:400px;background:var(--coral);top:-120px;left:-120px;opacity:0.08; }
+        .s2 .deco-2 { width:300px;height:300px;background:var(--orange);bottom:-80px;right:-80px;opacity:0.06; }
+        .section-tag { display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--orange),var(--coral));color:#fff;font-size:18px;font-weight:700;padding:10px 28px;border-radius:30px;margin-bottom:24px;box-shadow:0 4px 18px var(--glow-o); }
+        .s2 h2 { font-size:44px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s2 h2 .hl { color:var(--orange);position:relative; }
+        .s2 h2 .hl::after { content:'';position:absolute;bottom:-4px;left:0;width:100%;height:4px;background:linear-gradient(90deg,var(--orange),var(--coral));border-radius:2px; }
+        .vs-container { display:flex;gap:30px;width:100%;max-width:1100px;justify-content:center;align-items:stretch; }
+        .vs-card { flex:1;max-width:460px;border-radius:28px;padding:40px 36px;text-align:center;position:relative;overflow:hidden; }
+        .vs-card.oc { background:linear-gradient(160deg,rgba(46,196,182,0.08),rgba(46,196,182,0.03));border:3px solid var(--green);box-shadow:0 10px 40px rgba(46,196,182,0.12); }
+        .vs-card.cc { background:linear-gradient(160deg,rgba(231,113,54,0.08),rgba(231,111,81,0.03));border:3px solid var(--coral);box-shadow:0 10px 40px rgba(231,111,81,0.10); }
+        .vs-card .corner-deco { position:absolute;width:80px;height:80px;border-radius:50%;opacity:0.08;top:-20px;right:-20px; }
+        .vs-card.oc .corner-deco { background:var(--green); }
+        .vs-card.cc .corner-deco { background:var(--coral); }
+        .vs-card .card-icon { font-size:52px;position:relative;z-index:2;margin-bottom:16px; }
+        .vs-card.oc .card-icon { color:var(--green); }
+        .vs-card.cc .card-icon { color:var(--coral); }
+        .vs-card h3 { font-size:28px;font-weight:900;margin-bottom:14px; }
+        .vs-card.oc h3 { color:var(--green); }
+        .vs-card.cc h3 { color:var(--coral); }
+        .vs-card p { font-size:21px;line-height:1.7;color:var(--text2); }
+        .vs-card .kw { font-weight:700;padding:2px 10px;border-radius:8px; }
+        .vs-card.oc .kw { background:rgba(46,196,182,0.15);color:var(--green); }
+        .vs-card.cc .kw { background:rgba(231,111,81,0.15);color:var(--coral); }
+        .vs-badge { display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:linear-gradient(135deg,var(--orange),var(--coral));color:#fff;font-size:24px;font-weight:900;border-radius:50%;box-shadow:0 6px 24px var(--glow-o);animation:pulseGlow 2s ease-in-out infinite;flex-shrink:0;align-self:center; }
+        .vs-line { display:flex;flex-direction:column;gap:4px; }
+        .vs-line span { display:block;width:3px;height:10px;background:var(--orange);border-radius:2px;opacity:0.5; }
+
+        /* ---- SLIDE 3: Model Freedom ---- */
+        .s3 .deco-1 { width:300px;height:300px;background:var(--amber);bottom:-80px;right:-80px;opacity:0.1; }
+        .s3 .deco-2 { width:200px;height:200px;background:var(--coral);top:40px;left:-60px;opacity:0.08;animation:float 7s ease-in-out infinite; }
+        .feature-grid { display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1000px;width:100%; }
+        .feature-card { background:var(--bg-card2);border-radius:20px;padding:30px 28px;border-left:5px solid var(--orange);position:relative; }
+        .feature-card.green { border-left-color:var(--green); }
+        .feature-card .fc-icon { font-size:36px;color:var(--orange);margin-bottom:10px; }
+        .feature-card.green .fc-icon { color:var(--green); }
+        .feature-card h3 { font-size:24px;font-weight:900;margin-bottom:10px;color:var(--text); }
+        .feature-card p { font-size:18px;line-height:1.6;color:var(--text2); }
+        .feature-card .badge { display:inline-block;background:rgba(255,107,53,0.15);color:var(--orange);padding:3px 12px;border-radius:12px;font-size:14px;font-weight:700;margin-top:8px; }
+        .feature-card.green .badge { background:rgba(46,196,182,0.15);color:var(--green); }
+
+        /* ---- SLIDE 4: Smart Permission ---- */
+        .s4 h2 { font-size:44px;font-weight:900;margin-bottom:40px;text-align:center; }
+        .s4 h2 .hl { color:var(--orange); }
+        .perm-compare { display:flex;gap:24px;max-width:1050px;width:100%;align-items:stretch; }
+        .perm-box { flex:1;border-radius:24px;padding:36px 32px;text-align:center; }
+        .perm-box.good { background:var(--bg-card2);border:3px solid var(--green); }
+        .perm-box.bad { background:var(--bg-card2);border:3px solid var(--coral); }
+        .perm-box .perm-icon { font-size:48px;margin-bottom:16px; }
+        .perm-box.good .perm-icon { color:var(--green); }
+        .perm-box.bad .perm-icon { color:var(--coral); }
+        .perm-box h3 { font-size:26px;font-weight:900;margin-bottom:16px; }
+        .perm-box.good h3 { color:var(--green); }
+        .perm-box.bad h3 { color:var(--coral); }
+        .perm-box .perm-list { text-align:left;list-style:none; }
+        .perm-box .perm-list li { padding:10px 0;font-size:18px;color:var(--text2);display:flex;align-items:flex-start;gap:10px;line-height:1.5;border-bottom:1px solid rgba(255,255,255,0.04); }
+        .perm-box .perm-list li i { margin-top:2px;flex-shrink:0; }
+        .perm-box.good .perm-list li i { color:var(--green); }
+        .perm-box.bad .perm-list li i { color:var(--coral); }
+
+        /* ---- SLIDE 5: Architecture ---- */
+        .s5 h2 { font-size:42px;font-weight:900;margin-bottom:44px;text-align:center; }
+        .s5 h2 .hl { color:var(--orange); }
+        .arch-flow { display:flex;align-items:center;gap:20px;max-width:1100px;width:100%; }
+        .arch-node { flex:1;display:flex;flex-direction:column;align-items:center;background:var(--bg-card2);border-radius:20px;padding:28px 20px;position:relative; }
+        .arch-node .arch-icon { width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;margin-bottom:16px; }
+        .arch-node:nth-child(1) .arch-icon { background:linear-gradient(135deg,var(--orange),var(--coral)); }
+        .arch-node:nth-child(3) .arch-icon { background:linear-gradient(135deg,var(--coral),var(--amber)); }
+        .arch-node:nth-child(5) .arch-icon { background:linear-gradient(135deg,var(--amber),var(--orange)); }
+        .arch-node h3 { font-size:22px;font-weight:900;margin-bottom:8px; }
+        .arch-node:nth-child(1) h3 { color:var(--orange); }
+        .arch-node:nth-child(3) h3 { color:var(--coral); }
+        .arch-node:nth-child(5) h3 { color:var(--amber); }
+        .arch-node p { font-size:17px;text-align:center;line-height:1.5;color:var(--text2); }
+        .arch-arrow { font-size:32px;color:var(--orange);flex-shrink:0;animation:pulseArrow 1.5s ease-in-out infinite; }
+        .arch-arrow.down { animation-delay:0.5s; }
+
+        /* ---- SLIDE 6: Breakpoint Resume ---- */
+        .s6 h2 { font-size:42px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s6 h2 .hl { color:var(--orange); }
+        .bp-visual { display:flex;align-items:center;gap:0;max-width:900px; }
+        .bp-step { display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--bg-card2);border-radius:18px;padding:24px 20px;text-align:center;flex:1; }
+        .bp-step .step-num { width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;background:var(--orange); }
+        .bp-step.done .step-num { background:var(--green); }
+        .bp-step h4 { font-size:20px;font-weight:700;color:var(--text); }
+        .bp-step p { font-size:16px;color:var(--text2);line-height:1.5; }
+        .bp-arrow { font-size:28px;color:var(--orange);animation:pulseArrow 1.2s ease-in-out infinite;margin:0 8px; }
+        .bp-step.done { opacity:0.6; }
+        .bp-step.current { border:2px solid var(--orange);box-shadow:0 0 20px var(--glow-o); }
+        .bp-step.current .step-num { animation:pulseGlow 2s ease-in-out infinite; }
+
+        /* ---- SLIDE 7: Safety ---- */
+        .s7 h2 { font-size:42px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s7 h2 .hl { color:var(--orange); }
+        .safety-grid { display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1050px;width:100%; }
+        .safety-card { background:var(--bg-card2);border-radius:20px;padding:28px 28px;position:relative;overflow:hidden; }
+        .safety-card::before { content:'';position:absolute;top:0;left:0;width:5px;height:100%; }
+        .safety-card:nth-child(1)::before { background:var(--green); }
+        .safety-card:nth-child(2)::before { background:var(--orange); }
+        .safety-card:nth-child(3)::before { background:var(--amber); }
+        .safety-card:nth-child(4)::before { background:var(--coral); }
+        .safety-card .s-icon { font-size:34px;margin-bottom:12px; }
+        .safety-card:nth-child(1) .s-icon { color:var(--green); }
+        .safety-card:nth-child(2) .s-icon { color:var(--orange); }
+        .safety-card:nth-child(3) .s-icon { color:var(--amber); }
+        .safety-card:nth-child(4) .s-icon { color:var(--coral); }
+        .safety-card h3 { font-size:22px;font-weight:900;margin-bottom:10px;color:var(--text); }
+        .safety-card p { font-size:17px;line-height:1.6;color:var(--text2); }
+
+        /* ---- SLIDE 8: Custom Agents ---- */
+        .s8 h2 { font-size:42px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s8 h2 .hl { color:var(--orange); }
+        .agent-row { display:flex;gap:28px;max-width:1000px;width:100%;align-items:stretch; }
+        .agent-card { flex:1;background:var(--bg-card2);border-radius:24px;padding:32px 28px;text-align:center;position:relative; }
+        .agent-card.build { border-top:5px solid var(--orange); }
+        .agent-card.plan { border-top:5px solid var(--amber); }
+        .agent-card.custom { border-top:5px solid var(--coral); }
+        .agent-card .a-icon { font-size:44px;margin-bottom:14px; }
+        .agent-card.build .a-icon { color:var(--orange); }
+        .agent-card.plan .a-icon { color:var(--amber); }
+        .agent-card.custom .a-icon { color:var(--coral); }
+        .agent-card h3 { font-size:24px;font-weight:900;margin-bottom:10px; }
+        .agent-card.build h3 { color:var(--orange); }
+        .agent-card.plan h3 { color:var(--amber); }
+        .agent-card.custom h3 { color:var(--coral); }
+        .agent-card p { font-size:17px;line-height:1.6;color:var(--text2); }
+        .agent-card .tag { display:inline-block;padding:2px 12px;border-radius:10px;font-size:13px;font-weight:700;margin-top:8px; }
+        .agent-card.build .tag { background:rgba(255,107,53,0.15);color:var(--orange); }
+        .agent-card.plan .tag { background:rgba(244,162,97,0.15);color:var(--amber); }
+        .agent-card.custom .tag { background:rgba(231,111,81,0.15);color:var(--coral); }
+
+        /* ---- SLIDE 9: Collaboration Tips ---- */
+        .s9 h2 { font-size:40px;font-weight:900;margin-bottom:32px;text-align:center; }
+        .s9 h2 .hl { color:var(--orange); }
+        .tips-list { max-width:950px;width:100%;display:flex;flex-direction:column;gap:18px; }
+        .tip-item { display:flex;align-items:flex-start;gap:18px;background:var(--bg-card2);border-radius:16px;padding:22px 26px; }
+        .tip-item .tip-num { width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--coral));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0; }
+        .tip-item .tip-body h4 { font-size:22px;font-weight:700;color:var(--orange);margin-bottom:6px; }
+        .tip-item .tip-body p { font-size:17px;line-height:1.5;color:var(--text2); }
+
+        /* ---- SLIDE 10: Prompt Engineering ---- */
+        .s10 h2 { font-size:40px;font-weight:900;margin-bottom:32px;text-align:center; }
+        .s10 h2 .hl { color:var(--orange); }
+        .rule-grid { display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:1000px;width:100%; }
+        .rule-card { background:var(--bg-card2);border-radius:18px;padding:26px;border-left:4px solid var(--orange); }
+        .rule-card.r2 { border-left-color:var(--amber); }
+        .rule-card.r3 { border-left-color:var(--coral); }
+        .rule-card.r4 { border-left-color:var(--green); }
+        .rule-card .r-icon { font-size:28px;margin-bottom:8px;color:var(--orange); }
+        .rule-card.r2 .r-icon { color:var(--amber); }
+        .rule-card.r3 .r-icon { color:var(--coral); }
+        .rule-card.r4 .r-icon { color:var(--green); }
+        .rule-card h4 { font-size:20px;font-weight:900;margin-bottom:6px;color:var(--text); }
+        .rule-card p { font-size:16px;line-height:1.5;color:var(--text2); }
+
+        /* ---- SLIDE 11: Tool Ecosystem ---- */
+        .s11 h2 { font-size:42px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s11 h2 .hl { color:var(--orange); }
+        .tool-row { display:flex;gap:28px;max-width:1000px;width:100%; }
+        .tool-card { flex:1;background:var(--bg-card2);border-radius:24px;padding:34px 28px;text-align:center; }
+        .tool-card .t-icon { font-size:50px;margin-bottom:16px; }
+        .tool-card:nth-child(1) .t-icon { color:var(--orange); }
+        .tool-card:nth-child(2) .t-icon { color:var(--amber); }
+        .tool-card:nth-child(3) .t-icon { color:var(--green); }
+        .tool-card h3 { font-size:24px;font-weight:900;margin-bottom:10px; }
+        .tool-card:nth-child(1) h3 { color:var(--orange); }
+        .tool-card:nth-child(2) h3 { color:var(--amber); }
+        .tool-card:nth-child(3) h3 { color:var(--green); }
+        .tool-card p { font-size:17px;line-height:1.5;color:var(--text2); }
+        .tool-card .t-badge { display:inline-block;padding:4px 14px;border-radius:12px;font-size:14px;font-weight:700;margin-top:10px; }
+        .tool-card:nth-child(1) .t-badge { background:rgba(255,107,53,0.15);color:var(--orange); }
+        .tool-card:nth-child(2) .t-badge { background:rgba(244,162,97,0.15);color:var(--amber); }
+        .tool-card:nth-child(3) .t-badge { background:rgba(46,196,182,0.15);color:var(--green); }
+
+        /* ---- SLIDE 12: Core Insights ---- */
+        .s12 h2 { font-size:46px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s12 h2 .hl { background:linear-gradient(135deg,var(--orange),var(--coral));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+        .insight-grid { display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1000px;width:100%; }
+        .insight-card { background:var(--bg-card2);border-radius:18px;padding:26px;text-align:center;border:2px solid transparent;transition:all 0.3s; }
+        .insight-card:nth-child(1){border-color:rgba(255,107,53,0.3);}
+        .insight-card:nth-child(2){border-color:rgba(244,162,97,0.3);}
+        .insight-card:nth-child(3){border-color:rgba(46,196,182,0.3);}
+        .insight-card:nth-child(4){border-color:rgba(231,111,81,0.3);}
+        .insight-card:nth-child(5){border-color:rgba(255,107,53,0.3);}
+        .insight-card:nth-child(6){border-color:rgba(244,162,97,0.3);}
+        .insight-card .ii { font-size:36px;margin-bottom:10px; }
+        .insight-card:nth-child(1) .ii{color:var(--orange);}
+        .insight-card:nth-child(2) .ii{color:var(--amber);}
+        .insight-card:nth-child(3) .ii{color:var(--green);}
+        .insight-card:nth-child(4) .ii{color:var(--coral);}
+        .insight-card:nth-child(5) .ii{color:var(--orange);}
+        .insight-card:nth-child(6) .ii{color:var(--amber);}
+        .insight-card h3 { font-size:20px;font-weight:900;margin-bottom:6px;color:var(--text); }
+        .insight-card p { font-size:16px;line-height:1.5;color:var(--text2); }
+
+        /* ---- SLIDE 13: Future Directions ---- */
+        .s13 { background:radial-gradient(ellipse at 50% 30%,var(--bg-card) 0%,var(--bg-deep) 100%); }
+        .s13 .deco-1 { width:500px;height:500px;background:var(--orange);top:-120px;right:-100px;opacity:0.06; }
+        .s13 .deco-2 { width:350px;height:350px;background:var(--coral);bottom:-80px;left:-80px;opacity:0.05; }
+        .s13 h2 { font-size:48px;font-weight:900;margin-bottom:36px;text-align:center; }
+        .s13 h2 .hl { color:var(--orange); }
+        .future-list { max-width:900px;width:100%;display:flex;flex-direction:column;gap:18px; }
+        .future-item { display:flex;align-items:center;gap:18px;background:var(--bg-card2);border-radius:18px;padding:24px 28px; }
+        .future-item .f-icon { width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--coral));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0; }
+        .future-item:nth-child(2) .f-icon { background:linear-gradient(135deg,var(--amber),var(--orange)); }
+        .future-item:nth-child(3) .f-icon { background:linear-gradient(135deg,var(--coral),var(--amber)); }
+        .future-item:nth-child(4) .f-icon { background:linear-gradient(135deg,var(--green),#1DAF9C); }
+        .future-item:nth-child(5) .f-icon { background:linear-gradient(135deg,var(--orange),var(--amber)); }
+        .future-item .f-text h4 { font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px; }
+        .future-item .f-text p { font-size:16px;color:var(--text2);line-height:1.5; }
+
+        .warn-box {
+            background:rgba(231,29,54,0.08);border-left:4px solid var(--red);
+            border-radius:12px;padding:14px 20px;margin-top:24px;max-width:900px;width:100%;
+        }
+        .warn-box p { font-size:17px;color:var(--text2);line-height:1.5; }
+        .warn-box i { color:var(--red);margin-right:6px; }
+        .success-box {
+            background:rgba(46,196,182,0.08);border-left:4px solid var(--green);
+            border-radius:12px;padding:14px 20px;margin-top:24px;max-width:900px;width:100%;
+        }
+        .success-box p { font-size:17px;color:var(--text2);line-height:1.5; }
+        .success-box i { color:var(--green);margin-right:6px; }
+
+        /* Responsive */
+        @media (max-width:900px) {
+            .slide{padding:30px 20px;}
+            .s1 h1{font-size:34px;}
+            .feature-grid,.safety-grid,.insight-grid,.rule-grid{grid-template-columns:1fr;}
+            .vs-container,.arch-flow,.agent-row,.tool-row{flex-direction:column;gap:18px;}
+            .arch-arrow{transform:rotate(90deg);}
+            .vs-badge{display:none;}
+            .perm-compare{flex-direction:column;}
+            .bp-visual{flex-wrap:wrap;justify-content:center;}
+            .bp-arrow{transform:rotate(90deg);}
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-indicator"><span id="pageCur">01</span> / 13</div>
+
+<div class="bottom-nav">
+    <button onclick="changeSlide(-1)" id="prevBtn"><i class="fa-solid fa-chevron-left"></i> 上一页</button>
+    <div class="page-dots" id="pageDots"></div>
+    <button onclick="changeSlide(1)" id="nextBtn">下一页 <i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<div class="slides-wrapper">
+
+<!-- ===== SLIDE 1: Title ===== -->
+<div class="slide s1 active" data-slide="0">
+    <div class="particles">
+        <div class="particle" style="width:16px;height:16px;background:var(--orange);top:15%;left:8%;animation-delay:0s;animation-duration:7s;"></div>
+        <div class="particle" style="width:10px;height:10px;background:var(--coral);top:70%;left:15%;animation-delay:1s;animation-duration:9s;"></div>
+        <div class="particle" style="width:14px;height:14px;background:var(--amber);top:25%;right:12%;animation-delay:2s;animation-duration:6s;"></div>
+        <div class="particle" style="width:8px;height:8px;background:var(--green);top:80%;right:18%;animation-delay:0.5s;animation-duration:8s;"></div>
+        <div class="particle" style="width:12px;height:12px;background:var(--orange);top:50%;left:5%;animation-delay:3s;animation-duration:10s;"></div>
+    </div>
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="deco-circle deco-3"></div>
+    <div class="grid-bg"></div>
+
+    <div class="icon-wrap anim-item">
+        <div class="ripple-ring"></div><div class="ripple-ring"></div><div class="ripple-ring"></div>
+        <i class="fa-solid fa-code icon-main"></i>
+    </div>
+    <h1 class="anim-item">
+        <span class="shimmer-text">Open Code</span> 深度评测<br>
+        <span style="font-size:40px;">开源AI编程助手的</span><span class="hl"> 自由与安全</span>之道
+    </h1>
+    <p class="subtitle anim-item">从小潘老师的实战经验看开源AI编程的未来</p>
+</div>
+
+<!-- ===== SLIDE 2: Overview VS ===== -->
+<div class="slide s2" data-slide="1">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-circle-info"></i> 核心概述
+    </div>
+    <h2 class="anim-item">两大AI编程助手，<span class="hl">全面对比</span></h2>
+    <div class="vs-container">
+        <div class="vs-card oc anim-item">
+            <div class="corner-deco"></div>
+            <div class="card-icon"><i class="fa-solid fa-lock-open"></i></div>
+            <h3>Open Code</h3>
+            <p><span class="kw">开源</span> 软件<br>任意模型 <span class="kw">自由切换</span><br>智能权限 · 任务外包 · Docker沙箱</p>
+        </div>
+        <div class="vs-badge anim-item">VS</div>
+        <div class="vs-card cc anim-item">
+            <div class="corner-deco"></div>
+            <div class="card-icon"><i class="fa-solid fa-lock"></i></div>
+            <h3>Claude Code</h3>
+            <p><span class="kw">闭源</span> 产品<br>模型锁定 · <span class="kw">全有全无</span>权限<br>功能强大但缺乏细粒度控制</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 3: Model Freedom ===== -->
+<div class="slide s3" data-slide="2">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-microchip"></i> 第一大优势
+    </div>
+    <h2 class="anim-item" style="font-size:40px;font-weight:900;margin-bottom:30px;text-align:center;">
+        模型选择 <span class="hl" style="color:var(--orange);">完全自由</span>
+    </h2>
+    <div class="feature-grid">
+        <div class="feature-card anim-item">
+            <div class="fc-icon"><i class="fa-solid fa-key"></i></div>
+            <h3>任意模型 API Key 接入</h3>
+            <p>只要有 API Key，任何模型都能用。不只是 Anthropic，OpenAI、Google、DeepSeek 统统接入。</p>
+            <span class="badge"><i class="fa-solid fa-infinity"></i> 无限模型选择</span>
+        </div>
+        <div class="feature-card green anim-item">
+            <div class="fc-icon"><i class="fa-solid fa-gift"></i></div>
+            <h3>官方免费模型额度</h3>
+            <p>官方慷慨提供免费模型额度，如 Gemini 2.5 可限速免费使用一段时间。</p>
+            <span class="badge"><i class="fa-solid fa-star"></i> 零成本上手</span>
+        </div>
+        <div class="feature-card anim-item">
+            <div class="fc-icon"><i class="fa-solid fa-rotate"></i></div>
+            <h3>对话中随时切换模型</h3>
+            <p>不用重启、不用环境变量，对话过程中随时切换到不同模型，灵活应对不同任务。</p>
+            <span class="badge"><i class="fa-solid fa-bolt"></i> 即时切换</span>
+        </div>
+        <div class="feature-card green anim-item">
+            <div class="fc-icon"><i class="fa-solid fa-server"></i></div>
+            <h3>本地模型支持</h3>
+            <p>支持 Ollama 本地运行模型（如 Qwen 2.5 Coder），低延迟、数据不出本机。</p>
+            <span class="badge"><i class="fa-solid fa-hard-drive"></i> 本地推理</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 4: Smart Permission ===== -->
+<div class="slide s4" data-slide="3">
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-shield-halved"></i> 第二大优势
+    </div>
+    <h2 class="anim-item">智能权限控制：<span class="hl">会思考的 Bash</span></h2>
+    <div class="perm-compare">
+        <div class="perm-box good anim-item">
+            <div class="perm-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <h3>Open Code — 智能判断</h3>
+            <ul class="perm-list">
+                <li><i class="fa-solid fa-check"></i> 项目目录内操作：<b style="color:var(--green);">自动放行</b></li>
+                <li><i class="fa-solid fa-check"></i> 涉及全局系统：<b style="color:var(--orange);">询问用户</b></li>
+                <li><i class="fa-solid fa-check"></i> 破坏性命令：<b style="color:var(--orange);">智能识别</b></li>
+                <li><i class="fa-solid fa-check"></i> 安装系统包：<b style="color:var(--orange);">必须确认</b></li>
+            </ul>
+        </div>
+        <div class="perm-box bad anim-item">
+            <div class="perm-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+            <h3>Claude Code — 全有全无</h3>
+            <ul class="perm-list">
+                <li><i class="fa-solid fa-xmark"></i> 默认模式：<b style="color:var(--coral);">每步都问</b></li>
+                <li><i class="fa-solid fa-xmark"></i> 全编辑模式：<b style="color:var(--coral);">全部放行</b></li>
+                <li><i class="fa-solid fa-xmark"></i> 无法区分：<b style="color:var(--coral);">本地 vs 全局</b></li>
+                <li><i class="fa-solid fa-xmark"></i> 要么烦人、要么危险</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 5: Architecture ===== -->
+<div class="slide s5" data-slide="4">
+    <div class="particles">
+        <div class="particle" style="width:10px;height:10px;background:var(--orange);top:20%;left:8%;animation-delay:0s;animation-duration:7s;"></div>
+        <div class="particle" style="width:8px;height:8px;background:var(--amber);top:70%;right:10%;animation-delay:1s;animation-duration:8s;"></div>
+        <div class="particle" style="width:11px;height:11px;background:var(--coral);top:40%;left:85%;animation-delay:2s;animation-duration:6s;"></div>
+    </div>
+    <div class="glow-orb orb-coral" style="width:180px;height:180px;top:-50px;left:-60px;"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-diagram-project"></i> 第三大优势
+    </div>
+    <h2 class="anim-item">任务外包架构：<span class="hl">层层转包，各司其职</span></h2>
+    <div class="arch-flow">
+        <div class="arch-node anim-item">
+            <div class="arch-icon"><i class="fa-solid fa-brain"></i></div>
+            <h3>Architect</h3>
+            <p>大脑风暴 Agent<br>分析需求 · 搜索方案<br>澄清细节 · 生成计划</p>
+        </div>
+        <div class="arch-arrow anim-item"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="arch-node anim-item">
+            <div class="arch-icon"><i class="fa-solid fa-list-check"></i></div>
+            <h3>Task.json</h3>
+            <p>任务清单文档<br>逐步拆解 · 详细说明<br>测试验证标准</p>
+        </div>
+        <div class="arch-arrow anim-item"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="arch-node anim-item">
+            <div class="arch-icon"><i class="fa-solid fa-gears"></i></div>
+            <h3>Worker × N</h3>
+            <p>子代理执行层<br>每个Worker只拿一个子任务<br>上下文精简 · 不越界</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 6: Breakpoint Resume ===== -->
+<div class="slide s6" data-slide="5">
+    <div class="grid-bg"></div>
+
+    <h2 class="anim-item">天然支持 <span class="hl">断点续传</span></h2>
+    <div class="bp-visual">
+        <div class="bp-step done anim-item">
+            <div class="step-num"><i class="fa-solid fa-check"></i></div>
+            <h4>Task 1</h4>
+            <p>需求分析<br>已完成 ✓</p>
+        </div>
+        <div class="bp-arrow anim-item"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="bp-step done anim-item">
+            <div class="step-num"><i class="fa-solid fa-check"></i></div>
+            <h4>Task 2</h4>
+            <p>架构设计<br>已完成 ✓</p>
+        </div>
+        <div class="bp-arrow anim-item"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="bp-step current anim-item">
+            <div class="step-num">3</div>
+            <h4>Task 3</h4>
+            <p>核心实现<br>执行中...</p>
+        </div>
+        <div class="bp-arrow anim-item"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="bp-step anim-item">
+            <div class="step-num">4</div>
+            <h4>Task 4</h4>
+            <p>测试验证<br>待执行</p>
+        </div>
+    </div>
+    <div class="success-box anim-item" style="margin-top:30px;">
+        <p><i class="fa-solid fa-power-off"></i> <b>死机？关机？重启？</b> 重新启动后 Executor 自动检查 task.json 中最后完成的任务，从断点处继续执行，不丢进度。</p>
+    </div>
+</div>
+
+<!-- ===== SLIDE 7: Safety ===== -->
+<div class="slide s7" data-slide="6">
+    <div class="particles">
+        <div class="particle" style="width:12px;height:12px;background:var(--green);top:18%;left:10%;animation-delay:0s;animation-duration:7s;"></div>
+        <div class="particle" style="width:9px;height:9px;background:var(--orange);top:65%;right:12%;animation-delay:1s;animation-duration:9s;"></div>
+        <div class="particle" style="width:11px;height:11px;background:var(--amber);top:35%;left:80%;animation-delay:2s;animation-duration:8s;"></div>
+        <div class="particle" style="width:7px;height:7px;background:var(--coral);top:75%;left:20%;animation-delay:0.5s;animation-duration:6s;"></div>
+    </div>
+    <div class="glow-orb orb-orange" style="width:200px;height:200px;top:-60px;right:-60px;"></div>
+    <div class="glow-orb orb-amber" style="width:150px;height:150px;bottom:-40px;left:-40px;"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-shield"></i> 安全机制
+    </div>
+    <h2 class="anim-item">四重防线：<span class="hl">让AI安全地自主工作</span></h2>
+    <div class="safety-grid">
+        <div class="safety-card anim-item">
+            <div class="s-icon"><i class="fa-solid fa-flask"></i></div>
+            <h3>TDD 开发模式</h3>
+            <p>强制先写测试用例再写实现，测试全部通过才算完成。避免 AI 写出有 bug 但不自知的代码，杜绝"看起来能用但一跑就崩"。</p>
+        </div>
+        <div class="safety-card anim-item">
+            <div class="s-icon"><i class="fa-solid fa-file-shield"></i></div>
+            <h3>Test Safety Protocol</h3>
+            <p>限制文件系统写入仅限当前项目目录，禁止操作系统全局路径。每次 TDD 开发前强制读取安全协议文档。</p>
+        </div>
+        <div class="safety-card anim-item">
+            <div class="s-icon"><i class="fa-brands fa-docker"></i></div>
+            <h3>Docker 沙箱隔离</h3>
+            <p>容器内只有项目文件和 Open Code 配置，根目录仅有项目目录。AI 再怎么"飘"也只能破坏项目本身，动不了系统。</p>
+        </div>
+        <div class="safety-card anim-item">
+            <div class="s-icon"><i class="fa-brands fa-git-alt"></i></div>
+            <h3>Git 安全规则</h3>
+            <p>默认不 push（除非明确要求），自动管理 .gitignore 排除二进制文件，遵循规范化 commit message 格式。</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 8: Custom Agents ===== -->
+<div class="slide s8" data-slide="7">
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-sliders"></i> 可定制性
+    </div>
+    <h2 class="anim-item">自定义 Agent 类型：<span class="hl">不止 Build 和 Plan</span></h2>
+    <div class="agent-row">
+        <div class="agent-card build anim-item">
+            <div class="a-icon"><i class="fa-solid fa-hammer"></i></div>
+            <h3>Build 模式</h3>
+            <p>默认执行模式。收到指令直接行动，高效完成任务。</p>
+            <span class="tag">Tab 切换</span>
+        </div>
+        <div class="agent-card plan anim-item">
+            <div class="a-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+            <h3>Plan 模式</h3>
+            <p>先输出计划书，审核通过后再执行。防止 AI 脑补错误的方向。</p>
+            <span class="tag">Shift+Tab 切换</span>
+        </div>
+        <div class="agent-card custom anim-item">
+            <div class="a-icon"><i class="fa-solid fa-palette"></i></div>
+            <h3>自定义 Agent</h3>
+            <p>定义专属 Agent 类型：颜色、提示词、行为模式完全可定制。</p>
+            <span class="tag">大脑风暴 · 代码审查 · 更多</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 9: Collaboration Tips ===== -->
+<div class="slide s9" data-slide="8">
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-lightbulb"></i> 实战技巧
+    </div>
+    <h2 class="anim-item">AI 协作的 <span class="hl">三个关键方法</span></h2>
+    <div class="tips-list">
+        <div class="tip-item anim-item">
+            <div class="tip-num">1</div>
+            <div class="tip-body">
+                <h4>直接说目标X，不要说错误方案Z</h4>
+                <p>避免 XY 问题：不要预设错误路径去提问。先描述原始需求X，可附带"想到的方法是Z但不确定"，让AI判断正确做法。</p>
+            </div>
+        </div>
+        <div class="tip-item anim-item">
+            <div class="tip-num">2</div>
+            <div class="tip-body">
+                <h4>你自己写代码，让 AI 来审核</h4>
+                <p>AI 写代码容易幻觉API、曲解需求，但它审代码非常高效——变量命名错误、未处理返回值，它一眼就能看出来。</p>
+            </div>
+        </div>
+        <div class="tip-item anim-item">
+            <div class="tip-num">3</div>
+            <div class="tip-body">
+                <h4>Plan → Review → Build 工作流</h4>
+                <p>先让 AI 展示计划（Plan模式），审核脑补内容是否正确，纠正后再切换 Build 模式执行。相当于拼音输入法的候选词机制。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 10: Prompt Engineering ===== -->
+<div class="slide s10" data-slide="9">
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> 提示词工程
+    </div>
+    <h2 class="anim-item">四条 <span class="hl">核心方法论</span></h2>
+    <div class="rule-grid">
+        <div class="rule-card anim-item">
+            <div class="r-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <h4>文档 = 长期记忆</h4>
+            <p>把关键规范写入文档，用 @引用 强制 AI 读取。对话只是短期记忆，不要把所有信息塞进上下文。</p>
+        </div>
+        <div class="rule-card r2 anim-item">
+            <div class="r-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <h4>用强制词，不解释</h4>
+            <p>使用 must / always / don't，不要解释为什么。AI 是一次性"摔炮"，以服从命令为天职，不需要了解背景故事。</p>
+        </div>
+        <div class="rule-card r3 anim-item">
+            <div class="r-icon"><i class="fa-solid fa-scissors"></i></div>
+            <h4>新任务 = 新对话</h4>
+            <p>不同任务不要共用上下文。"中世纪裹脚布"只会让 AI 遗漏关键信息。干净上下文远胜冗长历史。</p>
+        </div>
+        <div class="rule-card r4 anim-item">
+            <div class="r-icon"><i class="fa-solid fa-code"></i></div>
+            <h4>规范先行，风格一致</h4>
+            <p>用 UV 而非 pip；新项目 4 空格缩进；已有项目遵循现有风格。代码英文，回复中文。一次配置，持续生效。</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 11: Tool Ecosystem ===== -->
+<div class="slide s11" data-slide="10">
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-toolbox"></i> 工具生态
+    </div>
+    <h2 class="anim-item">小潘老师的 <span class="hl">AI 增强工具链</span></h2>
+    <div class="tool-row">
+        <div class="tool-card anim-item">
+            <div class="t-icon"><i class="fa-solid fa-brain"></i></div>
+            <h3>Brain Stack</h3>
+            <p>开发中突发的随机想法快速捕获工具。截图+文字记录，快捷键唤出，不打断当前工作流。</p>
+            <span class="t-badge"><i class="fa-solid fa-camera"></i> 截图 + 文字</span>
+        </div>
+        <div class="tool-card anim-item">
+            <div class="t-icon"><i class="fa-solid fa-clock"></i></div>
+            <h3>正向计时器</h3>
+            <p>workstart 标记开始时间，随时查看已工作时长。到点提醒休息，保护精力不被耗尽。</p>
+            <span class="t-badge"><i class="fa-solid fa-bell"></i> 到时提醒</span>
+        </div>
+        <div class="tool-card anim-item">
+            <div class="t-icon"><i class="fa-solid fa-code-commit"></i></div>
+            <h3>Fish Commit 助手</h3>
+            <p>输入 commit 自动调用 AI 生成规范的 commit message。多行详细说明，不再手动敲提交信息。</p>
+            <span class="t-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 自动生成</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 12: Core Insights ===== -->
+<div class="slide s12" data-slide="11">
+    <div class="deco-circle" style="width:400px;height:400px;background:var(--orange);top:-100px;right:-80px;opacity:0.06;animation:rotateScale 20s linear infinite;"></div>
+    <div class="deco-circle" style="width:250px;height:250px;background:var(--coral);bottom:-60px;left:-60px;opacity:0.05;animation:rotateScale 15s linear infinite reverse;"></div>
+    <div class="particles">
+        <div class="particle" style="width:14px;height:14px;background:var(--orange);top:12%;left:6%;animation-delay:0s;animation-duration:6s;"></div>
+        <div class="particle" style="width:8px;height:8px;background:var(--amber);top:55%;right:8%;animation-delay:1s;animation-duration:8s;"></div>
+        <div class="particle" style="width:10px;height:10px;background:var(--green);top:25%;right:15%;animation-delay:2s;animation-duration:7s;"></div>
+        <div class="particle" style="width:6px;height:6px;background:var(--coral);top:78%;left:20%;animation-delay:0.5s;animation-duration:9s;"></div>
+        <div class="particle" style="width:12px;height:12px;background:var(--orange);top:45%;left:85%;animation-delay:1.5s;animation-duration:6.5s;"></div>
+    </div>
+    <div class="glow-orb orb-orange" style="width:300px;height:300px;top:20%;left:-100px;"></div>
+    <div class="glow-orb orb-coral" style="width:200px;height:200px;bottom:10%;right:-80px;"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-gem"></i> 总结收尾
+    </div>
+    <h2 class="anim-item">核心洞察<span class="hl">总结</span></h2>
+    <div class="insight-grid">
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-1"></i></div>
+            <h3>开源即自由</h3>
+            <p>不被厂商绑定，模型自由选择是AI编程助手的核心竞争力。</p>
+        </div>
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-2"></i></div>
+            <h3>智能 > 粗暴</h3>
+            <p>细粒度的权限判断胜过"全有全无"，这是工具能否安全后台运行的关键。</p>
+        </div>
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-3"></i></div>
+            <h3>分工是王道</h3>
+            <p>Architect → Task → Worker 的层层转包架构，把复杂任务拆解为可控的原子操作。</p>
+        </div>
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-4"></i></div>
+            <h3>安全不是可选</h3>
+            <p>TDD + Safety Protocol + Docker + Git 四重保障，让AI可以放心地在后台长时间运行。</p>
+        </div>
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-5"></i></div>
+            <h3>AI是工具不是人</h3>
+            <p>用强制词下指令，用文档做记忆，用 @ 引用做输入。把AI当成一次性的"智能摔炮"。</p>
+        </div>
+        <div class="insight-card anim-item">
+            <div class="ii"><i class="fa-solid fa-6"></i></div>
+            <h3>人写AI审 > AI写人审</h3>
+            <p>AI在代码审核上的能力远超代码生成。最佳分工：人负责创造，AI负责检查。</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SLIDE 13: Future Directions ===== -->
+<div class="slide s13" data-slide="12">
+    <div class="deco-circle deco-1"></div>
+    <div class="deco-circle deco-2"></div>
+    <div class="particles">
+        <div class="particle" style="width:12px;height:12px;background:var(--orange);top:10%;left:12%;animation-delay:0s;animation-duration:7s;"></div>
+        <div class="particle" style="width:9px;height:9px;background:var(--coral);top:60%;right:10%;animation-delay:1s;animation-duration:8s;"></div>
+        <div class="particle" style="width:11px;height:11px;background:var(--amber);top:30%;right:20%;animation-delay:2s;animation-duration:6.5s;"></div>
+        <div class="particle" style="width:7px;height:7px;background:var(--green);top:80%;left:18%;animation-delay:0.7s;animation-duration:9s;"></div>
+        <div class="particle" style="width:10px;height:10px;background:var(--orange);top:50%;left:75%;animation-delay:1.5s;animation-duration:7.5s;"></div>
+    </div>
+    <div class="glow-orb orb-amber" style="width:250px;height:250px;top:30%;right:-80px;"></div>
+    <div class="grid-bg"></div>
+
+    <div class="section-tag anim-item">
+        <i class="fa-solid fa-rocket"></i> 收尾点睛
+    </div>
+    <h2 class="anim-item">日后<span class="hl">奋斗方向</span></h2>
+    <div class="future-list">
+        <div class="future-item anim-item">
+            <div class="f-icon"><i class="fa-solid fa-arrows-spin"></i></div>
+            <div class="f-text">
+                <h4>持续优化 Safety Protocol</h4>
+                <p>让AI在项目目录内的操作更自由，同时对外部系统的防护更严格。在效率与安全之间找到最佳平衡点。</p>
+            </div>
+        </div>
+        <div class="future-item anim-item">
+            <div class="f-icon"><i class="fa-solid fa-puzzle-piece"></i></div>
+            <div class="f-text">
+                <h4>完善 Agent 技能体系</h4>
+                <p>构建更多专用 Agent 类型（代码审查、性能分析、文档生成），形成可复用的技能库。</p>
+            </div>
+        </div>
+        <div class="future-item anim-item">
+            <div class="f-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="f-text">
+                <h4>量化 AI 编程效率提升</h4>
+                <p>建立度量体系，追踪 AI 辅助开发的代码质量、bug率、开发速度，用数据指导工具优化。</p>
+            </div>
+        </div>
+        <div class="future-item anim-item">
+            <div class="f-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="f-text">
+                <h4>推广开源 AI 编程文化</h4>
+                <p>分享 Open Code 配置包和最佳实践，降低 AI 编程工具的使用门槛，让更多人享受开源红利。</p>
+            </div>
+        </div>
+        <div class="future-item anim-item">
+            <div class="f-icon"><i class="fa-solid fa-globe"></i></div>
+            <div class="f-text">
+                <h4>探索多模态编程交互</h4>
+                <p>结合语音、截图、白板等输入方式，让AI理解更丰富的上下文，提供更精准的编程辅助。</p>
+            </div>
+        </div>
+    </div>
+    <div class="warn-box anim-item">
+        <p><i class="fa-solid fa-triangle-exclamation"></i> <b>警示：</b> 不要在提示词中注入无关信息（罗马神话、取名缘由等），不要向AI解释"为什么"——它是一次性工具，浪费token就是对效率和资金的浪费。</p>
+    </div>
+    <div class="success-box anim-item">
+        <p><i class="fa-solid fa-circle-check"></i> <b>记住：</b> Open Code 的核心价值 = 开源自由 × 智能权限 × 架构分离 × 安全沙箱。掌握这四个维度，就能把AI编程助手从"玩具"升级为"生产力引擎"。</p>
+    </div>
+</div>
+
+</div>
+
+<script>
+(function() {
+    var slides = document.querySelectorAll('.slide');
+    var totalSlides = slides.length;
+    var currentSlide = 0;
+    var pageCur = document.getElementById('pageCur');
+    var dotsContainer = document.getElementById('pageDots');
+
+    // Create page dots
+    for (var i = 0; i < totalSlides; i++) {
+        (function(idx) {
+            var dot = document.createElement('div');
+            dot.className = 'dot' + (idx === 0 ? ' active' : '');
+            dot.addEventListener('click', function() { goToSlide(idx); });
+            dotsContainer.appendChild(dot);
+        })(i);
+    }
+
+    function updateDots() {
+        var dots = dotsContainer.querySelectorAll('.dot');
+        dots.forEach(function(d, i) { d.classList.toggle('active', i === currentSlide); });
+    }
+
+    function updatePageNum() {
+        pageCur.textContent = String(currentSlide + 1).padStart(2, '0');
+    }
+
+    function triggerAnimations(slide) {
+        var items = slide.querySelectorAll('.anim-item');
+        items.forEach(function(el, i) {
+            el.classList.remove('show');
+            setTimeout(function() { el.classList.add('show'); }, 150 * i);
+        });
+    }
+
+    function resetSlide(slide) {
+        // Clone nodes to force CSS animation reset
+        slide.querySelectorAll('.anim-item').forEach(function(item) {
+            var clone = item.cloneNode(true);
+            item.parentNode.replaceChild(clone, item);
+        });
+    }
+
+    function goToSlide(index) {
+        if (index < 0 || index >= totalSlides || index === currentSlide) return;
+        resetSlide(slides[currentSlide]);
+        slides[currentSlide].classList.remove('active');
+        currentSlide = index;
+        slides[currentSlide].classList.add('active');
+        triggerAnimations(slides[currentSlide]);
+        updateDots();
+        updatePageNum();
+    }
+
+    function changeSlide(dir) { goToSlide(currentSlide + dir); }
+
+    // Init
+    updatePageNum();
+    setTimeout(function() { triggerAnimations(slides[0]); }, 200);
+
+    // Keyboard
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+            e.preventDefault(); changeSlide(1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault(); changeSlide(-1);
+        }
+    });
+
+    // Touch
+    var touchX = 0;
+    document.addEventListener('touchstart', function(e) { touchX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', function(e) {
+        var diff = touchX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 60) changeSlide(diff > 0 ? 1 : -1);
+    });
+
+    // Click zones
+    document.addEventListener('click', function(e) {
+        var x = e.clientX, w = window.innerWidth;
+        if (x > w * 0.65) changeSlide(1);
+        else if (x < w * 0.35) changeSlide(-1);
+    });
+
+    // Wheel
+    var wheelTimeout;
+    document.addEventListener('wheel', function(e) {
+        if (wheelTimeout) return;
+        wheelTimeout = setTimeout(function() { wheelTimeout = null; }, 800);
+        changeSlide(e.deltaY > 0 ? 1 : -1);
+    }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
