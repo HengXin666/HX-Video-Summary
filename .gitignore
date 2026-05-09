@@ -37,6 +37,9 @@ videos/
 # data 目录（deployments.json 通过 Pages 持久化，不需要提交到 git）
 data/
 
+# 封面图片缓存（CI 运行时从B站CDN下载, 随 Pages 部署, 不提交 git）
+pages/covers/
+
 # cc
 .claude/settings.local.json
 .codebuddy/

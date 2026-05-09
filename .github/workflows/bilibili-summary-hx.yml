@@ -344,7 +344,7 @@ jobs:
     needs: process
     runs-on: ubuntu-latest
     concurrency:
-      group: pages-deploy-hx
+      group: pages-deploy
       cancel-in-progress: true
 
     steps:
@@ -396,6 +396,27 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: pages
           destination_dir: hx-${{ github.run_number }}
+          keep_files: true
+          enable_jekyll: false
+
+      - name: 清理 pages (为根目录索引做准备)
+        run: |
+          rm -f pages/bilibili_ppt.html pages/summary.txt pages/deployments.json
+
+      - name: 生成 Pages 索引页面
+        env:
+          RUN_NUMBER: hx-${{ github.run_number }}
+          RUN_TITLE: ${{ steps.meta.outputs.video_title || 'B站视频' }}
+          BILIBILI_URL: ${{ inputs.bilibili_url }}
+        run: |
+          python py/generate_index.py
+
+      - name: 部署更新后的索引到 Pages (根目录)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages
+          destination_dir: .
           keep_files: true
           enable_jekyll: false
 

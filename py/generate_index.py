@@ -18,6 +18,9 @@ from pathlib import Path
 # 从 raw GitHub 拉取(无 CDN 延迟, 避免并发竞态)
 RAW_URL = "https://raw.githubusercontent.com/HengXin666/HX-Video-Summary/gh-pages"
 
+# 封面图片本地缓存目录 (B站CDN有防盗链, 需下载到本地)
+COVERS_DIR = "covers"
+
 # 配色方案(与 science-content-ppt skill 保持一致)
 COLORS = {
     "bg": "#0F0E17",
@@ -161,6 +164,41 @@ def fetch_bilibili_info(bilibili_url: str) -> dict:
     return result
 
 
+def download_cover_image(cover_url: str, run_number: str, output_dir: Path) -> str:
+    """下载B站封面到本地 pages/covers/, 返回相对路径, 失败返回空字符串"""
+    covers_dir = output_dir / COVERS_DIR
+    covers_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = ".jpg"
+    if ".png" in cover_url.lower():
+        ext = ".png"
+    elif ".webp" in cover_url.lower():
+        ext = ".webp"
+
+    local_file = covers_dir / f"{run_number}{ext}"
+    if local_file.exists():
+        print(f"封面已存在, 跳过: {run_number}")
+        return f"{COVERS_DIR}/{run_number}{ext}"
+
+    try:
+        req = urllib.request.Request(cover_url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://www.bilibili.com/",
+        })
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = resp.read()
+            if len(data) < 1024:
+                print(f"封面文件过小 ({len(data)}B): {run_number}")
+                return ""
+            with open(local_file, "wb") as f:
+                f.write(data)
+            print(f"封面已下载: {run_number} ({len(data)}B)")
+            return f"{COVERS_DIR}/{run_number}{ext}"
+    except Exception as e:
+        print(f"封面下载失败 #{run_number}: {e}")
+        return ""
+
+
 def group_deployments(deployments: list) -> list:
     """按视频分组，每组包含最新记录和历史记录"""
     groups = {}
@@ -185,7 +223,7 @@ def render_card(d: dict, is_history: bool = False) -> str:
     run_num = d.get("run_number", "")
     title = d.get("title", "未知视频")
     bilibili_url = d.get("bilibili_url", "")
-    cover_url = d.get("cover_url", "")
+    cover_url = d.get("local_cover", "") or d.get("cover_url", "")
     owner_name = d.get("owner_name", "")
     owner_face = d.get("owner_face", "")
     owner_mid = d.get("owner_mid", "")
@@ -1068,6 +1106,13 @@ def main():
                 d["owner_face"] = info["owner_face"]
                 d["owner_mid"] = info["owner_mid"]
                 print(f"回填UP主: #{d.get('run_number')} -> {info['owner_name']}")
+
+    # 下载封面到本地 (B站CDN防盗链, 远程热链无法渲染)
+    for d in deployments:
+        if d.get("cover_url") and not d.get("local_cover"):
+            local = download_cover_image(d["cover_url"], d["run_number"], output_dir)
+            if local:
+                d["local_cover"] = local
 
     # 按时间戳倒序排列(最新的在最上面)
     deployments.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
