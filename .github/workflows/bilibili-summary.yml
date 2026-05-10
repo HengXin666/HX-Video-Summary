@@ -366,11 +366,18 @@ jobs:
         run: |
           rm -f pages/bilibili_ppt.html pages/summary.txt pages/deployments.json
 
+      - name: 克隆 gh-pages (供回填缺失记录)
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-backfill
+
       - name: 生成 Pages 索引页面 (从 raw GitHub 拉最新数据合并，无 CDN 延迟)
         env:
           RUN_NUMBER: ${{ github.run_number }}
           RUN_TITLE: ${{ steps.meta.outputs.video_title || 'B站视频' }}
           BILIBILI_URL: ${{ inputs.bilibili_url }}
+          GH_PAGES_DIR: /tmp/gh-pages-backfill
         run: |
           python py/generate_index.py
 
@@ -389,12 +396,10 @@ jobs:
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
             /tmp/gh-pages-clean
           cd /tmp/gh-pages-clean
-          # 清理所有 run 子目录中泄露的 index.html (旧单Job时代产物)
-          for d in [0-9]*/; do
+          for d in [0-9]*/ hx-*/; do
             [ -d "$d" ] || continue
             rm -f "$d/index.html"
           done
-          # 清理根目录残留的 PPT 产物 (只应在子目录中)
           rm -f bilibili_ppt.html summary.txt
           git add -A
           if git diff --staged --quiet; then

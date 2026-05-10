@@ -403,11 +403,18 @@ jobs:
         run: |
           rm -f pages/bilibili_ppt.html pages/summary.txt pages/deployments.json
 
+      - name: 克隆 gh-pages (供回填缺失记录)
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-backfill
+
       - name: 生成 Pages 索引页面
         env:
           RUN_NUMBER: hx-${{ github.run_number }}
           RUN_TITLE: ${{ steps.meta.outputs.video_title || 'B站视频' }}
           BILIBILI_URL: ${{ inputs.bilibili_url }}
+          GH_PAGES_DIR: /tmp/gh-pages-backfill
         run: |
           python py/generate_index.py
 
@@ -419,6 +426,51 @@ jobs:
           destination_dir: .
           keep_files: true
           enable_jekyll: false
+
+      - name: 清理 gh-pages 旧泄露文件 (子目录index.html + 根目录残留)
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-clean
+          cd /tmp/gh-pages-clean
+          for d in [0-9]*/ hx-*/; do
+            [ -d "$d" ] || continue
+            rm -f "$d/index.html"
+          done
+          rm -f bilibili_ppt.html summary.txt
+          git add -A
+          if git diff --staged --quiet; then
+            echo "gh-pages 已干净，无需清理"
+          else
+            git -c user.name="github-actions" -c user.email="actions@github.com" \
+              commit -m "chore: cleanup gh-pages (remove leaked files)"
+            git push
+            echo "清理完成"
+          fi
+
+      - name: 同步部署到 Cloudflare Workers (纯静态, 完整站点)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "未配置 CF_API_TOKEN / CF_ACCOUNT_ID secret，跳过 CF Workers 部署"
+            exit 0
+          fi
+          echo "从 gh-pages 分支拉取完整站点（含所有历史 run 子目录）..."
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-cf
+          echo "已拉取 $(find /tmp/gh-pages-cf -maxdepth 1 -type d | wc -l) 个目录/文件"
+          npm install -g wrangler
+          cat > wrangler.toml <<WRANGLER
+          name = "hx-video-summary"
+          compatibility_date = "2026-05-01"
+          [assets]
+          directory = "/tmp/gh-pages-cf"
+          WRANGLER
+          wrangler deploy
+          echo "CF Workers 完整站点部署完成"
 
       - name: 发送邮件
         env:

@@ -1,0 +1,102 @@
+name: 手动重新部署 (Pages索引 + CF同步)
+
+# 仅重新部署 GitHub Pages 索引和 Cloudflare Workers，
+# 不做视频下载/转写/总结。用于：
+# - 回填历史缺失的索引记录
+# - 修复 CF 未同步的问题
+# - 索引页面样式更新后批量刷新
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: true
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 Node.js (供 wrangler 使用)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 克隆 gh-pages 分支 (供回填 + 部署源)
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-full
+          echo "已拉取 $(find /tmp/gh-pages-full -maxdepth 1 -type d | wc -l) 个目录/文件"
+
+      - name: 生成/刷新索引页面 (扫描全部子目录回填缺失记录)
+        env:
+          GH_PAGES_DIR: /tmp/gh-pages-full
+        run: |
+          python py/generate_index.py
+
+      - name: 部署更新后的索引到 GitHub Pages (根目录)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages
+          destination_dir: .
+          keep_files: true
+          enable_jekyll: false
+
+      - name: 同步部署到 Cloudflare Workers (纯静态, 完整站点)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "未配置 CF_API_TOKEN / CF_ACCOUNT_ID secret，跳过 CF Workers 部署"
+            exit 0
+          fi
+          echo "从 gh-pages 分支拉取完整站点（含所有历史 run 子目录）..."
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-cf
+          echo "已拉取 $(find /tmp/gh-pages-cf -maxdepth 1 -type d | wc -l) 个目录/文件"
+          npm install -g wrangler
+          cat > wrangler.toml <<WRANGLER
+          name = "hx-video-summary"
+          compatibility_date = "2026-05-01"
+          [assets]
+          directory = "/tmp/gh-pages-cf"
+          WRANGLER
+          wrangler deploy
+          echo "CF Workers 完整站点部署完成"
+
+      - name: 清理 gh-pages 旧泄露文件
+        run: |
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+            /tmp/gh-pages-clean
+          cd /tmp/gh-pages-clean
+          for d in [0-9]*/ hx-*/; do
+            [ -d "$d" ] || continue
+            rm -f "$d/index.html"
+          done
+          rm -f bilibili_ppt.html summary.txt
+          git add -A
+          if git diff --staged --quiet; then
+            echo "gh-pages 已干净，无需清理"
+          else
+            git -c user.name="github-actions" -c user.email="actions@github.com" \
+              commit -m "chore: cleanup gh-pages (remove leaked files)"
+            git push
+            echo "清理完成"
+          fi

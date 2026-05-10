@@ -79,8 +79,10 @@ def save_deployments(data_file: Path, deployments: list):
 
 
 def add_current_deployment(deployments: list) -> list:
-    """添加当前运行到部署列表"""
+    """添加当前运行到部署列表(仅当 RUN_NUMBER 环境变量已设置)"""
     run_number = os.environ.get("RUN_NUMBER", "")
+    if not run_number:
+        return deployments
     run_title = os.environ.get("RUN_TITLE", "B站视频")
     bilibili_url = os.environ.get("BILIBILI_URL", "")
     info = fetch_bilibili_info(bilibili_url)
@@ -113,6 +115,47 @@ def add_current_deployment(deployments: list) -> list:
         entry["owner_face"] = info["owner_face"]
         entry["owner_mid"] = info["owner_mid"]
     deployments.append(entry)
+    return deployments
+
+
+def scan_gh_pages_for_missing(gh_pages_dir: str, deployments: list) -> list:
+    """扫描 gh-pages 克隆目录, 回填尚未记录到 deployments.json 的子目录"""
+    import re as _re
+    root = Path(gh_pages_dir)
+    if not root.is_dir():
+        print(f"gh-pages 目录不存在: {root}")
+        return deployments
+
+    existing_runs = {d.get("run_number") for d in deployments}
+    pattern = _re.compile(r"^(hx-)?\d+$")
+
+    for subdir in sorted(root.iterdir()):
+        if not subdir.is_dir():
+            continue
+        run_number = subdir.name
+        if not pattern.match(run_number):
+            continue
+        if run_number in existing_runs:
+            continue
+
+        meta_file = subdir / "deployments.json"
+        if not meta_file.exists():
+            continue
+        try:
+            with open(meta_file, "r", encoding="utf-8") as f:
+                sub_meta = json.load(f)
+            if isinstance(sub_meta, list) and sub_meta:
+                entry = sub_meta[0]
+                if "run_number" not in entry:
+                    entry["run_number"] = run_number
+                if "timestamp" not in entry:
+                    entry["timestamp"] = ""
+                deployments.append(entry)
+                existing_runs.add(run_number)
+                print(f"回填缺失记录: {run_number} — {entry.get('title', '?')}")
+        except Exception as e:
+            print(f"读取 {run_number} 元数据失败: {e}")
+
     return deployments
 
 
@@ -1085,7 +1128,12 @@ def main():
     if not deployments:
         deployments = load_local_deployments(Path("data/deployments.json"))
 
-    # 添加当前部署
+    # 回填 gh-pages 中存在但 deployment.json 缺失的子目录(如历史 hx-* 系列)
+    gh_pages_dir = os.environ.get("GH_PAGES_DIR", "")
+    if gh_pages_dir:
+        deployments = scan_gh_pages_for_missing(gh_pages_dir, deployments)
+
+    # 添加当前部署(仅当 RUN_NUMBER 设置)
     deployments = add_current_deployment(deployments)
 
     # 回填缺失的封面和UP主信息, 并修复 http→https
