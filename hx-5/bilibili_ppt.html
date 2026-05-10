@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>农民有多苦？农村有多穷？农业有多危险？——社会主义新农村建设始末</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: #0F0E17;
+  color: #FFFFFE;
+}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --accent3: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --green: #2EC4B6;
+  --red: #E71D36;
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --light: #FFFFFE;
+}
+
+.slide-container {
+  width: 100%; height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 80px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+  overflow: hidden;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.anim-item {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.anim-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bg-grid {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+.particles {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: floatParticle linear infinite;
+  opacity: 0;
+}
+@keyframes floatParticle {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) scale(1); opacity: 0; }
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+.slide-number {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.2);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* ========== SLIDE 1 - Title ========== */
+.slide-1 {
+  background: radial-gradient(ellipse at 50% 30%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-1 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  top: -100px; right: -100px;
+}
+.slide-1 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--accent3);
+  bottom: -100px; left: -50px;
+  animation-delay: -4s;
+}
+
+.slide-1 .icon-wrap {
+  position: relative;
+  margin-bottom: 28px;
+}
+.slide-1 .icon-main {
+  font-size: 90px;
+  color: var(--accent);
+  animation: pulseIcon 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+}
+@keyframes pulseIcon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.slide-1 .icon-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 140px; height: 140px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  animation: ringPulse 2.5s ease-in-out infinite;
+  opacity: 0.3;
+}
+.slide-1 .icon-ring:nth-child(3) {
+  width: 180px; height: 180px;
+  animation-delay: 0.5s;
+  opacity: 0.15;
+}
+@keyframes ringPulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%,-50%) scale(1.2); opacity: 0; }
+}
+
+.slide-1 .title-main {
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--light);
+  line-height: 1.3;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+.slide-1 .title-highlight {
+  color: var(--accent);
+  position: relative;
+  display: inline-block;
+}
+.slide-1 .title-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.slide-1 .subtitle {
+  font-size: 26px;
+  color: var(--gray);
+  margin-top: 12px;
+  font-weight: 400;
+}
+.slide-1 .tag-row {
+  display: flex;
+  gap: 18px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-1 .tag {
+  background: rgba(255,107,53,0.1);
+  color: var(--accent2);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 40px;
+  border: 1px solid rgba(255,107,53,0.25);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.slide-1 .tag:hover {
+  background: rgba(255,107,53,0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255,107,53,0.2);
+}
+
+/* ========== Generic Section Styles ========== */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 44px;
+}
+.section-header i {
+  font-size: 48px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 15px var(--accent-glow));
+}
+.section-header h2 {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--light);
+  letter-spacing: 1px;
+}
+
+.desc-text {
+  font-size: 26px;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.7;
+  max-width: 900px;
+  color: var(--gray);
+}
+.desc-text b {
+  color: var(--accent);
+  font-weight: 900;
+}
+.desc-text .hl {
+  color: var(--accent);
+  position: relative;
+  font-weight: 900;
+}
+.desc-text .hl::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0;
+  width: 100%; height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.desc-text .danger {
+  font-style: normal;
+  color: var(--red);
+  font-weight: 900;
+}
+
+/* ========== SLIDE 2 - 引子小品 ========== */
+.slide-2 {
+  background: radial-gradient(ellipse at 30% 60%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-2 .glow-orb-1 {
+  width: 400px; height: 400px;
+  background: var(--accent2);
+  top: -80px; left: -80px;
+}
+.slide-2 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--accent3);
+  bottom: -80px; right: -80px;
+  animation-delay: -3s;
+}
+
+.slide-2 .quote-box {
+  background: rgba(255,107,53,0.08);
+  border-left: 5px solid var(--accent);
+  border-radius: 8px 16px 16px 8px;
+  padding: 28px 36px;
+  margin-bottom: 28px;
+  max-width: 750px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.6;
+  backdrop-filter: blur(10px);
+}
+
+.slide-2 .char-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(231,29,54,0.08);
+  border: 2px solid rgba(231,29,54,0.3);
+  border-radius: 16px;
+  padding: 24px 32px;
+  max-width: 700px;
+  backdrop-filter: blur(10px);
+}
+.slide-2 .char-card i {
+  font-size: 46px;
+  color: var(--red);
+}
+.slide-2 .char-card .char-info {
+  flex: 1;
+}
+.slide-2 .char-card .char-name {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--red);
+}
+.slide-2 .char-card .char-desc {
+  font-size: 18px;
+  color: var(--gray);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ========== SLIDE 3 - 李昌平 ========== */
+.slide-3 {
+  background: radial-gradient(ellipse at 70% 40%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-3 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent3);
+  top: 50%; right: -150px;
+  transform: translateY(-50%);
+}
+
+.slide-3 .famous-quote {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.slide-3 .famous-quote .quote-line {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--light);
+  line-height: 1.6;
+  letter-spacing: 2px;
+  padding: 18px 36px;
+  background: rgba(255,107,53,0.06);
+  border-radius: 14px;
+  display: inline-block;
+  border: 1px solid rgba(255,107,53,0.2);
+}
+.slide-3 .famous-quote .quote-line span {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.slide-3 .data-cards {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-3 .data-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 24px 28px;
+  border-left: 4px solid var(--accent);
+  backdrop-filter: blur(10px);
+  min-width: 240px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+.slide-3 .data-card:hover { transform: translateY(-4px); }
+.slide-3 .data-card i {
+  font-size: 36px;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.slide-3 .data-card .dc-num {
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.slide-3 .data-card .dc-label {
+  font-size: 18px;
+  color: var(--gray);
+  margin-top: 6px;
+}
+
+/* ========== SLIDE 4 - 土地制度 ========== */
+.slide-4 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-4 .glow-orb-1 {
+  width: 400px; height: 400px;
+  background: var(--green);
+  top: -100px; left: 10%;
+}
+.slide-4 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--red);
+  bottom: -100px; right: 10%;
+  animation-delay: -3s;
+}
+
+.slide-4 .land-cards {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.slide-4 .land-card {
+  width: 300px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 20px;
+  padding: 30px 24px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(231,29,54,0.3);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.slide-4 .land-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+  pointer-events: none;
+}
+.slide-4 .land-card:hover { transform: translateY(-5px); }
+.slide-4 .land-card i {
+  font-size: 48px;
+  color: var(--red);
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 12px rgba(231,29,54,0.3));
+}
+.slide-4 .land-card .lc-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+.slide-4 .land-card .lc-desc {
+  font-size: 17px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+
+.slide-4 .money-box {
+  background: rgba(255,107,53,0.08);
+  border-radius: 14px;
+  padding: 20px 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(255,107,53,0.3);
+  margin-top: 12px;
+}
+.slide-4 .money-box i { font-size: 34px; color: var(--accent); }
+.slide-4 .money-box .money-num {
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.slide-4 .money-box .money-label {
+  font-size: 20px;
+  color: var(--gray);
+}
+
+/* ========== SLIDE 5 - 财政层层挤压 ========== */
+.slide-5 {
+  background: radial-gradient(ellipse at 40% 70%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-5 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  bottom: -150px; left: 50%;
+  transform: translateX(-50%);
+}
+
+.slide-5 .chain-visual {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-5 .chain-node {
+  background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(231,29,54,0.1));
+  border: 2px solid rgba(255,107,53,0.3);
+  border-radius: 14px;
+  padding: 16px 22px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--light);
+  text-align: center;
+  min-width: 90px;
+  transition: transform 0.3s ease;
+}
+.slide-5 .chain-node:hover { transform: translateY(-4px); }
+.slide-5 .chain-node.end {
+  border-color: rgba(231,29,54,0.5);
+  background: rgba(231,29,54,0.15);
+  color: var(--red);
+  animation: dangerPulse 2s ease-in-out infinite;
+}
+@keyframes dangerPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(231,29,54,0.25); }
+  50% { box-shadow: 0 4px 45px rgba(231,29,54,0.5); }
+}
+.slide-5 .chain-arrow { font-size: 22px; color: var(--accent2); }
+
+.slide-5 .burden-cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+.slide-5 .burden-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 22px 28px;
+  text-align: center;
+  border-left: 4px solid var(--accent);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+.slide-5 .burden-card:hover { transform: translateY(-4px); }
+.slide-5 .burden-card i { font-size: 32px; color: var(--accent); margin-bottom: 8px; }
+.slide-5 .burden-card .bc-num {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--red);
+}
+.slide-5 .burden-card .bc-label {
+  font-size: 17px;
+  color: var(--gray);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ========== SLIDE 6 - 乡镇企业 ========== */
+.slide-6 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-6 .glow-orb-1 {
+  width: 400px; height: 400px;
+  background: var(--green);
+  top: -100px; left: 10%;
+}
+.slide-6 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--red);
+  bottom: -100px; right: 10%;
+  animation-delay: -3s;
+}
+
+.slide-6 .vs-row {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.slide-6 .vs-card {
+  width: 320px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.slide-6 .vs-card:hover { transform: translateY(-5px); }
+.slide-6 .vs-card.rise {
+  border: 2px solid rgba(46,196,182,0.4);
+}
+.slide-6 .vs-card.rise i { color: var(--green); filter: drop-shadow(0 0 12px rgba(46,196,182,0.3)); }
+.slide-6 .vs-card.rise .vs-title { color: var(--green); }
+.slide-6 .vs-card.fall {
+  border: 2px solid rgba(231,29,54,0.4);
+}
+.slide-6 .vs-card.fall i { color: var(--red); filter: drop-shadow(0 0 12px rgba(231,29,54,0.3)); }
+.slide-6 .vs-card.fall .vs-title { color: var(--red); }
+.slide-6 .vs-card i { font-size: 48px; margin-bottom: 14px; }
+.slide-6 .vs-card .vs-title { font-size: 24px; font-weight: 900; margin-bottom: 10px; }
+.slide-6 .vs-card .vs-desc { font-size: 17px; color: var(--gray); line-height: 1.6; }
+
+.slide-6 .vs-arrow {
+  font-size: 48px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+
+.slide-6 .gap-stats {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-6 .gap-stat {
+  background: rgba(255,107,53,0.08);
+  border-radius: 12px;
+  padding: 14px 24px;
+  border: 1px solid rgba(255,107,53,0.2);
+  font-size: 18px;
+  color: var(--light);
+}
+.slide-6 .gap-stat b { color: var(--accent); font-size: 28px; }
+
+/* ========== SLIDE 7 - 群体性事件 ========== */
+.slide-7 {
+  background: radial-gradient(ellipse at 30% 60%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-7 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--red);
+  top: 50%; right: -150px;
+  transform: translateY(-50%);
+  opacity: 0.1;
+}
+
+.slide-7 .event-timeline {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 30px;
+  height: 260px;
+  padding: 0 20px;
+  position: relative;
+}
+.slide-7 .event-timeline::before {
+  content: '';
+  position: absolute;
+  bottom: 32px; left: 0;
+  width: 100%; height: 2px;
+  background: rgba(255,255,255,0.08);
+}
+.slide-7 .event-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+.slide-7 .event-bar {
+  width: 80px;
+  border-radius: 12px 12px 4px 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12px;
+  color: #FFF;
+  font-weight: 900;
+  font-size: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.slide-7 .event-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  pointer-events: none;
+}
+.slide-7 .event-bar.eb1 { background: linear-gradient(180deg, #FFAB91, #FF8A65); }
+.slide-7 .event-bar.eb2 { background: linear-gradient(180deg, #FF8A65, #FF7043); }
+.slide-7 .event-bar.eb3 { background: linear-gradient(180deg, #FF7043, var(--accent)); }
+.slide-7 .event-bar.eb4 { background: linear-gradient(180deg, var(--accent), var(--accent3)); }
+.slide-7 .event-bar.eb5 {
+  background: linear-gradient(180deg, var(--red), #B71C1C);
+  box-shadow: 0 4px 30px rgba(231,29,54,0.4);
+  animation: barAlert 1.5s ease-in-out infinite;
+}
+@keyframes barAlert {
+  0%, 100% { box-shadow: 0 4px 30px rgba(231,29,54,0.4); }
+  50% { box-shadow: 0 4px 50px rgba(231,29,54,0.7); }
+}
+.slide-7 .event-label {
+  font-size: 16px;
+  color: var(--gray);
+  font-weight: 700;
+}
+.slide-7 .event-label.danger {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.slide-7 .warn-box {
+  background: rgba(231,29,54,0.08);
+  border-left: 4px solid var(--red);
+  border-radius: 8px;
+  padding: 20px 28px;
+  max-width: 700px;
+  margin-top: 12px;
+  line-height: 1.6;
+  font-size: 20px;
+  color: var(--gray);
+}
+.slide-7 .warn-box b { color: var(--red); }
+.slide-7 .warn-box i { color: var(--red); margin-right: 8px; }
+
+/* ========== SLIDE 8 - 双重过剩 ========== */
+.slide-8 {
+  background: radial-gradient(ellipse at 70% 40%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-8 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent3);
+  top: 50%; right: -150px;
+  transform: translateY(-50%);
+}
+
+.slide-8 .surplus-cards {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-8 .surplus-card {
+  width: 280px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 20px;
+  padding: 28px 22px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,107,53,0.25);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.slide-8 .surplus-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  pointer-events: none;
+}
+.slide-8 .surplus-card:hover { transform: translateY(-5px); }
+.slide-8 .surplus-card i {
+  font-size: 44px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+.slide-8 .surplus-card .sc-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 8px;
+}
+.slide-8 .surplus-card .sc-desc {
+  font-size: 16px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+.slide-8 .idea-box {
+  background: linear-gradient(135deg, rgba(46,196,182,0.1), rgba(255,107,53,0.08));
+  border: 2px solid rgba(46,196,182,0.3);
+  border-radius: 16px;
+  padding: 24px 36px;
+  text-align: center;
+  max-width: 800px;
+}
+.slide-8 .idea-box i { font-size: 36px; color: var(--green); margin-right: 12px; }
+.slide-8 .idea-box span {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--green);
+}
+
+/* ========== SLIDE 9 - 新农村建设 ========== */
+.slide-9 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-9 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--green);
+  top: -100px; right: -100px;
+  opacity: 0.12;
+}
+
+.slide-9 .milestone {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.slide-9 .milestone .ms-date {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray);
+}
+.slide-9 .milestone .ms-event {
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--accent);
+  margin-top: 8px;
+  text-shadow: 0 0 30px var(--accent-glow);
+}
+.slide-9 .milestone .ms-sub {
+  font-size: 22px;
+  color: var(--gray);
+  margin-top: 8px;
+}
+
+.slide-9 .invest-cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+.slide-9 .invest-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  border-left: 4px solid var(--green);
+  backdrop-filter: blur(10px);
+  min-width: 220px;
+  transition: transform 0.3s ease;
+}
+.slide-9 .invest-card:hover { transform: translateY(-4px); }
+.slide-9 .invest-card i { font-size: 34px; color: var(--green); margin-bottom: 10px; }
+.slide-9 .invest-card .ic-num { font-size: 38px; font-weight: 900; color: var(--green); }
+.slide-9 .invest-card .ic-label { font-size: 18px; color: var(--gray); margin-top: 6px; }
+
+/* ========== SLIDE 10 - 减少农民数量 ========== */
+.slide-10 {
+  background: radial-gradient(ellipse at 50% 60%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-10 .glow-orb-1 {
+  width: 400px; height: 400px;
+  background: var(--accent2);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0.08;
+}
+
+.slide-10 .intl-compare {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.slide-10 .intl-card {
+  width: 280px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 18px;
+  padding: 26px 22px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,107,53,0.2);
+  transition: transform 0.3s ease;
+}
+.slide-10 .intl-card:hover { transform: translateY(-4px); }
+.slide-10 .intl-card i { font-size: 40px; color: var(--accent); margin-bottom: 12px; }
+.slide-10 .intl-card .intl-title { font-size: 22px; font-weight: 900; color: var(--light); }
+.slide-10 .intl-card .intl-data { font-size: 17px; color: var(--gray); margin-top: 8px; line-height: 1.6; }
+.slide-10 .intl-card .intl-data b { color: var(--accent); }
+
+.slide-10 .case-box {
+  background: rgba(46,196,182,0.06);
+  border: 1px solid rgba(46,196,182,0.2);
+  border-radius: 14px;
+  padding: 20px 28px;
+  text-align: center;
+  max-width: 750px;
+  font-size: 20px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+.slide-10 .case-box i { color: var(--green); margin-right: 8px; }
+.slide-10 .case-box b { color: var(--green); }
+
+/* ========== SLIDE 11 - 农民工艰难 ========== */
+.slide-11 {
+  background: radial-gradient(ellipse at 40% 50%, #1A1932 0%, #0F0E17 100%);
+}
+.slide-11 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--accent3);
+  bottom: -150px; left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.1;
+}
+
+.slide-11 .stat-highlight {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.slide-11 .stat-highlight .big-num {
+  font-size: 80px;
+  font-weight: 900;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(231,29,54,0.3);
+}
+.slide-11 .stat-highlight .big-label {
+  font-size: 24px;
+  color: var(--gray);
+  margin-top: 8px;
+}
+
+.slide-11 .reality-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.slide-11 .reality-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 20px 24px;
+  border-left: 4px solid var(--accent3);
+  backdrop-filter: blur(10px);
+  font-size: 18px;
+  color: var(--gray);
+  line-height: 1.6;
+  transition: transform 0.3s ease;
+}
+.slide-11 .reality-card:hover { transform: translateY(-4px); }
+.slide-11 .reality-card i { color: var(--accent3); margin-right: 8px; }
+.slide-11 .reality-card b { color: var(--light); }
+
+.slide-11 .comparison-box {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.slide-11 .comp-item {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+}
+.slide-11 .comp-item .comp-num {
+  font-size: 36px;
+  font-weight: 900;
+}
+.slide-11 .comp-item.china .comp-num { color: var(--red); }
+.slide-11 .comp-item.global .comp-num { color: var(--green); }
+.slide-11 .comp-item .comp-label { font-size: 16px; color: var(--gray); }
+.slide-11 .comp-vs { font-size: 28px; color: var(--gray); font-weight: 900; }
+
+/* ========== SLIDE 12 - 核心洞察总结 ========== */
+.slide-12 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-12 .glow-orb-1 {
+  width: 600px; height: 600px;
+  background: var(--accent);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0.08;
+}
+.slide-12 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--accent3);
+  bottom: -100px; left: -100px;
+  animation-delay: -4s;
+  opacity: 0.1;
+}
+
+.slide-12 .insight-header-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+.slide-12 .insight-icon {
+  font-size: 70px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+  position: relative;
+  z-index: 1;
+}
+.slide-12 .insight-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 130px; height: 130px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  animation: shieldPulse 3s ease-in-out infinite;
+  opacity: 0.2;
+}
+.slide-12 .insight-ring:nth-child(2) {
+  width: 170px; height: 170px;
+  animation-delay: 1s;
+}
+.slide-12 .insight-ring:nth-child(3) {
+  width: 210px; height: 210px;
+  animation-delay: 2s;
+}
+@keyframes shieldPulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.2; }
+  50% { transform: translate(-50%,-50%) scale(1.15); opacity: 0; }
+}
+
+.slide-12 .insight-title {
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 30px;
+}
+.slide-12 .insight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 850px;
+  width: 100%;
+}
+.slide-12 .insight-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 18px 24px;
+  border: 1px solid rgba(255,107,53,0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  text-align: left;
+}
+.slide-12 .insight-item:hover {
+  background: rgba(255,107,53,0.1);
+  transform: translateX(6px);
+  box-shadow: 0 6px 20px rgba(255,107,53,0.12);
+}
+.slide-12 .insight-item i {
+  font-size: 28px;
+  color: var(--accent);
+  min-width: 40px;
+  text-align: center;
+}
+.slide-12 .insight-item .ii-text {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--light);
+  line-height: 1.4;
+}
+.slide-12 .insight-item .ii-text b { color: var(--accent); }
+
+.slide-12 .summary-footnote {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-top: 30px;
+}
+
+/* ========== SLIDE 13 - 日后奋斗方向 ========== */
+.slide-13 {
+  background: radial-gradient(ellipse at 50% 50%, #1A1932 0%, #0F0E17 100%);
+  text-align: center;
+}
+.slide-13 .glow-orb-1 {
+  width: 500px; height: 500px;
+  background: var(--green);
+  top: -100px; right: -100px;
+  opacity: 0.1;
+}
+.slide-13 .glow-orb-2 {
+  width: 400px; height: 400px;
+  background: var(--accent2);
+  bottom: -80px; left: -80px;
+  opacity: 0.1;
+  animation-delay: -4s;
+}
+
+.slide-13 .future-title {
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--light);
+  margin-bottom: 36px;
+}
+.slide-13 .future-title span {
+  color: var(--accent);
+  position: relative;
+}
+.slide-13 .future-title span::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0;
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+}
+
+.slide-13 .future-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+  max-width: 900px;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .slide-13 .future-grid { grid-template-columns: 1fr; }
+}
+.slide-13 .future-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 22px 24px;
+  border: 1px solid rgba(46,196,182,0.25);
+  backdrop-filter: blur(10px);
+  text-align: left;
+  transition: all 0.3s ease;
+}
+.slide-13 .future-card:hover {
+  background: rgba(46,196,182,0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(46,196,182,0.1);
+}
+.slide-13 .future-card i {
+  font-size: 36px;
+  color: var(--green);
+  min-width: 46px;
+  text-align: center;
+}
+.slide-13 .future-card .fc-text {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--light);
+  line-height: 1.5;
+}
+
+.slide-13 .closing-line {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent2);
+  margin-top: 36px;
+  letter-spacing: 2px;
+}
+
+/* ========== Navigation ========== */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  padding: 18px 24px;
+  z-index: 100;
+  background: linear-gradient(to top, rgba(15,14,23,0.95), transparent);
+}
+.nav-btn {
+  background: rgba(255,107,53,0.1);
+  border: 1px solid rgba(255,107,53,0.3);
+  color: var(--accent2);
+  font-size: 18px;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Noto Sans SC', sans-serif;
+  backdrop-filter: blur(10px);
+}
+.nav-btn:hover {
+  background: rgba(255,107,53,0.2);
+  box-shadow: 0 4px 20px rgba(255,107,53,0.2);
+  transform: translateY(-2px);
+}
+.nav-btn:active { transform: scale(0.96); }
+.nav-page-indicator {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray);
+  letter-spacing: 2px;
+  min-width: 80px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="slide-container" id="slideContainer">
+
+  <!-- ============ SLIDE 1: Title ============ -->
+  <div class="slide slide-1 active" data-index="0">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="particles" id="particles1"></div>
+    <span class="slide-number">01 / 13</span>
+
+    <div class="anim-item icon-wrap">
+      <i class="fa-solid fa-wheat-awn icon-main"></i>
+      <div class="icon-ring"></div>
+      <div class="icon-ring"></div>
+    </div>
+    <div class="anim-item">
+      <div class="title-main">农民有多苦？农村有多穷？<br>农业有多<span class="title-highlight">危险</span>？</div>
+    </div>
+    <div class="anim-item">
+      <div class="subtitle">社会主义新农村建设始末 · 万字深度解析</div>
+    </div>
+    <div class="anim-item tag-row">
+      <span class="tag"><i class="fa-solid fa-landmark"></i>&nbsp; 三农问题</span>
+      <span class="tag"><i class="fa-solid fa-arrow-trend-up"></i>&nbsp; 土地制度</span>
+      <span class="tag"><i class="fa-solid fa-seedling"></i>&nbsp; 新农村建设</span>
+      <span class="tag"><i class="fa-solid fa-scale-balanced"></i>&nbsp; 城乡差距</span>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 2: 引子——小品《拜年》============ -->
+  <div class="slide slide-2" data-index="1">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <span class="slide-number">02 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-tv"></i>
+      <h2>1998年春晚小品《拜年》</h2>
+    </div>
+    <div class="anim-item quote-box">
+      <i class="fa-solid fa-quote-left" style="color:var(--accent);font-size:24px;margin-right:8px;"></i>
+      赵本山、高秀敏、范伟表演，表面讲养鱼大户给范乡长送礼，实则揭示了基层"精英+劣绅"联盟的时代缩影。
+    </div>
+    <div class="anim-item char-card">
+      <i class="fa-solid fa-user-secret"></i>
+      <div class="char-info">
+        <div class="char-name">范乡长的小舅子——没出场的"关键人物"</div>
+        <div class="char-desc">"那家伙一进门就高......正在俄罗斯谈判，要买一个航空母舰，赶紧腾出鱼塘"——短短几句话，一个仗势欺人的村霸形象跃然纸上。</div>
+      </div>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:24px;">
+      这部小品能在<b>1998年</b>问世，可见当时的小品对<b>时代背景的把握有多么精准</b>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 3: 李昌平上书 ============ -->
+  <div class="slide slide-3" data-index="2">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">03 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <h2>时代背景一：三农问题的爆发</h2>
+    </div>
+    <div class="anim-item famous-quote">
+      <div class="quote-line">
+        2000年 · 李昌平上书朱镕基总理<br>
+        <span>农民真苦 &nbsp; 农村真穷 &nbsp; 农业真危险</span>
+      </div>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:16px;">
+      当时农民的困境<b>远远超过</b>了今天能够想象的程度
+    </div>
+    <div class="anim-item data-cards">
+      <div class="data-card">
+        <i class="fa-solid fa-people-group"></i>
+        <div class="dc-num">6630万</div>
+        <div class="dc-label">农民失去土地<br>（1990-2002）</div>
+      </div>
+      <div class="data-card">
+        <i class="fa-solid fa-chart-pie"></i>
+        <div class="dc-num">4736万亩</div>
+        <div class="dc-label">非农建设占用耕地<br>（1990-2002）</div>
+      </div>
+      <div class="data-card">
+        <i class="fa-solid fa-coins"></i>
+        <div class="dc-num">5680亿</div>
+        <div class="dc-label">2005年土地出让差价<br>被各级政府收走</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 4: 土地制度 ============ -->
+  <div class="slide slide-4" data-index="3">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <span class="slide-number">04 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-landmark"></i>
+      <h2>土地制度的结构性矛盾</h2>
+    </div>
+    <div class="anim-item land-cards">
+      <div class="land-card">
+        <i class="fa-solid fa-gavel"></i>
+        <div class="lc-title">名义集体，实为干部支配</div>
+        <div class="lc-desc">土地承包调整、转让、征地补偿全部由村干部和乡镇干部说了算，农民没有任何话语权</div>
+      </div>
+      <div class="land-card">
+        <i class="fa-solid fa-lock"></i>
+        <div class="lc-title">无法转化为资本</div>
+        <div class="lc-desc">土地承包经营权和宅基地不能抵押、不允许房产跨村交易，农民无法筹集资金创业</div>
+      </div>
+      <div class="land-card">
+        <i class="fa-solid fa-handcuffs"></i>
+        <div class="lc-title">竭泽而渔的恶性循环</div>
+        <div class="lc-desc">农民不觉得土地是自己的财产，承包期内既不保护耕地，也不对土地进行长期投资</div>
+      </div>
+    </div>
+    <div class="anim-item money-box">
+      <i class="fa-solid fa-sack-dollar"></i>
+      <span class="money-label">2005年仅一年&nbsp;&nbsp;</span>
+      <span class="money-num">5,680亿元</span>
+      <span class="money-label">&nbsp;&nbsp;土地出让差价</span>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 5: 财政层层挤压 ============ -->
+  <div class="slide slide-5" data-index="4">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">05 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-arrow-down-up-across-line"></i>
+      <h2>财政层层挤压与农民负担</h2>
+    </div>
+    <div class="anim-item chain-visual">
+      <div class="chain-node">中央</div>
+      <i class="fa-solid fa-chevron-right chain-arrow"></i>
+      <div class="chain-node">省</div>
+      <i class="fa-solid fa-chevron-right chain-arrow"></i>
+      <div class="chain-node">市</div>
+      <i class="fa-solid fa-chevron-right chain-arrow"></i>
+      <div class="chain-node">县</div>
+      <i class="fa-solid fa-chevron-right chain-arrow"></i>
+      <div class="chain-node">乡镇</div>
+      <i class="fa-solid fa-chevron-right chain-arrow"></i>
+      <div class="chain-node end">农民</div>
+    </div>
+    <div class="anim-item desc-text" style="margin-bottom:18px;">
+      1994年<b>分税制改革</b>后，财政负担被<b>层层向下摊派</b>，最终全部压在农民肩上
+    </div>
+    <div class="anim-item burden-cards">
+      <div class="burden-card">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+        <div class="bc-num">679.44元</div>
+        <div class="bc-label">1996年湖北孝感<br>一户农民年负担总额</div>
+      </div>
+      <div class="burden-card">
+        <i class="fa-solid fa-circle-dollar-to-slot"></i>
+        <div class="bc-num">1,572元</div>
+        <div class="bc-label">1996年农民<br>人均年收入</div>
+      </div>
+      <div class="burden-card">
+        <i class="fa-solid fa-layer-group"></i>
+        <div class="bc-num">三提五统</div>
+        <div class="bc-label">公积金+公益金+管理费<br>教育+计生+民兵+优抚+交通</div>
+      </div>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:18px;">
+      政府退出教育、医疗等公共服务，农民<span class="danger">不仅享受不到服务，反而要自己掏钱买</span>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 6: 乡镇企业兴衰 ============ -->
+  <div class="slide slide-6" data-index="5">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <span class="slide-number">06 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-industry"></i>
+      <h2>乡镇企业：昙花一现的繁荣</h2>
+    </div>
+    <div class="anim-item vs-row">
+      <div class="vs-card rise">
+        <i class="fa-solid fa-arrow-trend-up"></i>
+        <div class="vs-title">八十年代：意外崛起</div>
+        <div class="vs-desc">家庭承包制催生了乡镇企业，填补了农村管理和福利的资金缺口，农民收入大幅提升</div>
+      </div>
+      <div class="vs-arrow">
+        <i class="fa-solid fa-right-long"></i>
+      </div>
+      <div class="vs-card fall">
+        <i class="fa-solid fa-arrow-trend-down"></i>
+        <div class="vs-title">九十年代末：私有化改制</div>
+        <div class="vs-desc">被迫"两头在外"参与国际竞争遭重创，改制后不再承担社区福利，农村就业率持续下滑</div>
+      </div>
+    </div>
+    <div class="anim-item gap-stats">
+      <div class="gap-stat">城乡收入差距 <b>3.24:1</b></div>
+      <div class="gap-stat">世界平均水平 <b>1.5:1</b></div>
+      <div class="gap-stat">城市面积年增 <b>6.18%</b></div>
+      <div class="gap-stat">城市人口年增 <b>1.3%</b></div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 7: 群体性事件 ============ -->
+  <div class="slide slide-7" data-index="6">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">07 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-people-arrows"></i>
+      <h2>农村群体性事件与社会危机</h2>
+    </div>
+    <div class="anim-item event-timeline">
+      <div class="event-bar-group">
+        <div class="event-bar eb1" style="height:60px;">1.5万</div>
+        <span class="event-label">1997</span>
+      </div>
+      <div class="event-bar-group">
+        <div class="event-bar eb2" style="height:105px;">3.2万</div>
+        <span class="event-label">1999</span>
+      </div>
+      <div class="event-bar-group">
+        <div class="event-bar eb3" style="height:165px;">6万</div>
+        <span class="event-label">2002</span>
+      </div>
+      <div class="event-bar-group">
+        <div class="event-bar eb4" style="height:210px;">7.4万</div>
+        <span class="event-label">2004</span>
+      </div>
+      <div class="event-bar-group">
+        <div class="event-bar eb5" style="height:255px;">8.6万</div>
+        <span class="event-label danger">2005</span>
+      </div>
+    </div>
+    <div class="anim-item desc-text">
+      全国群体性事件<b>8年增长近6倍</b>，其中<b>三分之一</b>是农民维权
+    </div>
+    <div class="anim-item warn-box">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      2000年<b>江西丰城事件</b>：农民购买减负手册遭镇政府阻挠，引发大规模冲击打砸。官方案访调查显示，大多数农民认为"<b>不砸不重视，一砸负担就减轻了</b>"
+    </div>
+    <div class="anim-item desc-text" style="margin-top:16px;">
+      基层政权出现<span class="danger">内卷化</span>——乡村公务人员向着<b>旧社会土豪劣绅</b>方向迅速黑化
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 8: 双重过剩 ============ -->
+  <div class="slide slide-8" data-index="7">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">08 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-scale-balanced"></i>
+      <h2>林毅夫：双重过剩下的恶性循环</h2>
+    </div>
+    <div class="anim-item surplus-cards">
+      <div class="surplus-card">
+        <i class="fa-solid fa-users"></i>
+        <div class="sc-title">第一重：劳动力严重过剩</div>
+        <div class="sc-desc">8亿农村劳动力涌向市场，加上国企数千万人裸体下岗——劳动力近乎无限供给，价格跌到极点</div>
+      </div>
+      <div class="surplus-card">
+        <i class="fa-solid fa-industry"></i>
+        <div class="sc-title">第二重：制造业产能过剩</div>
+        <div class="sc-desc">1997年亚洲金融危机后外需大幅萎缩，大量产能无法消化，供过于求的矛盾提早暴露</div>
+      </div>
+      <div class="surplus-card">
+        <i class="fa-solid fa-money-bill-trend-up"></i>
+        <div class="sc-title">第三重：金融资本过剩</div>
+        <div class="sc-desc">九十年代股市、期货、房地产市场放开，货币增发与紧缩政策叠加，资本暂时处于过剩阶段</div>
+      </div>
+    </div>
+    <div class="anim-item idea-box">
+      <i class="fa-solid fa-lightbulb"></i>
+      <span>林毅夫首次提出：利用当前过剩资本启动"社会主义新农村建设"战略</span>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:18px;">
+      2005年，新农村建设被列为<b>十一五规划八项战略之首</b>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 9: 新农村建设 ============ -->
+  <div class="slide slide-9" data-index="8">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="particles" id="particles9"></div>
+    <span class="slide-number">09 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-seedling"></i>
+      <h2>破局：社会主义新农村建设</h2>
+    </div>
+    <div class="anim-item milestone">
+      <div class="ms-date">2006年1月1日</div>
+      <div class="ms-event">延续两千多年的农业税正式废止</div>
+      <div class="ms-sub">皇粮国税，从此成为历史</div>
+    </div>
+    <div class="anim-item invest-cards">
+      <div class="invest-card">
+        <i class="fa-solid fa-money-bill-wave"></i>
+        <div class="ic-num">3万亿元</div>
+        <div class="ic-label">2003-2009年<br>三农财政投入累计</div>
+      </div>
+      <div class="invest-card">
+        <i class="fa-solid fa-house-chimney"></i>
+        <div class="ic-num">1.5万元</div>
+        <div class="ic-label">每个农户<br>平均获得的财政支持</div>
+      </div>
+      <div class="invest-card">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <div class="ic-num">75.3%</div>
+        <div class="ic-label">农民边际消费倾向<br>高于城市居民的69.5%</div>
+      </div>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:22px;">
+      工业反哺农业 · 城市支持农村 · <b>城乡收入差距扩大趋势终于被控制</b>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 10: 减少农民数量 ============ -->
+  <div class="slide slide-10" data-index="9">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">10 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-arrow-right-to-city"></i>
+      <h2>根本出路：减少农民的数量</h2>
+    </div>
+    <div class="anim-item desc-text" style="margin-bottom:22px;">
+      增产不增收的根源：农产品<b>收入弹性小</b>、<b>价格弹性小</b>——再多产，吃不掉的价格就会下跌
+    </div>
+    <div class="anim-item intl-compare">
+      <div class="intl-card">
+        <i class="fa-solid fa-flag-usa"></i>
+        <div class="intl-title">美国</div>
+        <div class="intl-data">1870年 <b>51%</b> 是农民<br>如今仅 <b>2%</b></div>
+      </div>
+      <div class="intl-card">
+        <i class="fa-solid fa-flag"></i>
+        <div class="intl-title">日本</div>
+        <div class="intl-data">1950年 <b>48%</b> 是农民<br>2000年仅 <b>3.9%</b></div>
+      </div>
+      <div class="intl-card">
+        <i class="fa-solid fa-flag"></i>
+        <div class="intl-title">中国</div>
+        <div class="intl-data">农业就业占比仍 <b>22.8%</b><br>但GDP占比仅 <b>7.1%</b></div>
+      </div>
+    </div>
+    <div class="anim-item case-box">
+      <i class="fa-solid fa-seedling"></i>
+      <b>甘肃定西</b>：农民工看到城里人爱吃土豆，回乡创业，最终成了<b>肯德基、麦当劳的马铃薯之乡</b><br>
+      <i class="fa-solid fa-seedling"></i>
+      <b>山东金乡</b>：大蒜出口量占全国<b>70%</b>，收入远超种植主粮
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 11: 农民工艰难 ============ -->
+  <div class="slide slide-11" data-index="10">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <span class="slide-number">11 / 13</span>
+
+    <div class="anim-item section-header">
+      <i class="fa-solid fa-hard-hat"></i>
+      <h2>现实与反思：农民工的艰难处境</h2>
+    </div>
+    <div class="anim-item stat-highlight">
+      <div class="big-num">9.3%</div>
+      <div class="big-label">中国制造业人均工资成本仅占人均增加值的比例</div>
+    </div>
+    <div class="anim-item comparison-box">
+      <div class="comp-item china">
+        <div class="comp-num">9.3%</div>
+        <div class="comp-label">中国</div>
+      </div>
+      <div class="comp-vs">vs</div>
+      <div class="comp-item global">
+        <div class="comp-num">35%-50%</div>
+        <div class="comp-label">发达国家</div>
+      </div>
+    </div>
+    <div class="anim-item desc-text" style="margin-top:16px;">
+      意味着创造<b>100元</b>价值，只获得<b>9.3元</b>工资
+    </div>
+    <div class="anim-item reality-cards">
+      <div class="reality-card">
+        <i class="fa-solid fa-circle-xmark"></i>
+        <b>干最脏最累的活</b>，拿最低的工资，工作时间为城镇职工的1.5倍以上
+      </div>
+      <div class="reality-card">
+        <i class="fa-solid fa-circle-xmark"></i>
+        不被城市接纳，难以落户，被嘲讽为<b>"低端人口"</b>
+      </div>
+      <div class="reality-card">
+        <i class="fa-solid fa-circle-xmark"></i>
+        年纪大了就被无情抛弃，带着伤病回农村，<b>养老医疗仍由农村承担</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 12: 核心洞察总结 ============ -->
+  <div class="slide slide-12" data-index="11">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="particles" id="particles12"></div>
+    <span class="slide-number">12 / 13</span>
+
+    <div class="anim-item insight-header-wrap">
+      <div class="insight-ring"></div>
+      <div class="insight-ring"></div>
+      <div class="insight-ring"></div>
+      <i class="fa-solid fa-lightbulb insight-icon"></i>
+    </div>
+    <div class="anim-item insight-title">核心洞察总结</div>
+    <div class="anim-item insight-list">
+      <div class="insight-item">
+        <i class="fa-solid fa-circle-1"></i>
+        <div class="ii-text">三农问题的本质是<b>制度设计的系统性失衡</b>：土地产权不清 + 财政层层挤压 + 城乡二元结构固化</div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-circle-2"></i>
+        <div class="ii-text">新农村建设是一次<b>成功的危机应对</b>：利用过剩资本反哺农村，稳定了濒临崩溃的基层政权</div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-circle-3"></i>
+        <div class="ii-text">农业税的废除是<b>历史性进步</b>，但农民真正富起来的路仍然漫长——农业就业人口占比22.8%，GDP仅占7.1%</div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-circle-4"></i>
+        <div class="ii-text">根本出路在城镇化，但城镇化<b>不能以牺牲农民工权益为代价</b></div>
+      </div>
+      <div class="insight-item">
+        <i class="fa-solid fa-circle-5"></i>
+        <div class="ii-text"><b>9.3%</b>的工资占比提醒我们：经济增长的果实需要更公平地分配——农民不该是被压榨的"基本盘"</div>
+      </div>
+    </div>
+    <div class="anim-item summary-footnote">
+      农民不该是被压榨的"基本盘"，而应是共享发展成果的主体
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 13: 日后奋斗方向 ============ -->
+  <div class="slide slide-13" data-index="12">
+    <div class="bg-grid"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <span class="slide-number">13 / 13</span>
+
+    <div class="anim-item">
+      <div class="future-title"><span>日后奋斗方向</span></div>
+    </div>
+    <div class="anim-item future-grid">
+      <div class="future-card">
+        <i class="fa-solid fa-city"></i>
+        <div class="fc-text">持续推进农业人口向城市及乡镇<b>二三产业</b>有序转移</div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-tractor"></i>
+        <div class="fc-text">加大政府对<b>农业基础设施</b>和农业科技的投入</div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-hand-holding-heart"></i>
+        <div class="fc-text">保障进城农民工公平待遇：<b>同工同酬、社会保障、子女教育</b></div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-file-contract"></i>
+        <div class="fc-text">完善农村土地制度改革，让农民真正享有<b>财产权利</b></div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-building-columns"></i>
+        <div class="fc-text">建立<b>城乡统一</b>的公共服务体系，缩小城乡差距</div>
+      </div>
+      <div class="future-card">
+        <i class="fa-solid fa-cart-flatbed"></i>
+        <div class="fc-text">构建<b>国内大市场</b>，让农产品更好流通，不让中间商欺压农民</div>
+      </div>
+    </div>
+    <div class="anim-item closing-line">
+      让农民成为体面的职业，让农村成为安居的家园
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== Navigation Bar ========== -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn"><i class="fa-solid fa-chevron-left"></i>&nbsp; 上一页</button>
+  <span class="nav-page-indicator" id="pageIndicator">01 / 13</span>
+  <button class="nav-btn" id="nextBtn">下一页 &nbsp;<i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<script>
+(function() {
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let current = 0;
+    let isAnimating = false;
+
+    // Generate particles
+    function createParticles(containerId, count) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 4 + 2;
+            const left = Math.random() * 100;
+            const duration = Math.random() * 8 + 8;
+            const delay = Math.random() * 10;
+            const hue = Math.random() > 0.5 ? '20' : '30';
+            p.style.cssText = `
+                width: ${size}px; height: ${size}px;
+                left: ${left}%;
+                background: hsl(${hue}, 90%, 60%);
+                box-shadow: 0 0 ${size*2}px hsl(${hue}, 90%, 60%);
+                animation-duration: ${duration}s;
+                animation-delay: ${delay}s;
+            `;
+            container.appendChild(p);
+        }
+    }
+    createParticles('particles1', 20);
+    createParticles('particles9', 15);
+    createParticles('particles12', 15);
+
+    function updatePageIndicator() {
+        const indicator = document.getElementById('pageIndicator');
+        if (indicator) {
+            const curr = String(current + 1).padStart(2, '0');
+            const total = String(totalSlides).padStart(2, '0');
+            indicator.textContent = curr + ' / ' + total;
+        }
+        // Update slide-number badges
+        slides.forEach(function(s, idx) {
+            const badge = s.querySelector('.slide-number');
+            if (badge) {
+                const currS = String(idx + 1).padStart(2, '0');
+                const totalS = String(totalSlides).padStart(2, '0');
+                badge.textContent = currS + ' / ' + totalS;
+            }
+        });
+    }
+
+    function resetAndAnimate(slideEl) {
+        // Clone nodes to force CSS animation reset
+        slideEl.querySelectorAll('.anim-item').forEach(function(item) {
+            var clone = item.cloneNode(true);
+            item.parentNode.replaceChild(clone, item);
+        });
+        // Animate items sequentially
+        var items = slideEl.querySelectorAll('.anim-item');
+        items.forEach(function(item, idx) {
+            setTimeout(function() {
+                item.classList.add('visible');
+            }, 200 + idx * 220);
+        });
+    }
+
+    function goTo(index) {
+        if (index === current || isAnimating || index < 0 || index >= totalSlides) return;
+        isAnimating = true;
+        // Hide current
+        slides[current].classList.remove('active');
+        slides[current].querySelectorAll('.anim-item').forEach(function(item) {
+            item.classList.remove('visible');
+        });
+        // Show target
+        current = index;
+        slides[current].classList.add('active');
+        updatePageIndicator();
+        resetAndAnimate(slides[current]);
+        setTimeout(function() { isAnimating = false; }, 1000);
+    }
+
+    function next() { if (current < totalSlides - 1) goTo(current + 1); }
+    function prev() { if (current > 0) goTo(current - 1); }
+
+    // Keyboard
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault(); next();
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault(); prev();
+        }
+    });
+
+    // Mouse wheel
+    var wheelTimeout = false;
+    document.addEventListener('wheel', function(e) {
+        if (wheelTimeout) return;
+        wheelTimeout = true;
+        if (e.deltaY > 0) next(); else prev();
+        setTimeout(function() { wheelTimeout = false; }, 1000);
+    }, { passive: true });
+
+    // Touch
+    var touchStartY = 0;
+    document.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; });
+    document.addEventListener('touchend', function(e) {
+        var diff = touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) next(); else prev();
+        }
+    });
+
+    // Click sides
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.nav-btn')) return;
+        var x = e.clientX;
+        var w = window.innerWidth;
+        if (x > w * 0.75) next();
+        else if (x < w * 0.25) prev();
+    });
+
+    // Nav buttons
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            prev();
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            next();
+        });
+    }
+
+    // Init
+    updatePageIndicator();
+    resetAndAnimate(slides[0]);
+})();
+</script>
+</body>
+</html>
