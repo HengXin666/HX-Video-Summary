@@ -1,5 +1,18 @@
 [
   {
+    "run_number": "hx-5",
+    "title": "农民有多苦？农村有多穷？农业有多危险？万字解析社会主义新农村始末【解读中国经济16】",
+    "bilibili_url": "https://www.bilibili.com/video/BV1jFP7erENg",
+    "timestamp": "2026-05-10 08:22:03",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "https://i2.hdslb.com/bfs/archive/c27268835cc47427bdd380a6e8319ea301125575.jpg",
+    "owner_name": "鹿头军师",
+    "owner_face": "https://i0.hdslb.com/bfs/face/4ca4735ffd9e909d702170595dff47d723c3881d.jpg",
+    "owner_mid": "2705784",
+    "local_cover": "covers/hx-5.jpg"
+  },
+  {
     "run_number": "25",
     "title": "【OpenCode】小彭老师skills+提示词配置分享",
     "bilibili_url": "https://www.bilibili.com/video/BV16WfwBDE4y",
@@ -9,7 +22,8 @@
     "cover_url": "https://i0.hdslb.com/bfs/archive/cbf6e4fc72d80930ee29e9772992365744ebaebb.jpg",
     "owner_name": "双笙子佯谬",
     "owner_face": "https://i0.hdslb.com/bfs/face/a0971237900a4beb3b6b0c5444b8f41f659e988c.jpg",
-    "owner_mid": "263032155"
+    "owner_mid": "263032155",
+    "local_cover": "covers/25.jpg"
   },
   {
     "run_number": "24",
@@ -21,7 +35,8 @@
     "cover_url": "https://i0.hdslb.com/bfs/archive/756aed24d3a2200ad99836f8c6911608f6546447.jpg",
     "owner_name": "双笙子佯谬",
     "owner_face": "https://i0.hdslb.com/bfs/face/a0971237900a4beb3b6b0c5444b8f41f659e988c.jpg",
-    "owner_mid": "263032155"
+    "owner_mid": "263032155",
+    "local_cover": "covers/24.jpg"
   },
   {
     "run_number": "23",
@@ -33,7 +48,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/c1aa1ac6d9bff990bfb70e3c2a5f1a276531d718.jpg",
     "owner_name": "科技老男孩",
     "owner_face": "https://i0.hdslb.com/bfs/face/bd767bdc31b18fc13c5e677adb4db8a893297512.jpg",
-    "owner_mid": "1278118266"
+    "owner_mid": "1278118266",
+    "local_cover": "covers/23.jpg"
   },
   {
     "run_number": "22",
@@ -45,7 +61,8 @@
     "cover_url": "https://i0.hdslb.com/bfs/archive/4d8d8ce4cb4d2ed39f27ffc5b391c96c4873bbcf.jpg",
     "owner_name": "橘鸦Juya",
     "owner_face": "https://i0.hdslb.com/bfs/face/afa12816f678f482a7333289d82437208b8d8cbf.jpg",
-    "owner_mid": "285286947"
+    "owner_mid": "285286947",
+    "local_cover": "covers/22.jpg"
   },
   {
     "run_number": "21",
@@ -57,7 +74,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/37e64d0128bef2da268dddb86651d00c19bca8e2.jpg",
     "owner_name": "老奇好好奇",
     "owner_face": "https://i1.hdslb.com/bfs/face/9f3e54f6d9a436f0e5aea34fb25477b17068ff63.jpg",
-    "owner_mid": "35894872"
+    "owner_mid": "35894872",
+    "local_cover": "covers/21.jpg"
   },
   {
     "run_number": "20",
@@ -69,7 +87,8 @@
     "cover_url": "https://i2.hdslb.com/bfs/archive/b8badfc3f421369639ba11ae4a719f43c8bdf4a6.jpg",
     "owner_name": "大象放映室",
     "owner_face": "https://i0.hdslb.com/bfs/face/9d3229d6157767ebe386f37f33d075e348bea07d.jpg",
-    "owner_mid": "49246269"
+    "owner_mid": "49246269",
+    "local_cover": "covers/20.jpg"
   },
   {
     "run_number": "19",
@@ -81,7 +100,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/e86a2970b4f341e02fa40cb8a034329979d3ff23.jpg",
     "owner_name": "老王聊天",
     "owner_face": "https://i1.hdslb.com/bfs/face/9afaea7dfbadc068070a04e9d46b5df50842ce41.jpg",
-    "owner_mid": "1612081513"
+    "owner_mid": "1612081513",
+    "local_cover": "covers/19.jpg"
   },
   {
     "run_number": "18",
@@ -93,7 +113,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg",
     "owner_name": "歌白说Geslook",
     "owner_face": "https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg",
-    "owner_mid": "315846984"
+    "owner_mid": "315846984",
+    "local_cover": "covers/18.jpg"
   },
   {
     "run_number": "17",
@@ -105,7 +126,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/6246f048e9506d4e9e0a2b6a6fbf6cd4d0670318.jpg",
     "owner_name": "小白debug",
     "owner_face": "https://i0.hdslb.com/bfs/face/ab6cf5698ed3db1997f84d515d39250ae56b450c.jpg",
-    "owner_mid": "302188068"
+    "owner_mid": "302188068",
+    "local_cover": "covers/17.jpg"
   },
   {
     "run_number": "15",
@@ -117,7 +139,8 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg",
     "owner_name": "歌白说Geslook",
     "owner_face": "https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg",
-    "owner_mid": "315846984"
+    "owner_mid": "315846984",
+    "local_cover": "covers/15.jpg"
   },
   {
     "run_number": "16",
@@ -129,6 +152,7 @@
     "cover_url": "https://i1.hdslb.com/bfs/archive/a7e4506ff21160bd15fc0bdb42f8fd72d84cc9d5.jpg",
     "owner_name": "大吃一顿鲸",
     "owner_face": "https://i1.hdslb.com/bfs/face/40a8c40ed4846d427f936abea4107416069e1a04.jpg",
-    "owner_mid": "43099096"
+    "owner_mid": "43099096",
+    "local_cover": "covers/16.jpg"
   }
 ]
