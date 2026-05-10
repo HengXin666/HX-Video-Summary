@@ -13,6 +13,19 @@
     "local_cover": "covers/hx-5.jpg"
   },
   {
+    "run_number": "hx-4",
+    "title": "Harness 实践：让 Agent 全自动制作知识讲解视频",
+    "bilibili_url": "https://www.bilibili.com/video/BV1ypdgBCE9B",
+    "timestamp": "2026-05-08 17:24:44",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "https://i0.hdslb.com/bfs/archive/eec466625384c1e47872f55dac5eb70e8147a149.jpg",
+    "owner_name": "code秘密花园",
+    "owner_face": "https://i1.hdslb.com/bfs/face/78046c565ac64613387671d5138f0c623efda405.jpg",
+    "owner_mid": "474921808",
+    "local_cover": "covers/hx-4.jpg"
+  },
+  {
     "run_number": "25",
     "title": "【OpenCode】小彭老师skills+提示词配置分享",
     "bilibili_url": "https://www.bilibili.com/video/BV16WfwBDE4y",
