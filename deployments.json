@@ -1,5 +1,18 @@
 [
   {
+    "run_number": "hx-8",
+    "title": "90%代码由AI生成！美团31万行代码重构实践阅读 —— 约束AI才是系统关键",
+    "bilibili_url": "https://www.bilibili.com/video/BV1vNL36YEid/",
+    "timestamp": "2026-05-16 16:46:14",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "https://i0.hdslb.com/bfs/archive/46ed642fbf0d40c550f1afd3b5a3500bc1b5e5dd.jpg",
+    "owner_name": "Web3SecAnalysisT",
+    "owner_face": "https://i1.hdslb.com/bfs/face/154d6814eabafb7dbd674e0f047871e0591c7e60.jpg",
+    "owner_mid": "3537112446011506",
+    "local_cover": "covers/hx-8.jpg"
+  },
+  {
     "run_number": "hx-7",
     "title": "[cpp] 某会议 回放 2025-12-20 女生自用99新",
     "bilibili_url": "https://www.bilibili.com/video/BV1uzqrBtEqf/",
