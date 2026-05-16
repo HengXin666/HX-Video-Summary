@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HX Video Summary - 视频总结索引</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0F0E17;
+      color: #FFFFFE;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, #FF6B3522 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, #E76F5122 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(#0F0E1788 1px, transparent 1px),
+        linear-gradient(90deg, #0F0E1788 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FF6B35, #F4A261, #E76F51);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+
+    .header .subtitle {
+      color: #A7A9BE;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+    }
+
+    .header .stats {
+      margin-top: 20px;
+      display: inline-flex;
+      gap: 30px;
+      padding: 12px 30px;
+      background: #0F0E17cc;
+      border: 1px solid #FF6B3533;
+      border-radius: 40px;
+    }
+
+    .header .stat-item { text-align: center; }
+
+    .header .stat-num {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #FF6B35;
+    }
+
+    .header .stat-label {
+      font-size: 0.8rem;
+      color: #A7A9BE;
+    }
+
+    /* ===== Page Layout (Sidebar + Main) ===== */
+    .page-layout {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+      align-items: flex-start;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      width: 220px;
+      flex-shrink: 0;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      background: linear-gradient(135deg, #1a1929, #16151f);
+      border: 1px solid #FF6B3522;
+      border-radius: 16px;
+      padding: 20px 16px;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #FF6B3533;
+      border-radius: 2px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #FF6B3522;
+    }
+
+    .sidebar-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #FFFFFE;
+    }
+
+    .sidebar-header i {
+      color: #FF6B35;
+      font-size: 0.9rem;
+    }
+
+    .up-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .up-filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      text-align: left;
+    }
+
+    .up-filter:hover {
+      background: #FF6B3511;
+      color: #FFFFFE;
+    }
+
+    .up-filter.active {
+      background: linear-gradient(135deg, #FF6B3533, #E76F5122);
+      color: #FFFFFE;
+      font-weight: 600;
+      box-shadow: inset 2px 0 0 #FF6B35;
+    }
+
+    .up-avatar-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1.5px solid #FF6B3533;
+    }
+
+    .up-avatar-placeholder {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FF6B3522;
+      color: #A7A9BE;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .up-name {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .up-count {
+      font-size: 0.75rem;
+      background: #FF6B3522;
+      color: #FF6B35;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ===== Container (Main Content) ===== */
+    .container {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== Deploy Card ===== */
+    .deploy-card {
+      background: linear-gradient(135deg, #1a1929, #16151f);
+      border: 1px solid #FF6B3522;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      gap: 20px;
+      padding: 20px 24px;
+      align-items: center;
+    }
+
+    .deploy-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #FF6B35, #E76F51);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .deploy-card:hover {
+      border-color: #FF6B3555;
+      transform: translateX(4px);
+      box-shadow: 0 8px 32px #FF6B3522;
+    }
+
+    /* hidden card (filtered out) */
+    .deploy-card.hidden {
+      display: none;
+    }
+
+    .card-cover {
+      flex-shrink: 0;
+      width: 180px;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      align-self: center;
+    }
+
+    .card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .run-badge {
+      background: linear-gradient(135deg, #FF6B35, #E76F51);
+      color: #0F0E17;
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .timestamp {
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .video-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #FFFFFE;
+      margin-bottom: 12px;
+      line-height: 1.5;
+      padding-left: 2px;
+    }
+
+    .card-owner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .owner-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid #FF6B3544;
+      flex-shrink: 0;
+    }
+
+    .owner-name {
+      font-size: 0.85rem;
+      color: #A7A9BE;
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .owner-name:hover {
+      color: #F4A261;
+      text-decoration: underline;
+    }
+
+    .owner-space {
+      font-size: 0.7rem;
+      color: #A7A9BE77;
+      transition: color 0.2s;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .owner-space:hover {
+      color: #FF6B35;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #FF6B35, #E76F51);
+      color: #0F0E17;
+      box-shadow: 0 4px 15px #FF6B3544;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px #FF6B3566;
+    }
+
+    .btn-secondary {
+      background: #0F0E17;
+      color: #A7A9BE;
+      border: 1px solid #A7A9BE33;
+    }
+
+    .btn-secondary:hover {
+      border-color: #F4A261;
+      color: #F4A261;
+    }
+
+    .bilibili-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #A7A9BE;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .bilibili-link:hover { color: #FF6B35; }
+    .bilibili-link .fa-bilibili { color: #00A1D6; }
+
+    /* ===== Empty State ===== */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #A7A9BE;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #FF6B3544;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .no-match {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: #A7A9BE;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 20px;
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      border-top: 1px solid #FF6B3511;
+    }
+
+    .footer a { color: #FF6B35; text-decoration: none; }
+
+    /* ===== Video Group & History ===== */
+    .video-group { margin-bottom: 24px; }
+
+    .video-group.hidden-group { display: none; }
+
+    .video-group .deploy-card {
+      margin-bottom: 0;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .video-group .deploy-card.history-item {
+      border-radius: 0;
+      border-top: none;
+      opacity: 0.7;
+    }
+
+    .video-group .deploy-card.history-item:last-of-type {
+      border-radius: 0 0 16px 16px;
+    }
+
+    .video-group .deploy-card.history-item:hover { opacity: 1; }
+
+    .history-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 32px;
+      background: #1a1929;
+      border: 1px solid #FF6B3522;
+      border-top: 1px solid #FF6B3511;
+      border-radius: 0 0 16px 16px;
+      color: #A7A9BE;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .history-toggle:hover {
+      background: #1e1d33;
+      border-color: #FF6B3544;
+      color: #F4A261;
+    }
+
+    .history-toggle .toggle-icon {
+      margin-left: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .history-toggle[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
+    .history-list { overflow: hidden; }
+
+    .history-list .deploy-card::before {
+      background: linear-gradient(180deg, #A7A9BE44, #FF6B3544);
+    }
+
+    .video-group:not(:has(.history-toggle)) .deploy-card { border-radius: 16px; }
+
+    /* ===== Animation ===== */
+    .an {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .page-layout {
+        flex-direction: column;
+        padding: 0 16px 60px;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+        width: 100%;
+        max-height: none;
+        padding: 14px 12px;
+      }
+
+      .up-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .up-filter {
+        width: auto;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+      }
+
+      .up-filter .up-count { display: none; }
+      .up-filter .up-avatar-sm { width: 22px; height: 22px; }
+      .up-filter.active { box-shadow: inset 0 -2px 0 #FF6B35; }
+      .sidebar-header { margin-bottom: 10px; padding-bottom: 8px; }
+    }
+
+    @media (max-width: 640px) {
+      .header h1 { font-size: 2rem; }
+      .deploy-card { padding: 16px; flex-direction: column; }
+      .card-cover { width: 100%; }
+      .card-actions { flex-direction: column; align-items: flex-start; }
+      .header .stats { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header class="header">
+    <h1><i class="fa-solid fa-film"></i> HX Video Summary</h1>
+    <p class="subtitle">B站视频智能总结 & PPT 生成记录</p>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num">9</span>
+        <span class="stat-label">独立视频</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">10</span>
+        <span class="stat-label">总计部署</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">#</span>
+        <span class="stat-label">最近部署</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-user-group"></i>
+        <h3>UP主</h3>
+      </div>
+      <nav class="up-list">
+        
+            <button class="up-filter active" data-up="all" onclick="filterByUp('all')" aria-pressed="true">
+              <i class="fa-solid fa-grid-2"></i>
+              <span class="up-name">全部</span>
+              <span class="up-count">9</span>
+            </button>
+            <button class="up-filter" data-up="未知UP主" onclick="filterByUp('未知UP主')" aria-pressed="false">
+              <i class="fa-solid fa-user up-avatar-placeholder"></i>
+              <span class="up-name">未知UP主</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="科技老男孩" onclick="filterByUp('科技老男孩')" aria-pressed="false">
+              <img src="https://i0.hdslb.com/bfs/face/bd767bdc31b18fc13c5e677adb4db8a893297512.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">科技老男孩</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="橘鸦Juya" onclick="filterByUp('橘鸦Juya')" aria-pressed="false">
+              <img src="https://i0.hdslb.com/bfs/face/afa12816f678f482a7333289d82437208b8d8cbf.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">橘鸦Juya</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="老奇好好奇" onclick="filterByUp('老奇好好奇')" aria-pressed="false">
+              <img src="https://i1.hdslb.com/bfs/face/9f3e54f6d9a436f0e5aea34fb25477b17068ff63.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">老奇好好奇</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="大象放映室" onclick="filterByUp('大象放映室')" aria-pressed="false">
+              <img src="https://i0.hdslb.com/bfs/face/9d3229d6157767ebe386f37f33d075e348bea07d.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">大象放映室</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="老王聊天" onclick="filterByUp('老王聊天')" aria-pressed="false">
+              <img src="https://i1.hdslb.com/bfs/face/9afaea7dfbadc068070a04e9d46b5df50842ce41.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">老王聊天</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="歌白说Geslook" onclick="filterByUp('歌白说Geslook')" aria-pressed="false">
+              <img src="https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">歌白说Geslook</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="小白debug" onclick="filterByUp('小白debug')" aria-pressed="false">
+              <img src="https://i0.hdslb.com/bfs/face/ab6cf5698ed3db1997f84d515d39250ae56b450c.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">小白debug</span>
+              <span class="up-count">1</span>
+            </button>
+            <button class="up-filter" data-up="大吃一顿鲸" onclick="filterByUp('大吃一顿鲸')" aria-pressed="false">
+              <img src="https://i1.hdslb.com/bfs/face/40a8c40ed4846d427f936abea4107416069e1a04.jpg" class="up-avatar-sm" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer">
+              <span class="up-name">大吃一顿鲸</span>
+              <span class="up-count">1</span>
+            </button>
+      </nav>
+    </aside>
+
+    <main class="container">
+      
+        <div class="video-group an" style="animation-delay: 0.0s">
+          
+          <div class="deploy-card" data-up="_none_">
+            
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#</span>
+                <span class="timestamp">2026-05-08 21:39:37</span>
+              </div>
+              <h3 class="video-title">B站视频</h3>
+              
+              <div class="card-actions">
+                <a href="/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.08s">
+          
+          <div class="deploy-card" data-up="科技老男孩">
+            <a href="https://www.bilibili.com/video/BV1WAcQzKEW8" target="_blank" class="card-cover" title="盘点简中互联网10大活全家交互设计，你肯定遇到过！"><img src="https://i1.hdslb.com/bfs/archive/c1aa1ac6d9bff990bfb70e3c2a5f1a276531d718.jpg" alt="盘点简中互联网10大活全家交互设计，你肯定遇到过！" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#23</span>
+                <span class="timestamp">2026-05-07 17:34:26</span>
+              </div>
+              <h3 class="video-title">盘点简中互联网10大活全家交互设计，你肯定遇到过！</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/bd767bdc31b18fc13c5e677adb4db8a893297512.jpg" alt="科技老男孩" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('科技老男孩')" title="按此UP主筛选">科技老男孩</button><a href="https://space.bilibili.com/1278118266" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="23/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="23/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1WAcQzKEW8" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.16s">
+          
+          <div class="deploy-card" data-up="橘鸦Juya">
+            <a href="https://www.bilibili.com/video/BV1B82DBdEdP" target="_blank" class="card-cover" title="轻松复刻！爆肝揭秘万粉 UP 主是如何炼成的，我的 AI 早报“生产线”大公开。"><img src="https://i0.hdslb.com/bfs/archive/4d8d8ce4cb4d2ed39f27ffc5b391c96c4873bbcf.jpg" alt="轻松复刻！爆肝揭秘万粉 UP 主是如何炼成的，我的 AI 早报“生产线”大公开。" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#22</span>
+                <span class="timestamp">2026-05-07 14:33:39</span>
+              </div>
+              <h3 class="video-title">轻松复刻！爆肝揭秘万粉 UP 主是如何炼成的，我的 AI 早报“生产线”大公开。</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/afa12816f678f482a7333289d82437208b8d8cbf.jpg" alt="橘鸦Juya" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('橘鸦Juya')" title="按此UP主筛选">橘鸦Juya</button><a href="https://space.bilibili.com/285286947" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="22/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="22/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1B82DBdEdP" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.24s">
+          
+          <div class="deploy-card" data-up="老奇好好奇">
+            <a href="https://www.bilibili.com/video/BV1Hk4y1q7Rz/" target="_blank" class="card-cover" title="阴差阳错 撼动世界的游戏引擎"><img src="https://i1.hdslb.com/bfs/archive/37e64d0128bef2da268dddb86651d00c19bca8e2.jpg" alt="阴差阳错 撼动世界的游戏引擎" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#21</span>
+                <span class="timestamp">2026-05-06 17:06:07</span>
+              </div>
+              <h3 class="video-title">阴差阳错 撼动世界的游戏引擎</h3>
+              <div class="card-owner"><img src="https://i1.hdslb.com/bfs/face/9f3e54f6d9a436f0e5aea34fb25477b17068ff63.jpg" alt="老奇好好奇" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('老奇好好奇')" title="按此UP主筛选">老奇好好奇</button><a href="https://space.bilibili.com/35894872" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="21/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="21/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1Hk4y1q7Rz/" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.32s">
+          
+          <div class="deploy-card" data-up="大象放映室">
+            <a href="https://www.bilibili.com/video/BV1Eeo5B1E4F" target="_blank" class="card-cover" title="史无前例！最严吏治！反腐就只是简单的“抓贪官”吗？【大国之治·反腐】"><img src="https://i2.hdslb.com/bfs/archive/b8badfc3f421369639ba11ae4a719f43c8bdf4a6.jpg" alt="史无前例！最严吏治！反腐就只是简单的“抓贪官”吗？【大国之治·反腐】" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#20</span>
+                <span class="timestamp">2026-05-06 15:59:29</span>
+              </div>
+              <h3 class="video-title">史无前例！最严吏治！反腐就只是简单的“抓贪官”吗？【大国之治·反腐】</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/9d3229d6157767ebe386f37f33d075e348bea07d.jpg" alt="大象放映室" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('大象放映室')" title="按此UP主筛选">大象放映室</button><a href="https://space.bilibili.com/49246269" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="20/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="20/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1Eeo5B1E4F" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.4s">
+          
+          <div class="deploy-card" data-up="老王聊天">
+            <a href="https://www.bilibili.com/video/BV1NWRBBXEq8" target="_blank" class="card-cover" title="中国为什么不花钱搞舆论，两重风险，步步维艰"><img src="https://i1.hdslb.com/bfs/archive/e86a2970b4f341e02fa40cb8a034329979d3ff23.jpg" alt="中国为什么不花钱搞舆论，两重风险，步步维艰" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#19</span>
+                <span class="timestamp">2026-05-06 15:59:14</span>
+              </div>
+              <h3 class="video-title">中国为什么不花钱搞舆论，两重风险，步步维艰</h3>
+              <div class="card-owner"><img src="https://i1.hdslb.com/bfs/face/9afaea7dfbadc068070a04e9d46b5df50842ce41.jpg" alt="老王聊天" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('老王聊天')" title="按此UP主筛选">老王聊天</button><a href="https://space.bilibili.com/1612081513" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="19/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="19/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1NWRBBXEq8" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.48s">
+          
+          <div class="deploy-card" data-up="歌白说Geslook">
+            <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/?vd_sou" target="_blank" class="card-cover" title="【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南"><img src="https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg" alt="【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#18</span>
+                <span class="timestamp">2026-05-06 15:34:50</span>
+              </div>
+              <h3 class="video-title">【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg" alt="歌白说Geslook" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('歌白说Geslook')" title="按此UP主筛选">歌白说Geslook</button><a href="https://space.bilibili.com/315846984" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="18/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="18/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/?vd_sou" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+          <button class="history-toggle" onclick="toggleHistory('hist-6', this)" aria-expanded="false">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            展开历史记录 (1)
+            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+          </button>
+          <div class="history-list" id="hist-6" style="display:none">
+          <div class="deploy-card history-item" data-up="歌白说Geslook">
+            <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/" target="_blank" class="card-cover" title="【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南"><img src="https://i1.hdslb.com/bfs/archive/18ab2b4b7444667f757b3a1e6e4ff51d424e549a.jpg" alt="【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#15</span>
+                <span class="timestamp">2026-05-05 23:24:21</span>
+              </div>
+              <h3 class="video-title">【硬核】爆肝1.4万字提前退休可行性计划 |23岁如何通过投资赚钱？新手投资指南</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/f91220c5c8c07a97e5fe5fb15c96e7d792e54a3f.jpg" alt="歌白说Geslook" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('歌白说Geslook')" title="按此UP主筛选">歌白说Geslook</button><a href="https://space.bilibili.com/315846984" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="15/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="15/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1Vb9hBVE4C/" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.56s">
+          
+          <div class="deploy-card" data-up="小白debug">
+            <a href="https://www.bilibili.com/video/BV1dpQTB3EXg" target="_blank" class="card-cover" title="Harness Engineering是什么？和提示词工程和上下文工程有什么关系？"><img src="https://i1.hdslb.com/bfs/archive/6246f048e9506d4e9e0a2b6a6fbf6cd4d0670318.jpg" alt="Harness Engineering是什么？和提示词工程和上下文工程有什么关系？" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#17</span>
+                <span class="timestamp">2026-05-06 14:45:08</span>
+              </div>
+              <h3 class="video-title">Harness Engineering是什么？和提示词工程和上下文工程有什么关系？</h3>
+              <div class="card-owner"><img src="https://i0.hdslb.com/bfs/face/ab6cf5698ed3db1997f84d515d39250ae56b450c.jpg" alt="小白debug" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('小白debug')" title="按此UP主筛选">小白debug</button><a href="https://space.bilibili.com/302188068" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="17/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="17/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1dpQTB3EXg" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="video-group an" style="animation-delay: 0.64s">
+          
+          <div class="deploy-card" data-up="大吃一顿鲸">
+            <a href="https://www.bilibili.com/video/BV1kZD5BqEgd" target="_blank" class="card-cover" title="如何在X/推特学知识的终极指南(2026)"><img src="https://i1.hdslb.com/bfs/archive/a7e4506ff21160bd15fc0bdb42f8fd72d84cc9d5.jpg" alt="如何在X/推特学知识的终极指南(2026)" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="run-badge">#16</span>
+                <span class="timestamp">2026-05-05 23:24:21</span>
+              </div>
+              <h3 class="video-title">如何在X/推特学知识的终极指南(2026)</h3>
+              <div class="card-owner"><img src="https://i1.hdslb.com/bfs/face/40a8c40ed4846d427f936abea4107416069e1a04.jpg" alt="大吃一顿鲸" class="owner-avatar" onerror="this.style.display='none'" loading="lazy" referrerpolicy="no-referrer"><button class="owner-name" onclick="filterByUp('大吃一顿鲸')" title="按此UP主筛选">大吃一顿鲸</button><a href="https://space.bilibili.com/43099096" target="_blank" class="owner-space" title="B站UP主空间"><i class="fa-solid fa-up-right-from-square"></i></a></div>
+              <div class="card-actions">
+                <a href="16/bilibili_ppt.html" target="_blank" class="btn btn-primary">
+                  <i class="fa-solid fa-tv"></i> 查看PPT
+                </a>
+                <a href="16/summary.txt" target="_blank" class="btn btn-secondary">
+                  <i class="fa-solid fa-file-lines"></i> 文字总结
+                </a>
+                <a href="https://www.bilibili.com/video/BV1kZD5BqEgd" target="_blank" class="bilibili-link"><i class="fa-brands fa-bilibili"></i> B站原视频</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <div class="no-match" id="no-match">
+        <i class="fa-solid fa-magnifying-glass" style="display:block;font-size:3rem;color:#FF6B3544;margin-bottom:16px"></i>
+        <p>该UP主暂无视频总结</p>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>
+      Powered by <a href="https://github.com/HengXin666/HX-Video-Summary" target="_blank">HX-Video-Summary</a>
+      &nbsp;·&nbsp;
+      <i class="fa-solid fa-heart" style="color:#E76F51"></i>
+      &nbsp;自动部署于 GitHub Pages
+    </p>
+    <p style="margin-top:8px;font-size:0.8rem;color:#A7A9BE77">
+      索引页面自动生成 · 同一视频仅展示最新 · 点击展开历史 · 按UP主筛选
+    </p>
+  </footer>
+
+  <script>
+    function toggleHistory(gid, btn) {
+      const list = document.getElementById(gid);
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        list.style.display = "none";
+        btn.setAttribute("aria-expanded", "false");
+        btn.style.borderRadius = "0 0 16px 16px";
+      } else {
+        list.style.display = "block";
+        btn.setAttribute("aria-expanded", "true");
+        btn.style.borderRadius = "0";
+      }
+    }
+
+    function filterByUp(key) {
+      const groups = document.querySelectorAll('.video-group');
+      const filters = document.querySelectorAll('.up-filter');
+      const noMatch = document.getElementById('no-match');
+      let visible = 0;
+
+      // Update filter buttons
+      filters.forEach(function(f) {
+        if (f.getAttribute('data-up') === key) {
+          f.classList.add('active');
+          f.setAttribute('aria-pressed', 'true');
+        } else {
+          f.classList.remove('active');
+          f.setAttribute('aria-pressed', 'false');
+        }
+      });
+
+      // Show/hide video groups
+      groups.forEach(function(g) {
+        const card = g.querySelector('.deploy-card');
+        if (!card) return;
+        const up = card.getAttribute('data-up');
+        if (key === 'all' || up === key) {
+          g.classList.remove('hidden-group');
+          visible++;
+        } else {
+          g.classList.add('hidden-group');
+        }
+      });
+
+      // Show/hide no-match message
+      if (noMatch) {
+        noMatch.style.display = (visible === 0) ? 'block' : 'none';
+      }
+
+      // Update URL hash
+      if (key === 'all') {
+        history.replaceState(null, '', window.location.pathname);
+      } else {
+        history.replaceState(null, '', '#' + key);
+      }
+    }
+
+    // Init: restore filter from URL hash
+    (function() {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        const btn = document.querySelector('.up-filter[data-up="' + hash + '"]');
+        if (btn) {
+          filterByUp(hash);
+          // Scroll sidebar active into view
+          btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

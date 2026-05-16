@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI编码范式变革 — 美团31万行代码AI重构实践</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --coral: #E76F51;
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --white: #FFFFFE;
+  --red: #E71D36;
+  --green: #2EC4B6;
+  --purple: #7F5AF0;
+}
+
+/* Slides */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:44px 70px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .an{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .an.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* Deco */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.10),transparent)}
+
+/* Floating particles */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* Grid bg */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.6}
+
+/* Type */
+.t-hero{font-size:4.5rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:3.6rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:2.8rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.5rem;font-weight:400;line-height:1.6;text-align:center}
+.t-sm{font-size:1.15rem;font-weight:400;line-height:1.5;text-align:center}
+
+/* Colors */
+.c-orange{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-red{color:#E71D36}.c-green{color:#2EC4B6}.c-purple{color:#7F5AF0}
+.c-gray{color:#A7A9BE}.c-white{color:#FFFFFE}
+
+/* BG highlight */
+.bg-orange{background:rgba(255,107,53,.15);padding:5px 18px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:5px 18px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:5px 18px;border-radius:10px}
+.bg-green{background:rgba(46,196,182,.15);padding:5px 18px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.12);padding:5px 18px;border-radius:10px}
+
+.ul-orange{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-coral{text-decoration:underline;text-decoration-color:#E76F51;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:70px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:18px auto}
+
+/* Layouts */
+.two-col{display:flex;gap:32px;width:92%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;border-radius:0 20px 20px 0;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden;background:rgba(26,25,50,.25)}
+.three-col{display:flex;gap:24px;width:92%;max-width:1200px;align-items:stretch}
+.col-card-3{flex:1;border-radius:16px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(26,25,50,.35);border:2px solid rgba(255,107,53,.12);transition:transform .3s,box-shadow .3s}
+.col-card-3:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.18)}
+
+/* Flow */
+.flow{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.12);padding:10px 18px;border-radius:10px;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35;font-size:1.3rem}
+
+/* VS */
+.vs-wrap{display:flex;gap:36px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:32px 24px;border-radius:18px;text-align:center;background:rgba(26,25,50,.25)}
+.vs-mid{font-size:2.6rem;font-weight:900;color:#FF6B35}
+
+/* Concept */
+.glow-text{font-size:2.4rem;font-weight:800;color:#FF6B35;text-shadow:0 0 40px rgba(255,107,53,.4);letter-spacing:8px}
+
+/* Shapes */
+.shape-grid{display:flex;gap:20px;margin:14px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-weight:900;color:#fff;transition:transform .3s;cursor:default}
+.shape-circle:hover{transform:scale(1.1)}
+.sh-sm{width:85px;height:85px;font-size:1.5rem}
+.sh-md{width:105px;height:105px;font-size:1.7rem}
+.sh-lg{width:130px;height:130px;font-size:2rem}
+.sp{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.so{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sg{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+.sr{background:linear-gradient(135deg,#E71D36,#FF6B6B)}
+
+/* Mini grid */
+.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:88%;max-width:1060px}
+.mini-card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 14px;text-align:center;border:2px solid rgba(255,107,53,.15);box-shadow:0 4px 16px rgba(255,107,53,.08);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s}
+.mini-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(255,107,53,.2)}
+
+/* Icon badge */
+.icon-badge{width:62px;height:62px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;font-size:1.6rem}
+.ib-orange{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.1))}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.2),rgba(244,162,97,.1))}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.2),rgba(231,111,81,.1))}
+.ib-green{background:linear-gradient(135deg,rgba(46,196,182,.2),rgba(46,196,182,.1))}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.2),rgba(231,29,54,.1))}
+
+/* Progress bar */
+.progress-bar{width:100%;height:8px;background:rgba(255,107,53,.12);border-radius:4px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease}
+.pf-orange{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#E9C46A,#F4A261)}
+.pf-green{background:linear-gradient(90deg,#06D6A0,#2EC4B6)}
+.pf-red{background:linear-gradient(90deg,#E71D36,#FF6B6B)}
+
+/* Pulse */
+.pulse{animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.85}}
+
+/* Glow ring */
+.glow-ring{width:130px;height:130px;border-radius:50%;border:4px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* Page badge */
+.page-badge{position:absolute;top:20px;right:30px;font-size:.85rem;color:rgba(255,107,53,.4);font-weight:700;letter-spacing:2px}
+
+/* Backgrounds */
+.bg-1{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 20% 50%,#1A1932 0%,#0F0E17 100%)}
+
+/* Tag */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-orange{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+.tag-green{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+.tag-coral{background:rgba(231,111,81,.15);color:#E76F51}
+
+/* Slide indicator */
+.slide-indicator{position:fixed;bottom:20px;right:30px;z-index:100;display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,107,53,.25);transition:all .3s}
+.dot.active{background:#FF6B35;width:28px;border-radius:5px}
+
+/* Warn/Success boxes */
+.warn-box{background:rgba(231,29,54,.08);border-left:5px solid #E71D36;border-radius:0 14px 14px 0;padding:18px 24px;text-align:left;margin:8px 0}
+.success-box{background:rgba(46,196,182,.08);border-left:5px solid #2EC4B6;border-radius:0 14px 14px 0;padding:18px 24px;text-align:left;margin:8px 0}
+.info-box{background:rgba(255,107,53,.06);border-left:5px solid #FF6B35;border-radius:0 14px 14px 0;padding:18px 24px;text-align:left;margin:8px 0}
+
+/* Grid 2 */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:90%;max-width:1100px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;width:92%;max-width:1200px}
+
+/* List style */
+.icon-text{display:flex;align-items:flex-start;gap:12px;font-size:1.25rem;line-height:1.6;text-align:left;margin:4px 0}
+.icon-text i{color:#FF6B35;margin-top:4px;font-size:1.1rem;width:22px;text-align:center;flex-shrink:0}
+
+/* Conn line animation */
+.conn-line{stroke-dasharray:8 4;animation:dash-move 1.5s linear infinite}
+@keyframes dash-move{to{stroke-dashoffset:-24}}
+
+/* Nav buttons */
+.nav-hint{position:fixed;bottom:24px;left:30px;z-index:100;display:flex;gap:14px;align-items:center}
+.nav-btn{width:44px;height:44px;border-radius:12px;background:rgba(255,107,53,.12);border:2px solid rgba(255,107,53,.25);color:#FF6B35;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;transition:all .3s}
+.nav-btn:hover{background:rgba(255,107,53,.25);border-color:#FF6B35}
+.nav-btn:active{transform:scale(.95)}
+
+.slide-num{position:fixed;top:20px;left:30px;z-index:100;font-size:1.2rem;font-weight:700;color:rgba(255,107,53,.5);letter-spacing:2px}
+
+/* Extra animations */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes countPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15);color:#FF6B35}}
+
+/* Number highlight */
+.num-highlight{font-size:3.5rem;font-weight:900;color:#FF6B35;line-height:1;display:inline-block;animation:countPulse 2.5s ease-in-out infinite}
+
+/* Step connector */
+.step-row{display:flex;align-items:center;gap:0;margin:12px 0;justify-content:center}
+.step-node{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;color:#fff;position:relative;z-index:2}
+.step-node.sn-orange{background:linear-gradient(135deg,#FF6B35,#E76F51);box-shadow:0 4px 20px rgba(255,107,53,.3)}
+.step-node.sn-amber{background:linear-gradient(135deg,#F4A261,#E9C46A);box-shadow:0 4px 20px rgba(244,162,97,.3)}
+.step-node.sn-coral{background:linear-gradient(135deg,#E76F51,#FF6B6B);box-shadow:0 4px 20px rgba(231,111,81,.3)}
+.step-node.sn-green{background:linear-gradient(135deg,#2EC4B6,#06D6A0);box-shadow:0 4px 20px rgba(46,196,182,.3)}
+.step-connector{width:60px;height:3px;background:linear-gradient(90deg,#FF6B35,#F4A261);position:relative}
+.step-connector::after{content:'';position:absolute;right:-3px;top:-3px;border:5px solid transparent;border-left:7px solid #F4A261}
+
+/* Card with icon header */
+.card-icon-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.card-icon-header i{font-size:1.6rem}
+
+/* Quote block */
+.quote-block{border-left:4px solid #F4A261;padding:12px 20px;font-style:italic;color:#A7A9BE;text-align:left;max-width:700px;background:rgba(244,162,97,.05);border-radius:0 12px 12px 0}
+
+/* Highlight number row */
+.num-row{display:flex;gap:28px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.num-item{text-align:center}
+.num-item .num{font-size:3rem;font-weight:900;color:#FF6B35}
+.num-item .lbl{font-size:1rem;color:#A7A9BE;margin-top:2px}
+
+/* Blinking cursor effect */
+.cursor-blink{animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Float up animation for decorative elements */
+@keyframes floatUp{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+
+/* Rotate slow for icons */
+@keyframes rotateSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.rotate-slow{animation:rotateSlow 12s linear infinite}
+
+/* Bounce subtle */
+@keyframes bounceSubtle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bounce-subtle{animation:bounceSubtle 2s ease-in-out infinite}
+
+/* Gradient text animation */
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.gradient-text-anim{background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51,#FF6B35);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientShift 4s ease infinite}
+
+/* Ribbon style */
+.ribbon{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(244,162,97,.1));border:1px solid rgba(255,107,53,.3);border-radius:30px;font-size:1.1rem;font-weight:700;color:#FF6B35}
+
+/* Divider with icon */
+.divider-icon{display:flex;align-items:center;gap:14px;margin:8px 0}
+.divider-icon::before,.divider-icon::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,107,53,.3),transparent)}
+.divider-icon i{color:#FF6B35;font-size:1rem}
+
+/* Phase label */
+.phase-label{font-size:.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#FF6B35;margin-bottom:2px}
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+<!-- ====== Slide 1: 标题页 ====== -->
+<div class="slide bg-1 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles0"></div>
+  <div class="deco deco-orange" style="width:500px;height:500px;top:-200px;right:-180px"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-100px;left:-100px"></div>
+
+  <div class="an" style="margin-bottom:16px">
+    <i class="fas fa-robot" style="font-size:4rem;color:#FF6B35;opacity:.7"></i>
+    <i class="fas fa-code" style="font-size:3rem;color:#F4A261;margin-left:8px;opacity:.6"></i>
+  </div>
+  <div class="an t-hero c-white">AI 编码范式变革</div>
+  <div class="an t-big c-orange" style="margin-top:8px">美团 31 万行代码 AI 重构实践</div>
+  <div class="an line"></div>
+  <div class="an t-body c-gray" style="max-width:700px;margin-top:8px">当 <span class="c-orange bold">90% 以上</span> 的代码由 AI 生成，决定系统走向的不是谁写得更快，而是 <span class="c-coral bold ul-coral">约束 AI 的能力</span></div>
+  <div class="an mini-grid" style="margin-top:18px">
+    <div class="mini-card"><div class="icon-badge ib-orange"><i class="fas fa-file-code" style="color:#FF6B35;font-size:1.4rem"></i></div><div style="font-size:1.1rem;font-weight:700">31 万行<br><span class="c-orange">代码重构</span></div></div>
+    <div class="mini-card"><div class="icon-badge ib-amber"><i class="fas fa-robot" style="color:#F4A261;font-size:1.4rem"></i></div><div style="font-size:1.1rem;font-weight:700">90%+<br><span class="c-amber">AI 生成</span></div></div>
+    <div class="mini-card"><div class="icon-badge ib-coral"><i class="fas fa-lock" style="color:#E76F51;font-size:1.4rem"></i></div><div style="font-size:1.1rem;font-weight:700">约束 AI<br><span class="c-coral">才是关键</span></div></div>
+    <div class="mini-card"><div class="icon-badge ib-green"><i class="fas fa-shield-haltered" style="color:#2EC4B6;font-size:1.4rem"></i></div><div style="font-size:1.1rem;font-weight:700">多 Agent<br><span class="c-green">质量闭环</span></div></div>
+  </div>
+</div>
+
+<!-- ====== Slide 2: 背景概述 ====== -->
+<div class="slide bg-2" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:450px;height:450px;top:-180px;left:-150px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:12px"><i class="fas fa-info-circle" style="color:#FF6B35;margin-right:8px"></i>背景：为什么是现在？</div>
+  <div class="an t-big c-white" style="margin-bottom:10px">业务探索期 + 高速迭代 <span class="c-orange bold">= 技术负债累积</span></div>
+  <div class="an line"></div>
+  <div class="an grid-2" style="margin-top:14px">
+    <div class="info-box">
+      <div style="font-size:1.4rem;font-weight:800;color:#FF6B35;margin-bottom:8px"><i class="fas fa-chart-line"></i> 业务背景</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> 业务规模快速升级，MVP 快速验证</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> 探索期需求变更频繁，功能大量耦合</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> 新功能开发受牵连，影响质量和工期</div>
+    </div>
+    <div class="info-box">
+      <div style="font-size:1.4rem;font-weight:800;color:#F4A261;margin-bottom:8px"><i class="fas fa-code-branch"></i> 技术挑战</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> 31 万行代码待重构，迭代不能停</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> 团队 AI 编码实践各显神通，缺乏规范</div>
+      <div class="icon-text"><i class="fas fa-circle" style="font-size:.5rem"></i> "重构叠开发"复杂度成倍增加</div>
+    </div>
+  </div>
+  <div class="an num-row" style="margin-top:12px">
+    <div class="num-item"><div class="num">31<span style="font-size:1.2rem">万</span></div><div class="lbl">待重构代码行数</div></div>
+    <div class="num-item"><div class="num" style="color:#F4A261">90<span style="font-size:1.2rem">%+</span></div><div class="lbl">AI 生成比例</div></div>
+    <div class="num-item"><div class="num" style="color:#E76F51">P0<span style="font-size:1.2rem">-P2</span></div><div class="lbl">问题优先级分级</div></div>
+    <div class="num-item"><div class="num" style="color:#2EC4B6">N<span style="font-size:1.2rem">个</span></div><div class="lbl">Agent 协作验证</div></div>
+  </div>
+  <div class="an t-body c-white" style="margin-top:14px;max-width:800px">
+    核心命题：<span class="bg-orange c-orange bold" style="font-size:1.6rem">当 90% 以上的代码由 AI 生成，决定系统走向的不是谁写得更快，而是约束 AI 的能力</span>
+  </div>
+</div>
+
+<!-- ====== Slide 3: 核心理念 ====== -->
+<div class="slide bg-3" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;bottom:-200px;right:-150px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:8px"><i class="fas fa-lightbulb" style="color:#F4A261;margin-right:8px"></i>三大核心理念</div>
+  <div class="an flow" style="margin:18px 0">
+    <div class="flow-step"><i class="fas fa-users"></i> 人人对齐</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-robot"></i> 人机对齐</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-shield-haltered"></i> 多 Agent 质量闭环</div>
+  </div>
+  <div class="an grid-3" style="margin-top:14px">
+    <div class="col-card-3" style="border-left:4px solid #FF6B35">
+      <i class="fas fa-handshake" style="font-size:2.2rem;color:#FF6B35;margin-bottom:8px"></i>
+      <div style="font-size:1.3rem;font-weight:800;color:#FF6B35">先人人对齐</div>
+      <div class="t-sm c-gray" style="text-align:left">统一团队对 AI 工具的认知与使用方式。明确"怎么做、用什么工具、如何拼装成完整规范"。先理解 WHY，再掌握 HOW，否则"形似神不似"。</div>
+    </div>
+    <div class="col-card-3" style="border-left:4px solid #F4A261">
+      <i class="fas fa-sliders-h" style="font-size:2.2rem;color:#F4A261;margin-bottom:8px"></i>
+      <div style="font-size:1.3rem;font-weight:800;color:#F4A261">规范适合 AI 执行</div>
+      <div class="t-sm c-gray" style="text-align:left">AI 比人类更擅长严格遵守规范。每写一行代码自动检查合规性。人难 100% 遵守的规范，正是 AI 的最佳用武之地——约束即质量。</div>
+    </div>
+    <div class="col-card-3" style="border-left:4px solid #E76F51">
+      <i class="fas fa-sync-alt" style="font-size:2.2rem;color:#E76F51;margin-bottom:8px"></i>
+      <div style="font-size:1.3rem;font-weight:800;color:#E76F51">多 Agent 协作保障</div>
+      <div class="t-sm c-gray" style="text-align:left">不追求单一 Agent 100 分。通过"写 + 审 + 验"多 Agent 组合：一个 Agent 犯错，审查 Agent 能发现，验证 Agent 兜底，形成有限状态闭环。</div>
+    </div>
+  </div>
+  <div class="an t-body c-gray" style="margin-top:18px;max-width:800px">美团团队的核心洞察：<span class="c-orange bold">"决定系统走向的不是谁写得更快，而是约束 AI 的能力"</span>。这三个理念共同构成了 AI 编码时代的<span class="bg-orange c-orange bold">质量三角</span>——对齐共识 × 规范约束 × 多Agent验证。</div>
+  <div class="an ribbon" style="margin-top:8px"><i class="fas fa-bullseye"></i> 约束 AI 的能力 = 系统的质量上限</div>
+</div>
+
+<!-- ====== Slide 4: 实践1 - 问题定义人机分工 ====== -->
+<div class="slide bg-4" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-100px;right:-100px"></div>
+  <div class="deco deco-amber" style="width:300px;height:300px;bottom:-80px;left:-80px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-orange">实践一</span> 问题定义阶段的人机分工</div>
+  <div class="an t-big c-white">人定方向，AI 深挖细节</div>
+  <div class="an line"></div>
+  <div class="an two-col" style="margin-top:14px">
+    <div class="col-card" style="border-left:6px solid #FF6B35">
+      <i class="fas fa-user-cog" style="font-size:2.5rem;color:#FF6B35;margin-bottom:4px"></i>
+      <div class="t-mid c-orange bold">人的职责</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 发现痛点，定义问题方向</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 设计方案，评估架构调整</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 排优先级 P0 / P1 / P2</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 风险判断：短期可接受 vs 长期不可接受</div>
+      <div class="tag tag-orange" style="margin-top:6px"><i class="fas fa-star"></i> 聚焦"面"上的方向决策</div>
+    </div>
+    <div class="col-card" style="border-left:6px solid #F4A261">
+      <i class="fas fa-microchip" style="font-size:2.5rem;color:#F4A261;margin-bottom:4px"></i>
+      <div class="t-mid c-amber bold">AI 的职责</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 识别代码耦合关系与依赖链</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 追踪数据流在多服务间的调度</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 发现并发风险与边界 H Case</div>
+      <div class="icon-text"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> 静态分析 + 动态分析，比人更深更全</div>
+      <div class="tag tag-amber" style="margin-top:6px"><i class="fas fa-star"></i> 聚焦"线"上的深层追踪</div>
+    </div>
+  </div>
+  <div class="an" style="margin-top:10px">
+    <svg width="420" height="60" viewBox="0 0 420 60">
+      <defs><linearGradient id="g4a" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#FF6B35"/><stop offset="100%" style="stop-color:#F4A261"/></linearGradient></defs>
+      <rect x="0" y="22" width="80" height="16" rx="8" fill="rgba(255,107,53,.15)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="40" y="34" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">人发现问题</text>
+      <line x1="80" y1="30" x2="110" y2="30" stroke="url(#g4a)" stroke-width="2" marker-end="url(#ah4)"/>
+      <rect x="115" y="22" width="80" height="16" rx="8" fill="rgba(244,162,97,.15)" stroke="#F4A261" stroke-width="1.5"/>
+      <text x="155" y="34" text-anchor="middle" fill="#F4A261" font-size="10" font-weight="700">AI 深层识别</text>
+      <line x1="195" y1="30" x2="225" y2="30" stroke="url(#g4a)" stroke-width="2" marker-end="url(#ah4)"/>
+      <rect x="230" y="22" width="80" height="16" rx="8" fill="rgba(46,196,182,.15)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="270" y="34" text-anchor="middle" fill="#2EC4B6" font-size="10" font-weight="700">方案设计</text>
+      <line x1="310" y1="30" x2="340" y2="30" stroke="url(#g4a)" stroke-width="2" marker-end="url(#ah4)"/>
+      <rect x="345" y="22" width="70" height="16" rx="8" fill="rgba(127,90,240,.15)" stroke="#7F5AF0" stroke-width="1.5"/>
+      <text x="380" y="34" text-anchor="middle" fill="#7F5AF0" font-size="10" font-weight="700">重构执行</text>
+      <defs><marker id="ah4" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#F4A261"/></marker></defs>
+    </svg>
+  </div>
+  <div class="an t-body c-white" style="margin-top:10px;max-width:800px">
+    <i class="fas fa-gem" style="color:#F4A261"></i> AI 对项目代码实现"<span class="c-orange bold">更熟悉</span>"——当 90% 代码由 AI 生成时，AI 比人更了解项目细节，成为团队的 <span class="bg-orange c-orange bold">额外专家</span>
+  </div>
+</div>
+
+<!-- ====== Slide 5: 实践2 - 研发规范落地 ====== -->
+<div class="slide bg-5" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:450px;height:450px;top:50%;left:50%;margin-top:-225px;margin-left:-225px;opacity:.6"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-amber">实践二</span> 研发规范落地</div>
+  <div class="an t-big c-white">独立专家 + SOP + AI 编码框架</div>
+  <div class="an line"></div>
+  <div class="an flow" style="margin:16px 0">
+    <div class="flow-step"><i class="fas fa-user-tie"></i> 独立专家拉通全流程</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-clipboard-list"></i> 产出标准 SOP</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-cubes"></i> AI 编码框架</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-check-double"></i> 团队统一使用</div>
+  </div>
+  <div class="an grid-2" style="margin-top:10px">
+    <div class="success-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#2EC4B6"><i class="fas fa-check-circle"></i> 正确做法</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 技术经验老道的核心成员拉通需求→研发→测试→上线全流程</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> Rule + Skill + Agent 工具链统一组装</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 持续提炼正例/反例，固化到 AI 编码框架</div>
+    </div>
+    <div class="warn-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#E71D36"><i class="fas fa-exclamation-triangle"></i> 需要警惕</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 各自为政，"八仙过海各显神通"</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 草莽期虽能出活，后期无法收敛</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 没有统一规范 = 技术负债加速累积</div>
+    </div>
+  </div>
+  <div class="an t-body c-gray" style="margin-top:14px;max-width:800px">
+    研发规范天然更适合 <span class="c-orange bold">AI 自动化执行</span>——人在高压下难以 100% 遵守的规范，AI 每写一行代码都能自动检查。多 Agent 互审机制确保了"<span class="bg-orange">一个变傻，另一个能兜底</span>"。
+  </div>
+  <div class="an" style="display:flex;gap:16px;margin-top:10px">
+    <span class="tag tag-orange"><i class="fas fa-check"></i> AI 执行规范</span>
+    <span class="tag tag-amber"><i class="fas fa-check"></i> AI 审查规范</span>
+    <span class="tag tag-green"><i class="fas fa-check"></i> 人确认方案</span>
+  </div>
+</div>
+
+<!-- ====== Slide 6: 实践3 - 零排期重构 ====== -->
+<div class="slide bg-6" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:350px;height:350px;top:-100px;right:-100px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-coral">实践三</span> 零排期重构策略</div>
+  <div class="an t-big c-white">把重构融入每一个版本迭代</div>
+  <div class="an line"></div>
+  <div class="an flow" style="margin:14px 0">
+    <div class="flow-step"><i class="fas fa-boxes"></i> 大重构拆成小任务</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-truck-loading"></i> 每个版本带一点</div>
+    <i class="fas fa-arrow-right flow-arrow"></i>
+    <div class="flow-step"><i class="fas fa-seedling"></i> 逐步消化</div>
+  </div>
+  <div class="an two-col" style="margin-top:14px">
+    <div class="col-card" style="border-left:6px solid #2EC4B6">
+      <i class="fas fa-thumbs-up" style="font-size:2rem;color:#2EC4B6"></i>
+      <div class="t-body c-green bold">适用场景</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 小型 / 简单项目</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 模块间耦合度低</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 需求相对稳定，变更不频繁</div>
+    </div>
+    <div class="col-card" style="border-left:6px solid #E71D36">
+      <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:#E71D36"></i>
+      <div class="t-body c-red bold">不适用的场景</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 大模块架构级重构</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 有一定并发量的系统</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 需要灰度发布、需求变更频繁</div>
+    </div>
+  </div>
+  <div class="an t-body c-gray" style="margin-top:12px;max-width:750px">
+    <i class="fas fa-exclamation-circle" style="color:#F4A261"></i> 时间不会凭空消失——零排期重构必然挤压新需求时间，需结合实际 <span class="c-orange bold">审慎评估</span>
+  </div>
+  <div class="an grid-2" style="margin-top:10px;width:80%;max-width:850px">
+    <div class="t-sm c-gray" style="text-align:left"><i class="fas fa-check-circle" style="color:#2EC4B6"></i> <span class="c-green bold">小模块：</span>正常开发随手带着改，对上下文影响小，P1-P2 级别</div>
+    <div class="t-sm c-gray" style="text-align:left"><i class="fas fa-times-circle" style="color:#E71D36"></i> <span class="c-red bold">大模块：</span>需方案讨论→设计→拆分多期→灰度验证，遇到变更就痛苦</div>
+  </div>
+</div>
+
+<!-- ====== Slide 7: 实践4 - 代码质量保障 ====== -->
+<div class="slide bg-1" id="s6">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles6"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;bottom:-200px;right:-200px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-orange">实践四</span> 代码质量保障体系</div>
+  <div class="an t-big c-white">AI + 人工协同，多 Agent 对抗审查</div>
+  <div class="an line"></div>
+  <div class="an grid-3" style="margin-top:14px">
+    <div class="col-card-3" style="border-left:4px solid #FF6B35">
+      <i class="fas fa-code-review" style="font-size:2rem;color:#FF6B35;margin-bottom:6px"></i>
+      <div style="font-size:1.2rem;font-weight:800;color:#FF6B35">AI + 人工协同 Review</div>
+      <div class="t-sm c-gray" style="text-align:left">AI 解决规范类问题（SQL/DB/代码/前端规范）。人负责技术方案评审（架构划分、接口设计、功能符合预期）。</div>
+    </div>
+    <div class="col-card-3" style="border-left:4px solid #F4A261">
+      <i class="fas fa-file-alt" style="font-size:2rem;color:#F4A261;margin-bottom:6px"></i>
+      <div style="font-size:1.2rem;font-weight:800;color:#F4A261">Pre-PR 审查机制</div>
+      <div class="t-sm c-gray" style="text-align:left">提交前调用 Review Agent 自动审查。生成 PR 报告：改动范围、影响面、风险点。人主动触发 AI 审查。</div>
+    </div>
+    <div class="col-card-3" style="border-left:4px solid #E76F51">
+      <i class="fas fa-balance-scale" style="font-size:2rem;color:#E76F51;margin-bottom:6px"></i>
+      <div style="font-size:1.2rem;font-weight:800;color:#E76F51">多模型对抗审查</div>
+      <div class="t-sm c-gray" style="text-align:left">Claude Code 审查 CodeBuddy 生成的代码，互为校验。如果两个 Agent 都犯错 → 反思规范本身是否有问题。</div>
+    </div>
+  </div>
+  <div class="an success-box" style="margin-top:16px;width:88%;max-width:1000px">
+    <div style="font-size:1.3rem;font-weight:800;color:#2EC4B6"><i class="fas fa-lightbulb"></i> 关键认知：Completion Gate 机制</div>
+    <div class="t-body c-gray" style="text-align:left">允许一个 Agent 只做到 80-90 分——关键是每个 Stage 都有审查门禁。写完一个状态 → Agent 验证 → 通过才进入下一阶段 → 不通过则打回重改。这本质上是分布式系统 "Tolerance" 的思路。</div>
+  </div>
+  <div class="an step-row" style="margin-top:10px">
+    <div class="step-node sn-orange"><i class="fas fa-pen"></i></div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-amber"><i class="fas fa-search"></i></div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-coral"><i class="fas fa-check"></i></div>
+    <div class="step-connector"></div>
+    <div class="step-node sn-green"><i class="fas fa-rocket"></i></div>
+  </div>
+  <div class="an" style="display:flex;gap:42px;font-size:.95rem;color:#A7A9BE;margin-top:6px">
+    <span style="width:60px;text-align:center">AI 生成</span>
+    <span style="width:60px;text-align:center">Agent 审查</span>
+    <span style="width:60px;text-align:center">通过/打回</span>
+    <span style="width:60px;text-align:center">提交</span>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:8px">测试用例是 AI 自我学习的基石——<span class="c-orange bold">AI 自我验证 → AI 自我学习 → 持续产出高质量代码</span></div>
+</div>
+
+<!-- ====== Slide 8: 实践5 - 高配审查低配执行 ====== -->
+<div class="slide bg-2" id="s7">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-120px;left:-120px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-amber">实践五</span> 模型策略</div>
+  <div class="an t-big c-white">高配审查 + 低配执行 = <span class="c-orange">质量·速度·成本</span> 三角平衡</div>
+  <div class="an line"></div>
+  <div class="an vs-wrap" style="margin-top:16px">
+    <div class="vs-box" style="border-top:4px solid #7F5AF0">
+      <i class="fas fa-brain" style="font-size:2.5rem;color:#7F5AF0;margin-bottom:6px"></i>
+      <div class="t-mid c-purple bold">高配模型</div>
+      <div class="tag tag-orange" style="margin:6px 0"><i class="fas fa-search"></i> 审查 + 设计</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 陪你讨论方案、详细设计</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> Debug 分析、变更影响评估</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 头脑风暴，确认想法对错</div>
+    </div>
+    <div class="vs-mid">VS</div>
+    <div class="vs-box" style="border-top:4px solid #2EC4B6">
+      <i class="fas fa-bolt" style="font-size:2.5rem;color:#2EC4B6;margin-bottom:6px"></i>
+      <div class="t-mid c-green bold">低配模型</div>
+      <div class="tag tag-green" style="margin:6px 0"><i class="fas fa-play"></i> 执行 + 生成</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 按详细设计照做，不需发散</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 约束已到位，自由空间有限</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 速度快 + 成本低</div>
+    </div>
+  </div>
+  <div class="an t-body c-white" style="margin-top:14px;max-width:750px">
+    <span class="bg-orange">先保证质量</span> <i class="fas fa-arrow-right c-orange"></i> <span class="bg-amber">再提升速度</span> <i class="fas fa-arrow-right c-amber"></i> <span class="bg-green">最后优化成本</span>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:10px;max-width:700px">
+    为什么低配模型能执行？因为<span class="c-orange bold">人的详细设计已经把约束给到位了</span>——代码 Demo、数据结构、函数调用方式都已明确。Agent 不需要"发散"，只需要"照做"。这也是约束力量的直接体现。
+  </div>
+  <div class="an" style="margin-top:8px">
+    <span class="tag tag-green"><i class="fas fa-check-circle"></i> 执行：低配模型 · 快 + 省</span>
+    <span class="tag tag-orange" style="margin-left:8px"><i class="fas fa-search"></i> 审查：高配模型 · 智 + 准</span>
+    <span class="tag tag-amber" style="margin-left:8px"><i class="fas fa-balance-scale"></i> 平衡：质量 → 速度 → 成本</span>
+  </div>
+</div>
+
+<!-- ====== Slide 9: 工程师角色迁移 ====== -->
+<div class="slide bg-3" id="s8">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles8"></div>
+  <div class="deco deco-coral" style="width:550px;height:550px;bottom:-250px;right:-200px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-user-astronaut" style="color:#FF6B35;margin-right:8px"></i>工程师的角色迁移</div>
+  <div class="an t-huge c-orange bold">从 Coder 到 AI 架构师</div>
+  <div class="an line"></div>
+  <div class="an shape-grid" style="margin:18px 0">
+    <div class="shape-circle sh-md sp">
+      <i class="fas fa-arrow-up"></i><span style="font-size:.9rem">向上</span>
+      <span style="font-size:.7rem;opacity:.8">产品思维</span>
+    </div>
+    <div class="shape-circle sh-md so">
+      <i class="fas fa-arrow-down"></i><span style="font-size:.9rem">向下</span>
+      <span style="font-size:.7rem;opacity:.8">测试思维</span>
+    </div>
+    <div class="shape-circle sh-md sg">
+      <i class="fas fa-arrows-alt-v"></i><span style="font-size:.9rem">向内</span>
+      <span style="font-size:.7rem;opacity:.8">架构深化</span>
+    </div>
+  </div>
+  <div class="an grid-2" style="margin-top:10px;width:88%;max-width:1000px">
+    <div class="info-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#FF6B35"><i class="fas fa-history"></i> 过去</div>
+      <div class="t-body c-gray" style="text-align:left">写代码 = 核心竞争力。时间花在 Coding 本身。方案不需要写太细，靠人之间的"容忍度"沟通。每个工程师都在"写代码"这个层面上竞争。</div>
+      <div class="tag tag-orange" style="margin-top:6px"><i class="fas fa-code"></i> 人均 Coder</div>
+    </div>
+    <div class="info-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#F4A261"><i class="fas fa-rocket"></i> 现在与未来</div>
+      <div class="t-body c-gray" style="text-align:left">指挥 AI 写代码 = 核心竞争力。时间花在设计方案、维护 AI 编码框架、判断"什么更重要"。视野从代码行抬升到系统架构层面。</div>
+      <div class="tag tag-amber" style="margin-top:6px"><i class="fas fa-crown"></i> 人人都是架构师</div>
+    </div>
+  </div>
+  <div class="an" style="margin-top:12px">
+    <svg width="480" height="55" viewBox="0 0 480 55">
+      <defs><linearGradient id="g9" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#FF6B35"/><stop offset="100%" style="stop-color:#2EC4B6"/></linearGradient></defs>
+      <rect x="5" y="18" width="85" height="20" rx="10" fill="rgba(255,107,53,.12)" stroke="#FF6B35" stroke-width="1"/>
+      <text x="47" y="32" text-anchor="middle" fill="#FF6B35" font-size="9" font-weight="700">写代码</text>
+      <line x1="90" y1="28" x2="118" y2="28" stroke="url(#g9)" stroke-width="2" marker-end="url(#ah9)"/>
+      <rect x="123" y="18" width="95" height="20" rx="10" fill="rgba(244,162,97,.12)" stroke="#F4A261" stroke-width="1"/>
+      <text x="170" y="32" text-anchor="middle" fill="#F4A261" font-size="9" font-weight="700">设计 AI 框架</text>
+      <line x1="218" y1="28" x2="246" y2="28" stroke="url(#g9)" stroke-width="2" marker-end="url(#ah9)"/>
+      <rect x="251" y="18" width="95" height="20" rx="10" fill="rgba(231,111,81,.12)" stroke="#E76F51" stroke-width="1"/>
+      <text x="298" y="32" text-anchor="middle" fill="#E76F51" font-size="9" font-weight="700">约束 AI 产出</text>
+      <line x1="346" y1="28" x2="374" y2="28" stroke="url(#g9)" stroke-width="2" marker-end="url(#ah9)"/>
+      <rect x="379" y="18" width="95" height="20" rx="10" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="1"/>
+      <text x="426" y="32" text-anchor="middle" fill="#2EC4B6" font-size="9" font-weight="700">系统架构师</text>
+      <defs><marker id="ah9" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#2EC4B6"/></marker></defs>
+    </svg>
+  </div>
+  <div class="an t-big c-white" style="margin-top:14px">
+    每一个工程师都<span class="bg-orange c-orange bold ul-orange">应该也必须是架构师</span>
+  </div>
+  <div class="an grid-3" style="margin-top:10px;width:88%;max-width:1000px">
+    <div class="col-card-3" style="border-left:3px solid #FF6B35">
+      <i class="fas fa-tasks" style="font-size:1.4rem;color:#FF6B35"></i>
+      <div style="font-size:1rem;font-weight:700;color:#FF6B35">设计 AI 编码框架</div>
+      <div class="t-sm c-gray">Rule + Skill + Agent 工具链的组装与维护</div>
+    </div>
+    <div class="col-card-3" style="border-left:3px solid #F4A261">
+      <i class="fas fa-balance-scale" style="font-size:1.4rem;color:#F4A261"></i>
+      <div style="font-size:1rem;font-weight:700;color:#F4A261">判断什么更重要</div>
+      <div class="t-sm c-gray">P0/P1/P2 优先级判断，方案评审</div>
+    </div>
+    <div class="col-card-3" style="border-left:3px solid #2EC4B6">
+      <i class="fas fa-shield-virus" style="font-size:1.4rem;color:#2EC4B6"></i>
+      <div style="font-size:1rem;font-weight:700;color:#2EC4B6">长期系统梳理</div>
+      <div class="t-sm c-gray">发现优化点，持续降低技术负债</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Slide 10: 审慎思考1 - RD与QA ====== -->
+<div class="slide bg-4" id="s9">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:350px;height:350px;top:-80px;right:-80px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-red">审慎思考</span> RD 与 QA 该不该合并？</div>
+  <div class="an t-big c-white">能力提升 <span class="c-red bold">≠</span> 职责耦合</div>
+  <div class="an line"></div>
+  <div class="an two-col" style="margin-top:14px">
+    <div class="col-card" style="border-left:6px solid #E71D36">
+      <i class="fas fa-link" style="font-size:2rem;color:#E71D36;margin-bottom:4px"></i>
+      <div class="t-body c-red bold">合并的风险</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 自己做、自己测 = 严重耦合</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 模型天花板 = 个人精力上限</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 架构拆不开 → 无法突破瓶颈</div>
+      <div class="icon-text"><i class="fas fa-times" style="color:#E71D36"></i> 美团 100% RD 兼测试 ≠ 适合所有团队</div>
+    </div>
+    <div class="col-card" style="border-left:6px solid #2EC4B6">
+      <i class="fas fa-expand-arrows-alt" style="font-size:2rem;color:#2EC4B6;margin-bottom:4px"></i>
+      <div class="t-body c-green bold">正确的方向</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> AI 让研发能力向上/向下扩展</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 但扩展是为了"做得更好"，不是"合并角色"</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 分开保持团队的弹性能力</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 研发和测试天然关注点不同</div>
+    </div>
+  </div>
+  <div class="an" style="margin-top:10px">
+    <svg width="500" height="65" viewBox="0 0 500 65">
+      <defs><linearGradient id="g10a" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#FF6B35"/><stop offset="100%" style="stop-color:#2EC4B6"/></linearGradient></defs>
+      <circle cx="50" cy="32" r="18" fill="rgba(255,107,53,.15)" stroke="#FF6B35" stroke-width="2"/>
+      <text x="50" y="37" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">研发</text>
+      <line x1="68" y1="32" x2="110" y2="32" stroke="url(#g10a)" stroke-width="2" stroke-dasharray="4 2"/>
+      <rect x="115" y="18" width="80" height="28" rx="6" fill="rgba(244,162,97,.12)" stroke="#F4A261" stroke-width="1.5"/>
+      <text x="155" y="31" text-anchor="middle" fill="#F4A261" font-size="10" font-weight="700">向上cover</text>
+      <text x="155" y="44" text-anchor="middle" fill="#A7A9BE" font-size="8">产品思维</text>
+      <line x1="195" y1="32" x2="237" y2="32" stroke="url(#g10a)" stroke-width="2" stroke-dasharray="4 2"/>
+      <rect x="242" y="18" width="80" height="28" rx="6" fill="rgba(231,111,81,.12)" stroke="#E76F51" stroke-width="1.5"/>
+      <text x="282" y="31" text-anchor="middle" fill="#E76F51" font-size="10" font-weight="700">向下cover</text>
+      <text x="282" y="44" text-anchor="middle" fill="#A7A9BE" font-size="8">测试思维</text>
+      <line x1="322" y1="32" x2="364" y2="32" stroke="url(#g10a)" stroke-width="2" stroke-dasharray="4 2"/>
+      <rect x="369" y="18" width="80" height="28" rx="6" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="409" y="31" text-anchor="middle" fill="#2EC4B6" font-size="10" font-weight="700">聚焦本职</text>
+      <text x="409" y="44" text-anchor="middle" fill="#A7A9BE" font-size="8">更专业</text>
+    </svg>
+  </div>
+  <div class="an t-body c-gray" style="margin-top:10px;max-width:750px">
+    <i class="fas fa-quote-left" style="color:#F4A261"></i> 产品经理有 AI 加持也能写 Demo，但产品经理就该去做开发吗？能力提升是为了更专业，不是为了打破分工。<i class="fas fa-quote-right" style="color:#F4A261"></i>
+  </div>
+  <div class="an t-sm c-orange" style="margin-top:6px"><i class="fas fa-lightbulb"></i> 保持 RD 和 QA 分开 = 保持团队弹性能力 = 打破个人天花板</div>
+</div>
+
+<!-- ====== Slide 11: 审慎思考2 - 零排期重构风险 ====== -->
+<div class="slide bg-5" id="s10">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:400px;height:400px;top:50%;left:50%;margin-top:-200px;margin-left:-200px;opacity:.5"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-red">审慎思考</span> 零排期重构的适用边界</div>
+  <div class="an t-big c-white" style="max-width:800px">美团能做到 ≠ 大部分团队能做到</div>
+  <div class="an line"></div>
+  <div class="an grid-2" style="margin-top:16px;width:88%;max-width:1000px">
+    <div class="warn-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#E71D36"><i class="fas fa-clock"></i> 时间挤压问题</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 同一需求内既要做业务又要做重构</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 事情变多但时间不变 → 必然挤压新需求</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 要么接受周期延长，要么需求做更少</div>
+    </div>
+    <div class="warn-box">
+      <div style="font-size:1.3rem;font-weight:800;color:#E71D36"><i class="fas fa-project-diagram"></i> 方案连续性问题</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 大模块重构需要讨论、设计、分期</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 做到第二期需求变更 → 原地爆炸</div>
+      <div class="icon-text"><i class="fas fa-exclamation" style="color:#E71D36"></i> 灰度期间遇到变更非常痛苦</div>
+    </div>
+  </div>
+  <div class="an" style="margin-top:10px">
+    <svg width="480" height="70" viewBox="0 0 480 70">
+      <defs><linearGradient id="g11a" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:#E71D36"/><stop offset="100%" style="stop-color:#FF6B35"/></linearGradient></defs>
+      <rect x="10" y="5" width="130" height="60" rx="8" fill="rgba(231,29,54,.08)" stroke="#E71D36" stroke-width="2"/>
+      <text x="75" y="25" text-anchor="middle" fill="#E71D36" font-size="10" font-weight="700">大模块重构</text>
+      <text x="75" y="40" text-anchor="middle" fill="#A7A9BE" font-size="9">拆3期 → 做2期</text>
+      <text x="75" y="55" text-anchor="middle" fill="#E71D36" font-size="9" font-weight="700">需求变了!</text>
+      <line x1="140" y1="35" x2="165" y2="35" stroke="url(#g11a)" stroke-width="2.5" marker-end="url(#ah11a)"/>
+      <circle cx="185" cy="35" r="22" fill="rgba(231,29,54,.1)" stroke="#E71D36" stroke-width="2.5"/>
+      <polygon points="185,18 190,26 199,26 192,31 195,39 185,34 175,39 178,31 171,26 180,26" fill="#E71D36"/>
+      <text x="185" y="50" text-anchor="middle" fill="#E71D36" font-size="8" font-weight="700">原地爆炸</text>
+      <line x1="207" y1="35" x2="240" y2="35" stroke="url(#g11a)" stroke-width="2.5" marker-end="url(#ah11a)"/>
+      <rect x="248" y="8" width="110" height="24" rx="6" fill="rgba(231,29,54,.12)"/>
+      <text x="303" y="24" text-anchor="middle" fill="#E71D36" font-size="10" font-weight="700">方案推倒重来</text>
+      <rect x="248" y="38" width="110" height="24" rx="6" fill="rgba(231,29,54,.12)"/>
+      <text x="303" y="54" text-anchor="middle" fill="#E71D36" font-size="10" font-weight="700">已做全白费</text>
+      <defs><marker id="ah11a" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#FF6B35"/></marker></defs>
+    </svg>
+  </div>
+  <div class="an t-body c-orange bold" style="margin-top:14px">
+    适用于 <span class="bg-orange">小型简单项目</span>，有规模/有并发量的系统 <span class="c-red">需审慎评估</span>
+  </div>
+</div>
+
+<!-- ====== Slide 12: 审慎思考3 - 人机高效协作 ====== -->
+<div class="slide bg-6" id="s11">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:450px;height:450px;top:-150px;left:-150px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><span class="tag tag-green">审慎思考</span> 人与 AI 的高效协作方式</div>
+  <div class="an t-big c-white">文档写到 <span class="c-orange bold">每个 Part · 每个 Model</span></div>
+  <div class="an line"></div>
+  <div class="an two-col" style="margin-top:14px">
+    <div class="col-card" style="border-left:6px solid #A7A9BE">
+      <i class="fas fa-user-friends" style="font-size:2rem;color:#A7A9BE;margin-bottom:4px"></i>
+      <div class="t-mid c-gray bold">没有 AI 的时代</div>
+      <div class="t-body c-gray" style="text-align:left">人与人沟通有容忍度。方案不写细，靠默契、习惯、记忆补全。研发文档"差不多能看懂就行"。</div>
+    </div>
+    <div class="col-card" style="border-left:6px solid #FF6B35">
+      <i class="fas fa-robot" style="font-size:2rem;color:#FF6B35;margin-bottom:4px"></i>
+      <div class="t-mid c-orange bold">AI 时代的要求</div>
+      <div class="t-body c-gray" style="text-align:left">人与 AI 没有"容忍度"。约束越清晰 → AI 越不会自由发散 → 产出质量越高。详细设计需涵盖代码 Demo、数据结构、函数调用方式。</div>
+    </div>
+  </div>
+  <div class="an info-box" style="margin-top:12px;width:88%;max-width:900px">
+    <div style="font-size:1.2rem;font-weight:800;color:#FF6B35"><i class="fas fa-key"></i> 核心协作公式</div>
+    <div class="t-body c-gray" style="text-align:left">人把方案写细（每个 Part/Model/接口）→ Agent 按方案执行（无自由发散空间）→ AI 审查 Agent 验证规范合规 → 人最终确认方案符合预期。<span class="c-orange bold">约束 = 输出质量的上限。</span></div>
+  </div>
+  <div class="an step-row" style="margin-top:8px">
+    <div class="step-node sn-orange" style="width:50px;height:50px;font-size:.85rem">文档</div>
+    <div class="step-connector" style="width:40px"></div>
+    <div class="step-node sn-amber" style="width:50px;height:50px;font-size:.85rem">约束</div>
+    <div class="step-connector" style="width:40px"></div>
+    <div class="step-node sn-coral" style="width:50px;height:50px;font-size:.85rem">执行</div>
+    <div class="step-connector" style="width:40px"></div>
+    <div class="step-node sn-green" style="width:50px;height:50px;font-size:.85rem">审查</div>
+    <div class="step-connector" style="width:40px"></div>
+    <div class="step-node sn-orange" style="width:50px;height:50px;font-size:.85rem">交付</div>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:6px;max-width:650px">与没有 AI 时相比，文档从"差不多能看懂"升级为"每个 Part 每个 Model 每个接口"级别的详细设计。这不是负担，是<span class="c-orange bold">质量的投资</span>。</div>
+</div>
+
+<!-- ====== Slide 13: 核心洞察总结 ====== -->
+<div class="slide bg-1" id="s12">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles12"></div>
+  <div class="deco deco-orange" style="width:700px;height:700px;top:50%;left:50%;margin-top:-350px;margin-left:-350px;opacity:.4"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-star" style="color:#F4A261"></i> 核心洞察总结</div>
+  <div class="an t-huge c-orange bold">约束 AI，就是约束系统的未来</div>
+  <div class="an line"></div>
+  <div class="an grid-2" style="margin-top:18px;width:88%;max-width:1000px">
+    <div class="success-box">
+      <div style="font-size:1.15rem;font-weight:800;color:#2EC4B6"><i class="fas fa-check-circle"></i> 关键认知</div>
+      <div class="icon-text"><i class="fas fa-gem" style="color:#FF6B35"></i> 决定系统走向的不是写得更快，而是约束 AI 的能力</div>
+      <div class="icon-text"><i class="fas fa-gem" style="color:#FF6B35"></i> 规范和流程是 AI 产出的"护栏"，不是束缚</div>
+      <div class="icon-text"><i class="fas fa-gem" style="color:#FF6B35"></i> 测试用例是 AI 自我学习的基石——AI 必须有办法自我验证</div>
+    </div>
+    <div class="info-box">
+      <div style="font-size:1.15rem;font-weight:800;color:#FF6B35"><i class="fas fa-lightbulb"></i> 行动方向</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 建立团队 AI 编码规范体系（SOP + 框架 + 工具链）</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 培养"架构师思维"：从 Coding 转向设计 + 判断</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 拥抱多 Agent 协作：不追求单点完美，追求系统闭环</div>
+    </div>
+  </div>
+  <div class="an info-box" style="margin-top:10px;width:88%;max-width:1000px">
+    <div style="font-size:1.15rem;font-weight:800;color:#FF6B35"><i class="fas fa-quote-right"></i> 一句话总结</div>
+    <div class="t-body c-gray" style="text-align:left">当 AI 解决了"写代码"的效率问题，工程师的核心价值不再是 Coding 本身，而是<span class="c-orange bold">定义什么样的代码才值得被写出来</span>——这需要架构师的判断力、产品经理的洞察力、以及对 AI 工具的驾驭力。</div>
+  </div>
+  <div class="an glow-text" style="margin-top:22px">从"会写代码"到"会管 AI 写代码"</div>
+  <div class="an t-body c-gray" style="margin-top:8px">这是每个开发者都正在经历的 <span class="c-orange bold">能力跃迁</span></div>
+  <div class="an shape-grid" style="margin-top:14px">
+    <div class="shape-circle sh-sm sp"><i class="fas fa-lock"></i>约束</div>
+    <div class="shape-circle sh-sm so"><i class="fas fa-shield-haltered"></i>规范</div>
+    <div class="shape-circle sh-sm sg"><i class="fas fa-sync-alt"></i>验证</div>
+    <div class="shape-circle sh-sm sp"><i class="fas fa-crown"></i>架构</div>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:8px">四个关键词，定义 AI 时代工程师的核心竞争力</div>
+  <div class="an divider-icon" style="width:200px"><i class="fas fa-star"></i></div>
+  <div class="an t-body c-gray" style="max-width:700px">
+    美团的实践揭示了 AI 时代的真相：<span class="c-orange bold">模型能力趋于同质化，决定产出质量的，是驾驭模型的能力。</span>这不是一个"AI 取代人"的故事，而是一个"人学会用好 AI，成为更强者"的故事。
+  </div>
+</div>
+
+<!-- ====== Slide 14: 日后奋斗方向 ====== -->
+<div class="slide bg-3" id="s13">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles13"></div>
+  <div class="deco deco-amber" style="width:500px;height:500px;top:-200px;right:-150px"></div>
+  <div class="deco deco-coral" style="width:350px;height:350px;bottom:-120px;left:-120px"></div>
+
+  <div class="an t-mid c-gray" style="margin-bottom:6px"><i class="fas fa-compass" style="color:#FF6B35"></i> 日后奋斗方向</div>
+  <div class="an t-huge c-white">成为 AI 时代的 <span class="c-orange bold">驾驭者</span></div>
+  <div class="an line"></div>
+  <div class="an shape-grid" style="margin:16px 0">
+    <div class="shape-circle sh-lg sp">
+      <i class="fas fa-book" style="font-size:1.5rem"></i>
+      <span style="font-size:.85rem">建立规范</span>
+      <span style="font-size:.65rem;opacity:.8">SOP + 框架</span>
+    </div>
+    <div class="shape-circle sh-lg so">
+      <i class="fas fa-crown" style="font-size:1.5rem"></i>
+      <span style="font-size:.85rem">架构师思维</span>
+      <span style="font-size:.65rem;opacity:.8">判断优先级</span>
+    </div>
+    <div class="shape-circle sh-lg sg">
+      <i class="fas fa-sync-alt" style="font-size:1.5rem"></i>
+      <span style="font-size:.85rem">持续迭代</span>
+      <span style="font-size:.65rem;opacity:.8">长期梳理</span>
+    </div>
+    <div class="shape-circle sh-lg sp">
+      <i class="fas fa-rocket" style="font-size:1.5rem"></i>
+      <span style="font-size:.85rem">拥抱变化</span>
+      <span style="font-size:.65rem;opacity:.8">AI 快速演进</span>
+    </div>
+  </div>
+  <div class="an grid-2" style="margin-top:10px;width:88%;max-width:1000px">
+    <div class="success-box">
+      <div style="font-size:1.2rem;font-weight:800;color:#2EC4B6"><i class="fas fa-tasks"></i> 短期行动</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 选一位"独立专家"拉通团队 AI 编码流程</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 先小范围试点，提炼最佳实践再推广</div>
+      <div class="icon-text"><i class="fas fa-check" style="color:#2EC4B6"></i> 建立 Pre-PR + 多 Agent 审查的质量门禁</div>
+    </div>
+    <div class="info-box">
+      <div style="font-size:1.2rem;font-weight:800;color:#FF6B35"><i class="fas fa-eye"></i> 长期目标</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 将 AI 编码框架打造成团队核心竞争力</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 工程师从 Coder 进化为 AI 系统架构师</div>
+      <div class="icon-text"><i class="fas fa-arrow-right" style="color:#F4A261"></i> 让"约束 AI"成为组织的肌肉记忆</div>
+    </div>
+  </div>
+  <div class="an" style="margin-top:8px">
+    <svg width="500" height="60" viewBox="0 0 500 60">
+      <circle cx="40" cy="30" r="16" fill="rgba(255,107,53,.15)" stroke="#FF6B35" stroke-width="2"/>
+      <text x="40" y="35" text-anchor="middle" fill="#FF6B35" font-size="9" font-weight="700">今</text>
+      <line x1="56" y1="30" x2="90" y2="30" stroke="#FF6B35" stroke-width="2" marker-end="url(#ah14)"/>
+      <rect x="95" y="16" width="110" height="28" rx="8" fill="rgba(255,107,53,.12)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="150" y="35" text-anchor="middle" fill="#FF6B35" font-size="10" font-weight="700">建规范体系</text>
+      <line x1="205" y1="30" x2="239" y2="30" stroke="#F4A261" stroke-width="2" marker-end="url(#ah14b)"/>
+      <rect x="244" y="16" width="110" height="28" rx="8" fill="rgba(244,162,97,.12)" stroke="#F4A261" stroke-width="1.5"/>
+      <text x="299" y="35" text-anchor="middle" fill="#F4A261" font-size="10" font-weight="700">培养架构思维</text>
+      <line x1="354" y1="30" x2="388" y2="30" stroke="#2EC4B6" stroke-width="2" marker-end="url(#ah14c)"/>
+      <rect x="393" y="16" width="100" height="28" rx="8" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="443" y="35" text-anchor="middle" fill="#2EC4B6" font-size="10" font-weight="700">持续进化</text>
+      <defs>
+        <marker id="ah14" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#FF6B35"/></marker>
+        <marker id="ah14b" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#F4A261"/></marker>
+        <marker id="ah14c" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#2EC4B6"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <div class="an divider-icon" style="margin-top:6px;width:200px"><i class="fas fa-circle" style="font-size:.35rem"></i></div>
+  <div class="an t-body c-gray" style="margin-top:6px;max-width:700px">
+    <span class="bg-orange c-orange bold" style="font-size:1.5rem">AI 不是替代你，而是让你成为一支团队</span>
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:6px">
+    <i class="fas fa-video"></i> 视频来源：B站 BV1vNL36YEid | 美团技术团队实践分享
+  </div>
+  <div class="an t-sm c-gray" style="margin-top:2px;opacity:.6">
+    基于美团技术团队公开分享的实践经验整理与解读
+  </div>
+</div>
+
+</div><!-- end slide-container -->
+
+<!-- Slide indicator -->
+<div class="slide-indicator" id="indicator"></div>
+
+<!-- Page number & nav -->
+<div class="slide-num" id="pageNum">01 / 14</div>
+<div class="nav-hint">
+  <button class="nav-btn" id="prevBtn" title="上一页"><i class="fas fa-chevron-left"></i></button>
+  <button class="nav-btn" id="nextBtn" title="下一页"><i class="fas fa-chevron-right"></i></button>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide'), total=slides.length;
+let cur=0;
+
+// Build slide indicator dots
+const indicator=document.getElementById('indicator');
+for(let i=0;i<total;i++){
+  const dot=document.createElement('div');
+  dot.className='dot'+(i===0?' active':'');
+  indicator.appendChild(dot);
+}
+
+function updateIndicator(){
+  document.querySelectorAll('#indicator .dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  document.getElementById('pageNum').textContent=String(cur+1).padStart(2,'0')+' / '+String(total).padStart(2,'0');
+}
+
+function go(n){
+  if(n<0||n>=total||n===cur)return;
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.an').forEach(e=>e.classList.remove('show'));
+  cur=n;
+  slides[cur].classList.add('active');
+  slides[cur].querySelectorAll('.an').forEach((e,i)=>{
+    e.classList.remove('show');
+    setTimeout(()=>e.classList.add('show'),120+i*240);
+  });
+  updateIndicator();
+}
+
+// Init first slide animation
+slides[0].querySelectorAll('.an').forEach((e,i)=>setTimeout(()=>e.classList.add('show'),300+i*280));
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home'){e.preventDefault();go(0)}
+  else if(e.key==='End'){e.preventDefault();go(total-1)}
+});
+
+// Nav buttons
+document.getElementById('prevBtn').addEventListener('click',()=>go(cur-1));
+document.getElementById('nextBtn').addEventListener('click',()=>go(cur+1));
+
+// Touch
+let tx=0,ty=0;
+document.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX;ty=e.changedTouches[0].screenY});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].screenX-tx,dy=e.changedTouches[0].screenY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){dx<0?go(cur+1):go(cur-1)}
+});
+
+// Wheel
+let wc=false;
+document.addEventListener('wheel',e=>{
+  if(wc)return;wc=true;setTimeout(()=>wc=false,800);
+  e.deltaY>0?go(cur+1):go(cur-1);
+});
+
+// Floating particles
+function createParticles(id){
+  const c=document.getElementById(id);
+  if(!c)return;
+  const colors=['rgba(255,107,53,.28)','rgba(244,162,97,.22)','rgba(231,111,81,.18)','rgba(46,196,182,.18)'];
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const s=Math.random()*8+3;
+    p.style.cssText='width:'+s+'px;height:'+s+'px;left:'+Math.random()*100+'%;background:'+colors[Math.floor(Math.random()*colors.length)]+';animation-duration:'+(Math.random()*7+7)+'s;animation-delay:'+(Math.random()*7)+'s';
+    c.appendChild(p);
+  }
+}
+['particles0','particles6','particles8','particles12','particles13'].forEach(createParticles);
+
+// ============================================================
+// Animation reset fix — ensures animations re-trigger on every slide change
+// Uses cloneNode to force browser to re-render CSS animations from scratch
+// This is the most cross-browser reliable approach
+// ============================================================
+(function(){
+  document.querySelectorAll('.slide').forEach(function(s){
+    s.querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item){
+      var clone=item.cloneNode(true);
+      item.parentNode.replaceChild(clone,item);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
