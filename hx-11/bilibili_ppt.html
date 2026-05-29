@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>意图识别：让Agent不再"万能皆无能"</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0F0E17;color:#FFFFFE;overflow:hidden;width:100vw;height:100vh;user-select:none}
+
+:root {
+  --accent: #FF6B35;
+  --accent2: #F4A261;
+  --accent3: #E76F51;
+  --accent-glow: rgba(255,107,53,0.3);
+  --dark: #0F0E17;
+  --dark2: #1A1932;
+  --gray: #A7A9BE;
+  --red: #E71D36;
+  --green: #2EC4B6;
+  --purple: #7F5AF0;
+  --blue: #4A90D9;
+}
+
+/* ===== Slides ===== */
+.slide-container{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 60px;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.slide .anim-item{opacity:0;transform:translateY(45px);transition:none}
+.slide.active .anim-item.show{opacity:1;transform:translateY(0);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+
+/* ===== Decorative Elements ===== */
+.deco{position:absolute;border-radius:50%;pointer-events:none}
+.deco-orange{background:radial-gradient(circle,rgba(255,107,53,.15),transparent)}
+.deco-amber{background:radial-gradient(circle,rgba(244,162,97,.12),transparent)}
+.deco-coral{background:radial-gradient(circle,rgba(231,111,81,.10),transparent)}
+.deco-purple{background:radial-gradient(circle,rgba(127,90,240,.10),transparent)}
+
+/* ===== Particles ===== */
+.particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite;opacity:0}
+@keyframes float-particle{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:1}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* ===== Grid BG ===== */
+.grid-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,107,53,.06) 1px,transparent 1px);
+  background-size:40px 40px;opacity:.6}
+
+/* ===== Glow Orbs ===== */
+.glow-orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(80px);opacity:.15}
+.glow-orb-orange{background:#FF6B35;width:600px;height:600px}
+.glow-orb-amber{background:#F4A261;width:450px;height:450px}
+.glow-orb-coral{background:#E76F51;width:500px;height:500px}
+
+/* ===== Typography ===== */
+.t-hero{font-size:5.2rem;font-weight:900;line-height:1.15;text-align:center}
+.t-huge{font-size:4rem;font-weight:900;line-height:1.2;text-align:center}
+.t-big{font-size:3rem;font-weight:800;line-height:1.3;text-align:center}
+.t-mid{font-size:2.2rem;font-weight:700;line-height:1.4;text-align:center}
+.t-body{font-size:1.6rem;font-weight:400;line-height:1.7;text-align:center}
+.t-sm{font-size:1.2rem;font-weight:400;line-height:1.5;text-align:center}
+.t-xs{font-size:1rem;font-weight:400;line-height:1.5;text-align:center}
+
+/* ===== Colors ===== */
+.c-orange{color:#FF6B35}.c-amber{color:#F4A261}.c-coral{color:#E76F51}
+.c-red{color:#E71D36}.c-green{color:#2EC4B6}.c-purple{color:#7F5AF0}
+.c-blue{color:#4A90D9}.c-gray{color:#A7A9BE}.c-white{color:#FFFFFE}
+
+/* ===== Background Highlights ===== */
+.bg-orange{background:rgba(255,107,53,.15);padding:6px 20px;border-radius:10px}
+.bg-amber{background:rgba(244,162,97,.15);padding:6px 20px;border-radius:10px}
+.bg-coral{background:rgba(231,111,81,.15);padding:6px 20px;border-radius:10px}
+.bg-red{background:rgba(231,29,54,.12);padding:6px 20px;border-radius:10px}
+.bg-green{background:rgba(46,196,182,.12);padding:6px 20px;border-radius:10px}
+.bg-purple{background:rgba(127,90,240,.12);padding:6px 20px;border-radius:10px}
+
+.ul-orange{text-decoration:underline;text-decoration-color:#FF6B35;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-red{text-decoration:underline;text-decoration-color:#E71D36;text-decoration-thickness:4px;text-underline-offset:8px}
+.ul-green{text-decoration:underline;text-decoration-color:#2EC4B6;text-decoration-thickness:4px;text-underline-offset:8px}
+.bold{font-weight:900}.italic{font-style:italic}
+.line{width:80px;height:4px;border-radius:2px;background:linear-gradient(90deg,#FF6B35,#F4A261);margin:16px auto}
+
+/* ===== Layouts ===== */
+.two-col{display:flex;gap:28px;width:92%;max-width:1200px;align-items:stretch}
+.col-card{flex:1;background:rgba(26,25,50,.4);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.col-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(255,107,53,.15)}
+
+/* ===== Flow Steps ===== */
+.flow{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;justify-content:center}
+.flow-step{background:rgba(255,107,53,.12);padding:8px 16px;border-radius:10px;font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:6px;position:relative;transition:transform .3s}
+.flow-step:hover{transform:scale(1.05)}
+.flow-arrow{color:#FF6B35;font-size:1.2rem}
+
+/* ===== VS ===== */
+.vs-wrap{display:flex;gap:30px;align-items:center;justify-content:center;width:88%;max-width:1000px}
+.vs-box{flex:1;padding:28px 22px;border-radius:16px;text-align:center;position:relative;overflow:hidden;background:rgba(26,25,50,.4)}
+.vs-mid{font-size:3rem;font-weight:900;color:#FF6B35;display:flex;flex-direction:column;align-items:center;gap:4px}
+
+/* ===== Method Cards ===== */
+.method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;width:90%;max-width:1150px}
+.method-card{background:rgba(26,25,50,.45);border-radius:16px;padding:28px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;border:2px solid rgba(255,107,53,.10);transition:transform .3s,box-shadow .3s, border-color .3s;position:relative;overflow:hidden}
+.method-card:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(255,107,53,.18);border-color:rgba(255,107,53,.3)}
+.method-card .icon-circle{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:4px}
+.method-card .rank-badge{position:absolute;top:14px;right:14px;font-size:.8rem;font-weight:900;padding:4px 10px;border-radius:12px}
+
+/* ===== Mini Grid 4 ===== */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:90%;max-width:1100px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;width:88%;max-width:1050px}
+.mini-card{background:rgba(26,25,50,.5);border-radius:14px;padding:22px 16px;text-align:center;border:2px solid rgba(255,107,53,.12);display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .3s,box-shadow .3s}
+.mini-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(255,107,53,.18)}
+
+/* ===== Icon Badge ===== */
+.icon-badge{width:62px;height:62px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+.ib-orange{background:linear-gradient(135deg,rgba(255,107,53,.25),rgba(255,107,53,.08))}
+.ib-amber{background:linear-gradient(135deg,rgba(244,162,97,.25),rgba(244,162,97,.08))}
+.ib-coral{background:linear-gradient(135deg,rgba(231,111,81,.25),rgba(231,111,81,.08))}
+.ib-red{background:linear-gradient(135deg,rgba(231,29,54,.22),rgba(231,29,54,.06))}
+.ib-green{background:linear-gradient(135deg,rgba(46,196,182,.22),rgba(46,196,182,.06))}
+.ib-purple{background:linear-gradient(135deg,rgba(127,90,240,.22),rgba(127,90,240,.06))}
+
+/* ===== Progress Bar ===== */
+.progress-bar{width:100%;height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.8s ease}
+.pf-orange{background:linear-gradient(90deg,#FF6B35,#E76F51)}
+.pf-amber{background:linear-gradient(90deg,#F4A261,#E9C46A)}
+.pf-green{background:linear-gradient(90deg,#2EC4B6,#06D6A0)}
+.pf-red{background:linear-gradient(90deg,#E71D36,#FF6B35)}
+.pf-purple{background:linear-gradient(90deg,#7F5AF0,#9B5DE5)}
+
+/* ===== Tags ===== */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:.9rem;font-weight:700}
+.tag-orange{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-red{background:rgba(231,29,54,.15);color:#E71D36}
+.tag-green{background:rgba(46,196,182,.15);color:#2EC4B6}
+.tag-purple{background:rgba(127,90,240,.15);color:#7F5AF0}
+.tag-amber{background:rgba(244,162,97,.15);color:#F4A261}
+
+/* ===== Pulse ===== */
+.pulse-glow{animation:pulse-glow 2.5s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.85}}
+
+/* ===== Glow Ring ===== */
+.glow-ring{width:120px;height:120px;border-radius:50%;border:4px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-pulse 3s ease-in-out infinite}
+@keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.2)}50%{box-shadow:0 0 0 18px rgba(255,107,53,0)}}
+
+/* ===== Concept Word ===== */
+.concept-word{font-size:5.5rem;font-weight:900;letter-spacing:8px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ===== Gradient Text ===== */
+.gradient-text{font-size:3.2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#E76F51,#FF6B35,#F4A261);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ===== Shapes ===== */
+.shape-row{display:flex;gap:18px;margin:12px 0;justify-content:center}
+.shape-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:900;color:#fff;transition:transform .3s}
+.shape-circle:hover{transform:scale(1.12)}
+.sh-sm{width:90px;height:90px;font-size:1.4rem}
+.sh-lg{width:110px;height:110px;font-size:1.6rem}
+.sc-orange{background:linear-gradient(135deg,#FF6B35,#E76F51)}
+.sc-amber{background:linear-gradient(135deg,#F4A261,#E9C46A)}
+.sc-coral{background:linear-gradient(135deg,#E76F51,#FF6B35)}
+.sc-purple{background:linear-gradient(135deg,#7F5AF0,#9B5DE5)}
+.sc-green{background:linear-gradient(135deg,#2EC4B6,#06D6A0)}
+
+/* ===== Connector Lines ===== */
+.conn-line{stroke-dasharray:8 4;animation:dash-move 1.5s linear infinite}
+@keyframes dash-move{to{stroke-dashoffset:-24}}
+
+/* ===== Icon Row ===== */
+.icon-row{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap}
+
+/* ===== VS Detail ===== */
+.vs-detail{display:flex;flex-direction:column;gap:6px;margin-top:10px;width:100%}
+.vs-item{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:600;padding:6px 12px;border-radius:8px}
+.vs-item-red{background:rgba(231,29,54,.08);color:#E71D36}
+.vs-item-green{background:rgba(46,196,182,.08);color:#2EC4B6}
+
+/* ===== Warn Box ===== */
+.warn-box{border-left:5px solid #E71D36;background:rgba(231,29,54,.06);padding:16px 22px;border-radius:0 12px 12px 0;text-align:left;margin:8px 0}
+.success-box{border-left:5px solid #2EC4B6;background:rgba(46,196,182,.06);padding:16px 22px;border-radius:0 12px 12px 0;text-align:left;margin:8px 0}
+.info-box{border-left:5px solid #FF6B35;background:rgba(255,107,53,.06);padding:16px 22px;border-radius:0 12px 12px 0;text-align:left;margin:8px 0}
+
+/* ===== Page Badge ===== */
+.page-badge{position:fixed;top:22px;left:28px;font-size:1rem;color:#FF6B35;font-weight:800;letter-spacing:2px;z-index:100}
+
+/* ===== Slide Indicator ===== */
+.slide-indicator{position:fixed;bottom:24px;right:28px;z-index:100;display:flex;gap:7px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,107,53,.22);transition:all .3s}
+.dot.active{background:#FF6B35;width:26px;border-radius:5px}
+
+/* ===== Nav ===== */
+.nav-bottom{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:14px;align-items:center}
+.nav-btn{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,107,53,.3);background:rgba(15,14,23,.8);color:#FF6B35;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;backdrop-filter:blur(8px)}
+.nav-btn:hover{background:rgba(255,107,53,.15);border-color:#FF6B35;box-shadow:0 0 20px rgba(255,107,53,.2)}
+
+/* ===== Bg Variants ===== */
+.bg-0{background:radial-gradient(ellipse at 50% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-1{background:radial-gradient(ellipse at 30% 20%,#1A1932 0%,#0F0E17 100%)}
+.bg-2{background:radial-gradient(ellipse at 70% 80%,#1A1932 0%,#0F0E17 100%)}
+.bg-3{background:radial-gradient(ellipse at 50% 50%,#1A1932 0%,#0F0E17 100%)}
+.bg-4{background:radial-gradient(ellipse at 50% 70%,#1A1932 0%,#0F0E17 100%)}
+.bg-5{background:radial-gradient(ellipse at 40% 60%,#1A1932 0%,#0F0E17 100%)}
+.bg-6{background:radial-gradient(ellipse at 60% 30%,#1A1932 0%,#0F0E17 100%)}
+.bg-7{background:radial-gradient(ellipse at 20% 50%,#1A1932 0%,#0F0E17 100%)}
+
+/* ===== Gradient Border ===== */
+.gradient-border{position:relative;border-radius:18px;padding:3px}
+.gradient-border::before{content:'';position:absolute;inset:0;border-radius:18px;padding:3px;background:linear-gradient(135deg,#FF6B35,#F4A261,#E76F51,#FF6B35);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:border-rotate 4s linear infinite}
+@keyframes border-rotate{0%{background:linear-gradient(0deg,#FF6B35,#F4A261,#E76F51,#FF6B35)}25%{background:linear-gradient(90deg,#FF6B35,#F4A261,#E76F51,#FF6B35)}50%{background:linear-gradient(180deg,#FF6B35,#F4A261,#E76F51,#FF6B35)}75%{background:linear-gradient(270deg,#FF6B35,#F4A261,#E76F51,#FF6B35)}100%{background:linear-gradient(360deg,#FF6B35,#F4A261,#E76F51,#FF6B35)}}
+
+/* ===== Shine ===== */
+.shine{position:relative;overflow:hidden}
+/* ===== Sparkle ===== */
+@keyframes sparkle{0%,100%{opacity:.3}50%{opacity:1}}
+.sparkle{animation:sparkle 2s ease-in-out infinite}
+
+/* ===== Float Up ===== */
+@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.float-up{animation:floatUp 3s ease-in-out infinite}
+
+/* ===== Arrow Bounce ===== */
+@keyframes arrowBounce{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+.arrow-bounce{animation:arrowBounce 1.2s ease-in-out infinite}
+
+/* ===== Slide-specific full-width text area ===== */
+.text-area{width:88%;max-width:1100px;text-align:left}
+.text-area p{margin:8px 0}
+.text-area .highlight-row{display:flex;align-items:flex-start;gap:14px;margin:10px 0}
+.text-area .highlight-row .hl-icon{font-size:1.5rem;margin-top:2px;flex-shrink:0}
+
+/* ===== Comparison bar chart ===== */
+.bar-chart{display:flex;gap:40px;align-items:flex-end;justify-content:center;margin:10px 0}
+.bar-group{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar{width:90px;border-radius:10px 10px 0 0;transition:height 1.5s ease;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-weight:900;font-size:1.1rem}
+.bar-orange{background:linear-gradient(180deg,#FF6B35,rgba(255,107,53,.4))}
+.bar-amber{background:linear-gradient(180deg,#F4A261,rgba(244,162,97,.4))}
+.bar-coral{background:linear-gradient(180deg,#E76F51,rgba(231,111,81,.4))}
+
+/* ===== Summary Grid ===== */
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;width:90%;max-width:1050px}
+.summary-card{background:rgba(26,25,50,.45);border-radius:14px;padding:22px 18px;display:flex;align-items:flex-start;gap:14px;border:2px solid rgba(255,107,53,.10);transition:all .3s}
+.summary-card:hover{border-color:rgba(255,107,53,.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(255,107,53,.12)}
+.summary-card .sc-icon{font-size:2rem;flex-shrink:0;width:50px;text-align:center}
+
+/* ===== Future direction ===== */
+.future-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:90%;max-width:1100px}
+.future-card{background:rgba(26,25,50,.45);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;border:2px solid rgba(255,107,53,.10);transition:all .3s}
+.future-card:hover{border-color:rgba(255,107,53,.3);transform:translateY(-5px);box-shadow:0 12px 36px rgba(255,107,53,.15)}
+.future-card .fc-icon{font-size:2.5rem;margin-bottom:4px}
+
+/* ===== Hero gradient ===== */
+.hero-gradient{font-size:4.5rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#E76F51,#FF6B35,#F4A261);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
+
+/* ===== Subtitle box ===== */
+.subtitle-box{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:30px;padding:10px 28px;margin:8px 0}
+
+/* ===== Number stat ===== */
+.stat-row{display:flex;gap:30px;justify-content:center;margin:12px 0}
+.stat-item{text-align:center}
+.stat-num{font-size:3.5rem;font-weight:900;line-height:1}
+.stat-label{font-size:1rem;color:#A7A9BE;margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="page-badge">意图识别 <span style="color:#A7A9BE;font-weight:400">INTENT RECOGNITION</span></div>
+
+<div class="slide-container">
+
+<!-- ==================== Slide 0: 封面 ==================== -->
+<div class="slide bg-0 active" id="s0">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles0"></div>
+  <div class="deco deco-orange" style="width:550px;height:550px;top:-220px;right:-200px"></div>
+  <div class="deco deco-amber" style="width:380px;height:380px;bottom:-140px;left:-120px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <i class="fa-solid fa-brain" style="font-size:5rem;color:#FF6B35;opacity:.85"></i>
+  </div>
+  <div class="anim-item" style="margin-bottom:6px">
+    <span class="t-sm c-amber" style="letter-spacing:6px">《浅入深出》AGENT 系列之十二</span>
+  </div>
+  <div class="anim-item hero-gradient" style="margin-bottom:10px">意图识别</div>
+  <div class="anim-item t-mid c-gray" style="margin-bottom:0">Intent Recognition</div>
+  <div class="anim-item line" style="margin:10px auto"></div>
+  <div class="anim-item t-body c-gray" style="margin-top:4px">让 Agent 不再 <span class="c-red bold">"万能皆无能"</span></div>
+  <div class="anim-item subtitle-box" style="margin-top:12px">
+    <span class="t-sm c-amber">Query → 路由层 → 专业 Agent：分而治之，各司其职</span>
+  </div>
+  <div class="anim-item shape-row" style="margin-top:14px">
+    <div class="shape-circle sh-sm sc-orange" style="box-shadow:0 6px 18px rgba(255,107,53,.25)">
+      <i class="fa-solid fa-magnifying-glass"></i>识别
+    </div>
+    <div class="shape-circle sh-sm sc-amber" style="box-shadow:0 6px 18px rgba(244,162,97,.25)">
+      <i class="fa-solid fa-code-branch"></i>路由
+    </div>
+    <div class="shape-circle sh-sm sc-coral" style="box-shadow:0 6px 18px rgba(231,111,81,.25)">
+      <i class="fa-solid fa-robot"></i>执行
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 1: 问题的提出 ==================== -->
+<div class="slide bg-1" id="s1">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:450px;height:450px;top:-160px;left:-160px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:14px">
+    <i class="fa-solid fa-circle-question c-amber" style="margin-right:8px"></i>为什么需要意图识别？
+  </div>
+  <div class="anim-item" style="margin-bottom:16px">
+    <span class="t-big c-white">一个 Agent <span class="bg-red c-red bold">塞入太多功能</span> 会怎样？</span>
+  </div>
+
+  <div class="anim-item grid-4" style="margin-top:6px">
+    <div class="mini-card">
+      <div class="icon-badge ib-red">
+        <i class="fa-solid fa-file-lines c-red"></i>
+      </div>
+      <div style="font-size:1.1rem;font-weight:700">上下文<span class="c-red bold">冗长</span></div>
+      <div class="t-xs c-gray">20个 System Prompt<br>拼接可达上千行</div>
+      <div class="progress-bar"><div class="progress-fill pf-red" data-width="92%"></div></div>
+      <div class="tag tag-red"><i class="fa-solid fa-triangle-exclamation"></i> 高频踩坑</div>
+    </div>
+    <div class="mini-card">
+      <div class="icon-badge ib-orange">
+        <i class="fa-solid fa-eye-slash c-orange"></i>
+      </div>
+      <div style="font-size:1.1rem;font-weight:700">注意力<span class="c-orange bold">稀释</span></div>
+      <div class="t-xs c-gray">长文本下 LLM<br>注意力自然衰减</div>
+      <div class="progress-bar"><div class="progress-fill pf-orange" data-width="85%"></div></div>
+      <div class="tag tag-orange"><i class="fa-solid fa-triangle-exclamation"></i> 难以聚焦</div>
+    </div>
+    <div class="mini-card">
+      <div class="icon-badge ib-purple">
+        <i class="fa-solid fa-lightbulb-slash c-purple"></i>
+      </div>
+      <div style="font-size:1.1rem;font-weight:700">先验知识<span class="c-purple bold">浪费</span></div>
+      <div class="t-xs c-gray">通用 ReAct Agent<br>无法利用精心设计的 Workflow</div>
+      <div class="progress-bar"><div class="progress-fill pf-purple" data-width="78%"></div></div>
+      <div class="tag tag-purple"><i class="fa-solid fa-triangle-exclamation"></i> 效果打折</div>
+    </div>
+    <div class="mini-card">
+      <div class="icon-badge ib-coral">
+        <i class="fa-solid fa-bug-slash c-coral"></i>
+      </div>
+      <div style="font-size:1.1rem;font-weight:700">调试<span class="c-coral bold">灾难</span></div>
+      <div class="t-xs c-gray">"大杂烩"Agent<br>出问题极难定位</div>
+      <div class="progress-bar"><div class="progress-fill pf-amber" data-width="65%"></div></div>
+      <div class="tag tag-amber"><i class="fa-solid fa-triangle-exclamation"></i> 排查困难</div>
+    </div>
+  </div>
+  <div class="anim-item warn-box" style="width:88%;max-width:1100px;margin-top:14px">
+    <span class="c-red bold" style="font-size:1.3rem"><i class="fa-solid fa-circle-exclamation"></i> 核心矛盾：</span>
+    <span style="font-size:1.2rem">功能越多 → System Prompt 越冗长 → LLM 越难准确选对工作流程 → 用户体验越差</span>
+  </div>
+</div>
+
+<!-- ==================== Slide 2: 问题本质 ==================== -->
+<div class="slide bg-2" id="s2">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:480px;height:480px;bottom:-180px;right:-180px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:14px">问题本质：一个真实的企业 Agent 场景</div>
+  <div class="anim-item" style="display:flex;align-items:center;gap:50px;margin-bottom:14px">
+    <!-- SVG illustration -->
+    <svg width="480" height="220" viewBox="0 0 480 220">
+      <defs>
+        <linearGradient id="gA" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FF6B35"/><stop offset="100%" style="stop-color:#E76F51"/></linearGradient>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#FF6B35"/></marker>
+      </defs>
+      <!-- Query input -->
+      <rect x="20" y="85" width="130" height="50" rx="12" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="2"/>
+      <text x="85" y="116" text-anchor="middle" font-size="15" fill="#FFFFFE" font-weight="700">用户 Query</text>
+      <!-- Big Agent box - too crowded -->
+      <rect x="190" y="30" width="200" height="160" rx="16" fill="rgba(231,29,54,.08)" stroke="#E71D36" stroke-width="2"/>
+      <text x="290" y="58" text-anchor="middle" font-size="14" fill="#E71D36" font-weight="700">大杂烩 Agent</text>
+      <!-- System prompts inside -->
+      <rect x="205" y="70" width="80" height="18" rx="6" fill="rgba(255,107,53,.15)"/><text x="245" y="83" text-anchor="middle" font-size="9" fill="#FF6B35">行政咨询</text>
+      <rect x="295" y="70" width="80" height="18" rx="6" fill="rgba(244,162,97,.15)"/><text x="335" y="83" text-anchor="middle" font-size="9" fill="#F4A261">工单系统</text>
+      <rect x="205" y="95" width="80" height="18" rx="6" fill="rgba(231,111,81,.15)"/><text x="245" y="108" text-anchor="middle" font-size="9" fill="#E76F51">人事考勤</text>
+      <rect x="295" y="95" width="80" height="18" rx="6" fill="rgba(127,90,240,.15)"/><text x="335" y="108" text-anchor="middle" font-size="9" fill="#7F5AF0">财务报销</text>
+      <rect x="205" y="120" width="80" height="18" rx="6" fill="rgba(74,144,217,.15)"/><text x="245" y="133" text-anchor="middle" font-size="9" fill="#4A90D9">会议管理</text>
+      <text x="290" y="153" text-anchor="middle" font-size="9" fill="#A7A9BE">+ ... 共20+功能</text>
+      <!-- Arrow from query to big agent -->
+      <line x1="150" y1="110" x2="188" y2="110" stroke="#FF6B35" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- Arrow from big agent to disaster -->
+      <line x1="390" y1="110" x2="425" y2="110" stroke="#E71D36" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- Disaster icon -->
+      <circle cx="448" cy="110" r="20" fill="rgba(231,29,54,.12)" stroke="#E71D36" stroke-width="2"/>
+      <text x="448" y="116" text-anchor="middle" font-size="18" fill="#E71D36">✕</text>
+    </svg>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+      <div class="tag tag-red" style="font-size:1rem;padding:8px 18px"><i class="fa-solid fa-xmark"></i> 上下文爆炸，选错流程</div>
+      <div class="tag tag-orange" style="font-size:1rem;padding:8px 18px"><i class="fa-solid fa-clock"></i> Token 和时间双双飙升</div>
+      <div class="tag tag-amber" style="font-size:1rem;padding:8px 18px"><i class="fa-solid fa-code"></i> 先验 Workflow 形同虚设</div>
+      <div class="tag tag-purple" style="font-size:1rem;padding:8px 18px"><i class="fa-solid fa-bug"></i> Debug 变成猜谜游戏</div>
+    </div>
+  </div>
+
+  <div class="anim-item success-box" style="width:88%;max-width:1100px">
+    <span class="c-green bold" style="font-size:1.3rem"><i class="fa-solid fa-lightbulb"></i> 解决之道：</span>
+    <span style="font-size:1.2rem">在 Query 和 Action 之间插入<span class="c-orange bold"> 意图识别层（Intent Router）</span>——先判断意图，再路由到专业 Agent</span>
+  </div>
+</div>
+
+<!-- ==================== Slide 3: 三种方法总览 ==================== -->
+<div class="slide bg-3" id="s3">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;top:-200px;left:50%;margin-left:-250px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px">
+    <i class="fa-solid fa-layer-group c-orange" style="margin-right:8px"></i>意图识别的三种实现方法
+  </div>
+  <div class="anim-item t-body c-gray" style="margin-bottom:18px">三种方案各有优劣，工程实践中<span class="c-amber bold">可以混合使用</span></div>
+
+  <div class="anim-item method-grid">
+    <div class="method-card gradient-border">
+      <div class="rank-badge tag-green">能力最强</div>
+      <div class="icon-circle ib-orange">
+        <i class="fa-solid fa-microchip c-orange" style="font-size:2rem"></i>
+      </div>
+      <div class="t-mid c-orange">LLM 分类</div>
+      <div class="t-sm c-gray">轻量 Flash 版 LLM<br>进行语义级意图判断</div>
+      <div style="display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;font-size:.9rem;margin-top:4px">
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 语义理解最精准</div>
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 处理模糊表达</div>
+        <div class="vs-item vs-item-red"><i class="fa-solid fa-xmark"></i> 速度最慢</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-green" data-width="95%"></div></div>
+      <span class="c-gray" style="font-size:.8rem">能力得分</span>
+    </div>
+
+    <div class="method-card">
+      <div class="rank-badge tag-orange">速度最快</div>
+      <div class="icon-circle ib-amber">
+        <i class="fa-solid fa-code c-amber" style="font-size:2rem"></i>
+      </div>
+      <div class="t-mid c-amber">规则匹配</div>
+      <div class="t-sm c-gray">正则 + 关键字<br>CPU 本地直接匹配</div>
+      <div style="display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;font-size:.9rem;margin-top:4px">
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 毫秒级响应</div>
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 逻辑完全确定</div>
+        <div class="vs-item vs-item-red"><i class="fa-solid fa-xmark"></i> 无法处理模糊语义</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-orange" data-width="99%"></div></div>
+      <span class="c-gray" style="font-size:.8rem">速度得分</span>
+    </div>
+
+    <div class="method-card">
+      <div class="rank-badge tag-purple">兼顾双优</div>
+      <div class="icon-circle ib-purple">
+        <i class="fa-solid fa-chart-simple c-purple" style="font-size:2rem"></i>
+      </div>
+      <div class="t-mid c-purple">BERT 模型</div>
+      <div class="t-sm c-gray">双向语义匹配<br>一次向前传播出概率</div>
+      <div style="display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;font-size:.9rem;margin-top:4px">
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 速度远快于 LLM</div>
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-check"></i> 易于微调适配</div>
+        <div class="vs-item vs-item-red"><i class="fa-solid fa-xmark"></i> 语义理解弱于 LLM</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill pf-purple" data-width="80%"></div></div>
+      <span class="c-gray" style="font-size:.8rem">均衡得分</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 4: 方法一 LLM ==================== -->
+<div class="slide bg-4" id="s4">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-120px;right:-120px"></div>
+  <div class="deco deco-purple" style="width:300px;height:300px;bottom:-100px;left:-80px"></div>
+
+  <div class="anim-item t-mid c-orange" style="margin-bottom:6px">
+    <i class="fa-solid fa-1"></i> 方法一：LLM 直接分类
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:14px">语义理解能力最强，适合处理模糊多样的用户表达</div>
+
+  <div class="anim-item" style="display:flex;align-items:center;gap:40px">
+    <!-- Diagram -->
+    <svg width="360" height="260" viewBox="0 0 360 260">
+      <defs>
+        <marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#FF6B35"/></marker>
+      </defs>
+      <!-- Query -->
+      <rect x="80" y="15" width="200" height="36" rx="10" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="180" y="38" text-anchor="middle" font-size="13" fill="#FFFFFE">"我的入职流程是什么？"</text>
+      <line x1="180" y1="51" x2="180" y2="68" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr2)"/>
+      <!-- LLM box -->
+      <rect x="60" y="70" width="240" height="50" rx="12" fill="rgba(244,162,97,.08)" stroke="#F4A261" stroke-width="2"/>
+      <text x="180" y="93" text-anchor="middle" font-size="12" fill="#F4A261" font-weight="700">轻量 LLM (Flash 版)</text>
+      <text x="180" y="110" text-anchor="middle" font-size="10" fill="#A7A9BE">System Prompt: 预设21个 Intent 列表</text>
+      <line x1="180" y1="120" x2="180" y2="138" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr2)"/>
+      <!-- Output -->
+      <rect x="55" y="140" width="250" height="28" rx="8" fill="rgba(46,196,182,.12)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="180" y="158" text-anchor="middle" font-size="12" fill="#2EC4B6" font-weight="700">Intent: 行政咨询</text>
+      <line x1="180" y1="168" x2="180" y2="186" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr2)"/>
+      <!-- Route -->
+      <rect x="30" y="188" width="300" height="28" rx="8" fill="rgba(255,107,53,.10)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="180" y="207" text-anchor="middle" font-size="12" fill="#FFFFFE">switch / case → 行政咨询 Agent</text>
+      <!-- Agents below -->
+      <rect x="45" y="225" width="60" height="22" rx="6" fill="rgba(46,196,182,.15)"/><text x="75" y="240" text-anchor="middle" font-size="9" fill="#2EC4B6">行政</text>
+      <rect x="115" y="225" width="55" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="142" y="240" text-anchor="middle" font-size="9" fill="#A7A9BE">工单</text>
+      <rect x="180" y="225" width="55" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="207" y="240" text-anchor="middle" font-size="9" fill="#A7A9BE">人事</text>
+      <rect x="245" y="225" width="55" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="272" y="240" text-anchor="middle" font-size="9" fill="#A7A9BE">...</text>
+    </svg>
+
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:500px">
+      <div class="info-box">
+        <span class="c-orange bold"><i class="fa-solid fa-circle-info"></i> 核心原理：</span>
+        System Prompt 中预设 N 个 Intent + 1 个"未知"兜底，LLM 根据 Query 语义输出匹配的 Intent 标签
+      </div>
+      <div class="warn-box">
+        <span class="c-red bold"><i class="fa-solid fa-circle-exclamation"></i> 关键缺陷：</span>
+        LLM 逐字生成（Auto-Regressive），即使使用大算力加速，其机制决定了速度天然慢于非生成式方案
+      </div>
+      <div class="success-box">
+        <span class="c-green bold"><i class="fa-solid fa-circle-check"></i> 适用场景：</span>
+        用户表达高度多样化、模糊、多意图混合的复杂场景
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 5: 方法二 规则匹配 ==================== -->
+<div class="slide bg-5" id="s5">
+  <div class="grid-bg"></div>
+  <div class="deco deco-amber" style="width:420px;height:420px;top:-150px;left:50%;margin-left:-210px"></div>
+
+  <div class="anim-item t-mid c-amber" style="margin-bottom:6px">
+    <i class="fa-solid fa-2"></i> 方法二：规则匹配
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:14px">速度最快、逻辑最稳，但需要精心设计匹配规则</div>
+
+  <div class="anim-item grid-2">
+    <div class="col-card" style="border-left:5px solid #2EC4B6">
+      <i class="fa-solid fa-bolt c-green" style="font-size:2.5rem"></i>
+      <div class="t-mid c-green">三大优势</div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;margin-top:6px">
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-gauge-high"></i> <span class="bold">毫秒级响应</span>：CPU 本地运算，不走网络</div>
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-shield-halved"></i> <span class="bold">逻辑确定</span>：每条规则 100% 可预测，无幻觉</div>
+        <div class="vs-item vs-item-green"><i class="fa-solid fa-wrench"></i> <span class="bold">易于调试</span>：每条匹配路径可追踪、可复现</div>
+      </div>
+    </div>
+    <div class="col-card" style="border-left:5px solid #E71D36">
+      <i class="fa-solid fa-circle-exclamation c-red" style="font-size:2.5rem"></i>
+      <div class="t-mid c-red">关键陷阱</div>
+      <div class="t-body c-gray" style="font-size:1.1rem;text-align:left">
+        <p>用户说<span class="c-orange bold">"我叫张三，我要请假"</span></p>
+        <p>如果只匹配到 <code class="bg-orange">"我叫"</code> 关键词，就会触发<span class="c-red bold">身份识别</span>意图</p>
+        <p>而<span class="c-green bold">丢失了"请假"</span>这个真正的需求！</p>
+      </div>
+      <div class="tag tag-amber" style="margin-top:8px"><i class="fa-solid fa-lightbulb"></i> 建议：匹配完整句式，而非单个关键词</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:14px;width:88%;max-width:1100px">
+    <div class="flow">
+      <div class="flow-step">
+        <i class="fa-solid fa-magnifying-glass c-orange"></i> Query 进入
+      </div>
+      <span class="flow-arrow"><i class="fa-solid fa-arrow-right c-orange"></i></span>
+      <div class="flow-step" style="background:rgba(244,162,97,.12)">
+        <i class="fa-solid fa-filter c-amber"></i> 正则匹配
+      </div>
+      <span class="flow-arrow"><i class="fa-solid fa-arrow-right c-orange"></i></span>
+      <div class="flow-step" style="background:rgba(46,196,182,.10);border:2px solid rgba(46,196,182,.3)">
+        <i class="fa-solid fa-check c-green"></i> 命中 → 路由
+      </div>
+      <span class="flow-arrow"><i class="fa-solid fa-arrow-right c-orange"></i></span>
+      <div class="flow-step" style="background:rgba(231,29,54,.08);border:2px dashed rgba(231,29,54,.3)">
+        <i class="fa-solid fa-xmark c-red"></i> 未命中 → 兜底
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 6: 方法三 BERT ==================== -->
+<div class="slide bg-6" id="s6">
+  <div class="grid-bg"></div>
+  <div class="deco deco-purple" style="width:480px;height:480px;bottom:-180px;left:-180px"></div>
+
+  <div class="anim-item t-mid c-purple" style="margin-bottom:6px">
+    <i class="fa-solid fa-3"></i> 方法三：BERT 语义匹配
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:14px">类似 RAG 中的 Rerank 机制——Query 与 Intent 做语义相关性打分</div>
+
+  <div class="anim-item" style="display:flex;align-items:center;gap:30px">
+    <!-- Diagram -->
+    <svg width="400" height="210" viewBox="0 0 400 210">
+      <defs>
+        <marker id="arr3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7F5AF0"/></marker>
+      </defs>
+      <!-- Query + Intents -->
+      <rect x="10" y="15" width="170" height="36" rx="8" fill="rgba(127,90,240,.08)" stroke="#7F5AF0" stroke-width="1.5"/>
+      <text x="95" y="38" text-anchor="middle" font-size="12" fill="#FFFFFE">Query: "我要请假"</text>
+      <!-- Intents to compare -->
+      <rect x="220" y="5" width="160" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="300" y="20" text-anchor="middle" font-size="10" fill="#A7A9BE">Intent 1: 人事请假</text>
+      <rect x="220" y="32" width="160" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="300" y="47" text-anchor="middle" font-size="10" fill="#A7A9BE">Intent 2: 工单创建</text>
+      <rect x="220" y="59" width="160" height="22" rx="6" fill="rgba(255,107,53,.08)"/><text x="300" y="74" text-anchor="middle" font-size="10" fill="#A7A9BE">Intent N: ...</text>
+      <!-- Arrow to BERT -->
+      <line x1="95" y1="51" x2="95" y2="78" stroke="#7F5AF0" stroke-width="2" marker-end="url(#arr3)"/>
+      <line x1="300" y1="81" x2="300" y2="88" stroke="#7F5AF0" stroke-width="1.5"/>
+      <line x1="300" y1="88" x2="200" y2="88" stroke="#7F5AF0" stroke-width="1.5"/>
+      <line x1="200" y1="88" x2="200" y2="78" stroke="#7F5AF0" stroke-width="1.5"/>
+      <!-- BERT model -->
+      <rect x="40" y="80" width="320" height="48" rx="12" fill="rgba(127,90,240,.12)" stroke="#7F5AF0" stroke-width="2"/>
+      <text x="200" y="100" text-anchor="middle" font-size="13" fill="#7F5AF0" font-weight="700">BERT 双向语义匹配模型</text>
+      <text x="200" y="118" text-anchor="middle" font-size="10" fill="#A7A9BE">一次前向传播 → 直接输出概率 P</text>
+      <!-- Output -->
+      <line x1="200" y1="128" x2="200" y2="148" stroke="#7F5AF0" stroke-width="2" marker-end="url(#arr3)"/>
+      <rect x="60" y="150" width="280" height="50" rx="10" fill="rgba(46,196,182,.08)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="200" y="170" text-anchor="middle" font-size="11" fill="#2EC4B6" font-weight="700">P(请假|Query) = 0.94 ✓</text>
+      <text x="200" y="188" text-anchor="middle" font-size="9" fill="#A7A9BE">P(工单|Query) = 0.12 ✗</text>
+    </svg>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+      <div class="info-box">
+        <span class="c-purple bold"><i class="fa-solid fa-circle-info"></i> 为什么 BERT 更快？</span><br>
+        LLM 是"预测下一个字→丢回去→再预测→..."的自回归过程；BERT 是双向理解，<span class="c-amber bold">Query + Intent 拼接后一次前向传播直接出概率</span>，无需逐字生成。
+      </div>
+      <div class="success-box">
+        <span class="c-green bold"><i class="fa-solid fa-circle-check"></i> 额外优势：可微调</span><br>
+        创建几百上千条标注数据（Query-Intent 对），对 BERT 微调，让它<span class="c-green bold">深度适配你的业务场景</span>。
+      </div>
+      <div class="warn-box">
+        <span class="c-red bold"><i class="fa-solid fa-circle-exclamation"></i> 注意：</span>
+        BERT 语义理解能力<span class="c-red bold">不及</span>大模型，对于高度模糊或复杂的语义场景可能误判。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 7: 速度 vs 能力对比 ==================== -->
+<div class="slide bg-7" id="s7">
+  <div class="grid-bg"></div>
+  <div class="deco deco-orange" style="width:400px;height:400px;top:-140px;right:-140px"></div>
+  <div class="deco deco-amber" style="width:350px;height:350px;bottom:-120px;left:-100px"></div>
+
+  <div class="anim-item t-mid c-gray" style="margin-bottom:10px">
+    <i class="fa-solid fa-chart-column c-orange" style="margin-right:8px"></i>三种方法综合对比
+  </div>
+
+  <div class="anim-item vs-wrap" style="margin-bottom:6px">
+    <div class="vs-box" style="border-top:4px solid #F4A261">
+      <i class="fa-solid fa-bolt c-amber" style="font-size:2.2rem"></i>
+      <div class="t-mid c-amber bold">速度排名</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;width:100%">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-amber" style="width:50px;justify-content:center"><i class="fa-solid fa-trophy"></i> 1</span>
+          <span style="font-weight:700">规则匹配</span>
+          <span class="c-gray" style="font-size:.85rem">毫秒级</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-purple" style="width:50px;justify-content:center">2</span>
+          <span style="font-weight:700">BERT 模型</span>
+          <span class="c-gray" style="font-size:.85rem">数十毫秒</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-orange" style="width:50px;justify-content:center">3</span>
+          <span style="font-weight:700">LLM 分类</span>
+          <span class="c-gray" style="font-size:.85rem">百毫秒~秒级</span>
+        </div>
+      </div>
+    </div>
+    <div class="vs-mid">
+      <div>VS</div>
+      <i class="fa-solid fa-arrows-left-right c-orange" style="font-size:1.5rem"></i>
+    </div>
+    <div class="vs-box" style="border-top:4px solid #2EC4B6">
+      <i class="fa-solid fa-microchip c-green" style="font-size:2.2rem"></i>
+      <div class="t-mid c-green bold">能力排名</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;width:100%">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-green" style="width:50px;justify-content:center"><i class="fa-solid fa-trophy"></i> 1</span>
+          <span style="font-weight:700">LLM 分类</span>
+          <span class="c-gray" style="font-size:.85rem">语义最强</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-purple" style="width:50px;justify-content:center">2</span>
+          <span style="font-weight:700">BERT 模型</span>
+          <span class="c-gray" style="font-size:.85rem">中等语义</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tag tag-amber" style="width:50px;justify-content:center">3</span>
+          <span style="font-weight:700">规则匹配</span>
+          <span class="c-gray" style="font-size:.85rem">关键词级</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item success-box" style="width:88%;max-width:1100px;margin-top:10px">
+    <span class="c-green bold" style="font-size:1.3rem"><i class="fa-solid fa-puzzle-piece"></i> 最佳实践——混合使用：</span>
+    <span style="font-size:1.15rem">规则匹配处理确定性强的高频句式 → BERT 处理中等复杂度 → LLM 兜底处理模糊表达</span>
+  </div>
+</div>
+
+<!-- ==================== Slide 8: LLM输出设计 ==================== -->
+<div class="slide bg-1" id="s8">
+  <div class="grid-bg"></div>
+  <div class="deco deco-coral" style="width:450px;height:450px;top:-150px;left:50%;margin-left:-225px"></div>
+
+  <div class="anim-item t-mid c-orange" style="margin-bottom:6px">
+    <i class="fa-solid fa-file-code c-amber" style="margin-right:8px"></i>LLM 意图识别的输出设计
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:14px">不是只输出一个标签那么简单——需要结构化的完整输出</div>
+
+  <div class="anim-item grid-4">
+    <div class="mini-card" style="border-color:rgba(255,107,53,.25)">
+      <i class="fa-solid fa-tag c-orange" style="font-size:2.2rem"></i>
+      <div class="t-body c-orange bold">Intent</div>
+      <div class="t-sm c-gray">意图标签</div>
+      <div class="bg-orange" style="font-size:.9rem;padding:4px 12px;margin-top:4px">"行政咨询"</div>
+      <div class="t-xs c-gray">路由到对应 Agent</div>
+    </div>
+    <div class="mini-card" style="border-color:rgba(244,162,97,.25)">
+      <i class="fa-solid fa-percent c-amber" style="font-size:2.2rem"></i>
+      <div class="t-body c-amber bold">Confidence</div>
+      <div class="t-sm c-gray">置信度 0~1</div>
+      <div class="bg-amber" style="font-size:.9rem;padding:4px 12px;margin-top:4px">0.95</div>
+      <div class="t-xs c-gray">不足则追问或拒绝</div>
+    </div>
+    <div class="mini-card" style="border-color:rgba(46,196,182,.25)">
+      <i class="fa-solid fa-circle-plus c-green" style="font-size:2.2rem"></i>
+      <div class="t-body c-green bold">Complement</div>
+      <div class="t-sm c-gray">需补充信息</div>
+      <div class="bg-green" style="font-size:.9rem;padding:4px 12px;margin-top:4px">"您的工号是？"</div>
+      <div class="t-xs c-gray">形成 Human-in-Loop</div>
+    </div>
+    <div class="mini-card" style="border-color:rgba(127,90,240,.25)">
+      <i class="fa-solid fa-brackets-curly c-purple" style="font-size:2.2rem"></i>
+      <div class="t-body c-purple bold">JSON</div>
+      <div class="t-sm c-gray">结构化输出</div>
+      <div class="bg-purple" style="font-size:.8rem;padding:4px 12px;margin-top:4px">{intent, conf, ...}</div>
+      <div class="t-xs c-gray">Harness 代码直接消费</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="display:flex;gap:20px;margin-top:16px;width:88%;max-width:1100px">
+    <div class="warn-box" style="flex:1">
+      <span class="c-red bold"><i class="fa-solid fa-circle-exclamation"></i> 低置信度处理：</span>
+      Confidence &lt; 0.5 → 拒绝路由，友好提示用户提供更准确的描述
+    </div>
+    <div class="success-box" style="flex:1">
+      <span class="c-green bold"><i class="fa-solid fa-circle-check"></i> 补充信息流程：</span>
+      Complement 非空 → 缓存当前 Intent → 将追问展示给用户 → 二次 Query 回到意图识别
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 9: Skills 与意图识别 ==================== -->
+<div class="slide bg-3" id="s9">
+  <div class="grid-bg"></div>
+  <div class="deco deco-purple" style="width:500px;height:500px;top:-180px;right:-150px"></div>
+  <div class="deco deco-orange" style="width:350px;height:350px;bottom:-120px;left:-80px"></div>
+
+  <div class="anim-item t-mid c-orange" style="margin-bottom:6px">
+    <i class="fa-solid fa-link c-amber" style="margin-right:8px"></i>深层洞察：Skills 机制 = 意图识别的优雅实现
+  </div>
+  <div class="anim-item t-sm c-gray" style="margin-bottom:12px">现代 Agent 架构中，Skills 的选取本质上就是一次意图识别过程</div>
+
+  <div class="anim-item" style="display:flex;align-items:center;gap:30px">
+    <svg width="380" height="240" viewBox="0 0 380 240">
+      <defs>
+        <marker id="arr4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#FF6B35"/></marker>
+      </defs>
+      <!-- Query -->
+      <rect x="90" y="8" width="200" height="30" rx="8" fill="rgba(255,107,53,.10)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="190" y="28" text-anchor="middle" font-size="11" fill="#FFFFFE">用户 Query</text>
+      <line x1="190" y1="38" x2="190" y2="56" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr4)"/>
+      <!-- Skills Index -->
+      <rect x="50" y="58" width="280" height="55" rx="10" fill="rgba(127,90,240,.08)" stroke="#7F5AF0" stroke-width="1.5"/>
+      <text x="190" y="78" text-anchor="middle" font-size="11" fill="#7F5AF0" font-weight="700">Skills 索引文件 (skills.md)</text>
+      <text x="190" y="96" text-anchor="middle" font-size="9" fill="#A7A9BE">name: xxx | description: 什么场景使用</text>
+      <text x="190" y="108" text-anchor="middle" font-size="9" fill="#A7A9BE">这就是 Intent 目录！</text>
+      <line x1="190" y1="113" x2="190" y2="130" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr4)"/>
+      <!-- Find skill -->
+      <rect x="60" y="132" width="260" height="30" rx="8" fill="rgba(46,196,182,.10)" stroke="#2EC4B6" stroke-width="1.5"/>
+      <text x="190" y="151" text-anchor="middle" font-size="11" fill="#2EC4B6" font-weight="700"><i class="fa-solid fa-magnifying-glass"></i> 匹配 Skill → 这就是意图识别！</text>
+      <line x1="190" y1="162" x2="190" y2="178" stroke="#FF6B35" stroke-width="2" marker-end="url(#arr4)"/>
+      <!-- Inject skill -->
+      <rect x="40" y="180" width="300" height="48" rx="10" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1.5"/>
+      <text x="190" y="200" text-anchor="middle" font-size="10" fill="#FFFFFE">将 Skill 专业知识注入空白 LLM</text>
+      <text x="190" y="218" text-anchor="middle" font-size="10" fill="#FF6B35" font-weight="700">&rarr; 通用 Agent 变身 专业 Agent</text>
+    </svg>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+      <div class="info-box">
+        <span class="c-orange bold" style="font-size:1.2rem"><i class="fa-solid fa-lightbulb"></i> 核心哲学：</span><br>
+        <span style="font-size:1.05rem">不要让一个 Agent 做所有事。<br>识别意图 → 注入专业能力 → 路由到合适的 Skill。</span>
+      </div>
+      <div class="success-box">
+        <span class="c-green bold" style="font-size:1.2rem"><i class="fa-solid fa-eye"></i> 关键洞察：</span><br>
+        <span style="font-size:1.05rem">像 Open-Core 等现代 Agent 架构中，你看不到显式的"意图识别层"——因为它已经<span class="c-green bold">完全整合到了 Skills 机制</span>中。</span>
+      </div>
+      <div style="text-align:center;color:#A7A9BE;font-size:1rem;margin-top:4px">
+        找到合适的 Skill = 一次意图识别的完整过程
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Slide 10: 核心洞察总结 ==================== -->
+<div class="slide bg-0" id="s10">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles10"></div>
+  <div class="deco deco-orange" style="width:600px;height:600px;top:-250px;right:-250px"></div>
+  <div class="deco deco-amber" style="width:400px;height:400px;bottom:-150px;left:-120px"></div>
+
+  <div class="anim-item" style="margin-bottom:10px">
+    <span class="gradient-text">核心洞察总结</span>
+  </div>
+  <div class="anim-item line"></div>
+
+  <div class="anim-item summary-grid" style="margin-top:8px">
+    <div class="summary-card">
+      <div class="sc-icon"><i class="fa-solid fa-circle-nodes c-orange"></i></div>
+      <div>
+        <div class="t-body c-orange bold" style="font-size:1.3rem;text-align:left">路由层思维</div>
+        <div class="t-sm c-gray" style="text-align:left;margin-top:4px">在 Query 和 Action 之间插入意图识别路由层，将模糊的自然语言请求精准分发到最合适的工作流。这是 Agent 架构从<span class="c-amber bold">"大而全"到"专业分工"</span>的关键转型。</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon"><i class="fa-solid fa-layer-group c-amber"></i></div>
+      <div>
+        <div class="t-body c-amber bold" style="font-size:1.3rem;text-align:left">混合方案最优</div>
+        <div class="t-sm c-gray" style="text-align:left;margin-top:4px">规则匹配（快且稳）→ BERT（均衡）→ LLM（强但慢），三者按确定性从高到低级联使用。没有一种方案是银弹，<span class="c-amber bold">混合才能最大化性价比</span>。</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon"><i class="fa-solid fa-file-export c-green"></i></div>
+      <div>
+        <div class="t-body c-green bold" style="font-size:1.3rem;text-align:left">结构化输出必不可少</div>
+        <div class="t-sm c-gray" style="text-align:left;margin-top:4px">LLM 方案必须设计 Intent + Confidence + Complement 的完整 JSON 输出结构，配合<span class="c-green bold">Human-in-the-Loop</span>机制处理低置信度和信息缺失场景。</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon"><i class="fa-solid fa-puzzle-piece c-purple"></i></div>
+      <div>
+        <div class="t-body c-purple bold" style="font-size:1.3rem;text-align:left">Skills 即意图识别</div>
+        <div class="t-sm c-gray" style="text-align:left;margin-top:4px">Skills 索引文件就是 Intent 目录，Skill 选取就是意图识别，Skill 注入就是专业 Agent 的创建。<span class="c-purple bold">两者是一体两面</span>，现代架构已将二者无缝融合。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:12px;display:flex;align-items:center;gap:20px">
+    <div class="glow-ring"><i class="fa-solid fa-bullseye c-orange" style="font-size:2rem"></i></div>
+    <div class="glow-ring" style="animation-delay:.5s"><i class="fa-solid fa-shield-halved c-amber" style="font-size:2rem"></i></div>
+    <div class="glow-ring" style="animation-delay:1s"><i class="fa-solid fa-gears c-coral" style="font-size:2rem"></i></div>
+    <div class="glow-ring" style="animation-delay:1.5s"><i class="fa-solid fa-rocket c-purple" style="font-size:2rem"></i></div>
+  </div>
+  <div class="anim-item t-mid c-amber" style="margin-top:10px">分而治之，方能各司其职</div>
+</div>
+
+<!-- ==================== Slide 11: 日后奋斗方向 ==================== -->
+<div class="slide bg-2" id="s11">
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles11"></div>
+  <div class="deco deco-coral" style="width:500px;height:500px;top:-200px;left:-200px"></div>
+  <div class="deco deco-purple" style="width:400px;height:400px;bottom:-150px;right:-120px"></div>
+
+  <div class="anim-item" style="margin-bottom:8px">
+    <span class="gradient-text">日后奋斗方向</span>
+  </div>
+  <div class="anim-item line"></div>
+  <div class="anim-item t-body c-gray" style="margin-bottom:14px">意图识别技术仍在快速演进中，以下是值得投入的方向</div>
+
+  <div class="anim-item future-grid">
+    <div class="future-card gradient-border">
+      <div class="fc-icon"><i class="fa-solid fa-brain c-orange pulse-glow"></i></div>
+      <div class="t-mid c-orange" style="font-size:1.4rem">多意图联合识别</div>
+      <div class="t-sm c-gray">用户输入常含多个意图——"我叫张三，我要请假" → 同时识别身份声明和请假需求，<span class="c-amber bold">并行路由而非丢弃其一</span></div>
+      <div class="tag tag-orange"><i class="fa-solid fa-code-branch"></i> 多路并发路由</div>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon"><i class="fa-solid fa-rotate c-amber pulse-glow" style="animation-delay:.5s"></i></div>
+      <div class="t-mid c-amber" style="font-size:1.4rem">自适应级联策略</div>
+      <div class="t-sm c-gray">根据运行时指标（响应延迟、置信度分布）<span class="c-orange bold">动态调整</span>规则/BERT/LLM 的级联顺序，而不是写死 if-else</div>
+      <div class="tag tag-amber"><i class="fa-solid fa-chart-line"></i> 在线学习优化</div>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon"><i class="fa-solid fa-database c-purple pulse-glow" style="animation-delay:1s"></i></div>
+      <div class="t-mid c-purple" style="font-size:1.4rem">微调专注意图模型</div>
+      <div class="t-sm c-gray">积累业务数据后微调 BERT，或用 LoRA 微调小参数 LLM，打造<span class="c-green bold">领域专用意图识别器</span></div>
+      <div class="tag tag-purple"><i class="fa-solid fa-microchip"></i> 蒸馏 + 量化</div>
+    </div>
+
+    <div class="future-card" style="grid-column:1/3">
+      <div class="fc-icon"><i class="fa-solid fa-arrows-spin c-green pulse-glow" style="animation-delay:1.5s"></i></div>
+      <div class="t-mid c-green" style="font-size:1.4rem">Human-in-the-Loop 闭环优化</div>
+      <div class="t-sm c-gray">将用户对追问的响应、低置信度拒绝后的修正输入纳入反馈循环，持续优化意图识别准确率——<span class="c-amber bold">让每一次交互都成为训练信号</span></div>
+      <div class="tag tag-green"><i class="fa-solid fa-infinity"></i> 持续改进飞轮</div>
+    </div>
+
+    <div class="future-card" style="grid-column:3/4">
+      <div class="fc-icon"><i class="fa-solid fa-wand-magic-sparkles c-orange pulse-glow" style="animation-delay:2s"></i></div>
+      <div class="t-mid c-orange" style="font-size:1.4rem">Skill 自动发现</div>
+      <div class="t-sm c-gray">Agent 自主从交互历史中发现新的高频意图模式，<span class="c-purple bold">自动生成</span>新的 Skill 定义并加入 Skills 索引</div>
+      <div class="tag tag-orange"><i class="fa-solid fa-robot"></i> 自进化 Agent</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="margin-top:12px">
+    <span class="t-body c-gray italic">意图识别看似"中间层"，但它<span class="c-orange bold">决定了整个 Agent 系统的上限</span></span>
+  </div>
+</div>
+
+</div><!-- /slide-container -->
+
+<!-- Navigation -->
+<div class="nav-bottom">
+  <button class="nav-btn" id="btnPrev" title="上一页"><i class="fa-solid fa-chevron-left"></i></button>
+  <button class="nav-btn" id="btnNext" title="下一页"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+<div class="slide-indicator" id="dots"></div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide'),
+        total = slides.length;
+  let cur = 0;
+
+  // Create dots
+  const dotsContainer = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => go(i));
+    dotsContainer.appendChild(dot);
+  }
+
+  function animateProgressBars(slide) {
+    slide.querySelectorAll('.progress-fill').forEach(bar => {
+      const w = bar.dataset.width || '0%';
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = w; }, 500);
+    });
+  }
+
+  function go(n) {
+    if (n < 0 || n >= total || n === cur) return;
+    slides[cur].classList.remove('active');
+    slides[cur].querySelectorAll('.anim-item').forEach(e => e.classList.remove('show'));
+    cur = n;
+    slides[cur].classList.add('active');
+    // Animate items sequentially
+    slides[cur].querySelectorAll('.anim-item').forEach((e, i) => {
+      e.classList.remove('show');
+      setTimeout(() => e.classList.add('show'), 150 + i * 250);
+    });
+    animateProgressBars(slides[cur]);
+    // Update dots
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === cur);
+    });
+    // Clone nodes for animation reset
+    resetAnimations(slides[cur]);
+  }
+
+  function resetAnimations(slide) {
+    slide.querySelectorAll('.anim-item, [style*="animation"]').forEach(function(item) {
+      if (item.classList.contains('anim-item')) return;
+      const clone = item.cloneNode(true);
+      item.parentNode.replaceChild(clone, item);
+    });
+  }
+
+  // Initialize slide 0
+  slides[0].querySelectorAll('.anim-item').forEach((e, i) =>
+    setTimeout(() => e.classList.add('show'), 300 + i * 280)
+  );
+  setTimeout(() => animateProgressBars(slides[0]), 700);
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
+      e.preventDefault(); go(cur + 1);
+    } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+      e.preventDefault(); go(cur - 1);
+    } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+  });
+
+  // Touch
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', e => {
+    tx = e.changedTouches[0].screenX;
+    ty = e.changedTouches[0].screenY;
+  });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].screenX - tx,
+          dy = e.changedTouches[0].screenY - ty;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      dx < 0 ? go(cur + 1) : go(cur - 1);
+    }
+  });
+
+  // Mouse wheel
+  let wc = false;
+  document.addEventListener('wheel', e => {
+    if (wc) return;
+    wc = true;
+    setTimeout(() => wc = false, 700);
+    e.deltaY > 0 ? go(cur + 1) : go(cur - 1);
+  });
+
+  // Nav buttons
+  document.getElementById('btnPrev').addEventListener('click', () => go(cur - 1));
+  document.getElementById('btnNext').addEventListener('click', () => go(cur + 1));
+
+  // Floating particles
+  function createParticles(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const colors = [
+      'rgba(255,107,53,.35)', 'rgba(244,162,97,.3)',
+      'rgba(231,111,81,.25)', 'rgba(127,90,240,.25)',
+      'rgba(46,196,182,.22)'
+    ];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 7 + 3;
+      p.style.cssText = `
+        width:${size}px;height:${size}px;
+        left:${Math.random() * 100}%;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration:${Math.random() * 7 + 5}s;
+        animation-delay:${Math.random() * 7}s;
+      `;
+      container.appendChild(p);
+    }
+  }
+  createParticles('particles0');
+  createParticles('particles10');
+  createParticles('particles11');
+
+  // ===== Animation Reset Fix =====
+  // Clone nodes to force CSS animation re-trigger on slide switch
+  document.querySelectorAll('.slide').forEach(function(s) {
+    s.querySelectorAll('.an, .anim-item, [style*="animation"]').forEach(function(item) {
+      var clone = item.cloneNode(true);
+      if (item.parentNode) {
+        item.parentNode.replaceChild(clone, item);
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
