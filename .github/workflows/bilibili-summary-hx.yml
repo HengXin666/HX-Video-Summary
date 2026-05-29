@@ -157,13 +157,17 @@ jobs:
           AUDIO_URL=$(cat output/audio_url.txt)
 
           echo "下载视频流..."
-          curl -sSL -o videos/video.m4s \
+          curl -SL -o videos/video.m4s \
+            --retry 5 --retry-delay 3 --retry-max-time 120 \
+            -C - \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
             "$VIDEO_URL"
 
           echo "下载音频流..."
-          curl -sSL -o videos/audio.m4s \
+          curl -SL -o videos/audio.m4s \
+            --retry 5 --retry-delay 3 --retry-max-time 120 \
+            -C - \
             -H "User-Agent: $UA" \
             -H "Referer: https://www.bilibili.com/" \
             "$AUDIO_URL"
