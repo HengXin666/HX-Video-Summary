@@ -1,5 +1,18 @@
 [
   {
+    "run_number": "hx-11",
+    "title": "《浅入深出》Agent系列之十二：意图识别",
+    "bilibili_url": "https://www.bilibili.com/video/BV1HTGy68EUF",
+    "timestamp": "2026-05-29 15:15:28",
+    "ppt_file": "bilibili_ppt.html",
+    "summary_file": "summary.txt",
+    "cover_url": "https://i0.hdslb.com/bfs/archive/d54e910966d40d1f7d53685eac0e4b2269f7414c.jpg",
+    "owner_name": "奇创喵",
+    "owner_face": "https://i2.hdslb.com/bfs/face/caae63d24e897f958af0b36ac771afaf6dd29b2e.jpg",
+    "owner_mid": "3546923843717447",
+    "local_cover": "covers/hx-11.jpg"
+  },
+  {
     "run_number": "hx-8",
     "title": "90%代码由AI生成！美团31万行代码重构实践阅读 —— 约束AI才是系统关键",
     "bilibili_url": "https://www.bilibili.com/video/BV1vNL36YEid/",
