@@ -131,16 +131,28 @@ jobs:
           print(best['baseUrl'])
           ")
 
-          echo "下载视频流..."
-          curl -sSL -o videos/video.m4s \
-            -H "User-Agent: $UA" \
-            -H "Referer: https://www.bilibili.com/" \
-            "$VIDEO_URL"
-          echo "下载音频流..."
-          curl -sSL -o videos/audio.m4s \
-            -H "User-Agent: $UA" \
-            -H "Referer: https://www.bilibili.com/" \
-            "$AUDIO_URL"
+          download() {
+            local url="$1" output="$2" desc="$3"
+            for i in 1 2 3 4 5; do
+              echo "$desc (尝试 $i/5)..."
+              if curl --http1.1 -SL -o "$output" \
+                --connect-timeout 15 --max-time 300 \
+                -H "User-Agent: $UA" \
+                -H "Referer: https://www.bilibili.com/" \
+                "$url"; then
+                echo "✅ $desc 成功"
+                return 0
+              fi
+              echo "⚠️ $desc 失败, ${i}/5 次重试, 等待 5 秒..."
+              rm -f "$output"
+              sleep 5
+            done
+            echo "❌ $desc 最终失败"
+            return 1
+          }
+
+          download "$VIDEO_URL" "videos/video.m4s" "下载视频流"
+          download "$AUDIO_URL" "videos/audio.m4s" "下载音频流"
 
           # 4. ffmpeg 合并
           ffmpeg -y -i videos/video.m4s -i videos/audio.m4s -c copy videos/bilibili_video.mp4
